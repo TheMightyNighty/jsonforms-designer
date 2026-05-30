@@ -1,0 +1,160 @@
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import CodeIcon from '@mui/icons-material/Code';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import EditIcon from '@mui/icons-material/Edit';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import PreviewIcon from '@mui/icons-material/Visibility';
+import RedoIcon from '@mui/icons-material/Redo';
+import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
+import LanguageIcon from '@mui/icons-material/Language';
+import UndoIcon from '@mui/icons-material/Undo';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import Toolbar from '@mui/material/Toolbar';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import React, { useState } from 'react';
+
+import { useEditorContext, useUndoRedo } from '../context';
+import { useI18n } from '../../i18n';
+import { createLoadTemplateAction, createSetFieldStateAction, createToggleLineNumbersAction } from '../model/addFieldActions';
+import { ImportExportDialog } from './ImportExportDialog';
+import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
+import { FormTemplate } from '../../field-types/formTemplates';
+import { EditorMode } from '../../editor/editorMode';
+import { copyToClipBoard } from '../util/clipboard';
+
+interface HeaderProps {
+  mode: EditorMode;
+  onModeChange: (mode: EditorMode) => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
+  const { dispatch, fieldState } = useEditorContext();
+  const { undo, redo, canUndo, canRedo } = useUndoRedo();
+  const { t, locale, setLocale } = useI18n();
+  const [exportOpen, setExportOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+
+  const handleTemplateSelect = (tpl: FormTemplate) => {
+    (dispatch as any)(createLoadTemplateAction(tpl.state));
+  };
+
+  const handleCopySchema = () => {
+    copyToClipBoard(JSON.stringify(
+      { schema: fieldState.schema, uiSchema: fieldState.uiSchema },
+      null, 2
+    ));
+  };
+
+  const lineNumbers = fieldState.lineNumbersEnabled;
+  const isCode = mode === 'code';
+  const isPreview = mode === 'preview';
+
+  return (
+    <AppBar position="static" elevation={0}>
+      <Toolbar>
+        <Typography variant="h6" noWrap sx={{ flexGrow: 1, fontWeight: 600 }}>
+          {t.header.title}
+        </Typography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+          <Tooltip title={locale === 'de' ? 'English' : 'Deutsch'}>
+            <IconButton color="inherit" onClick={() => setLocale(locale === 'de' ? 'en' : 'de')} aria-label="Sprache wechseln">
+              <LanguageIcon />
+              <Typography variant="caption" sx={{ ml: 0.25, fontSize: '0.65rem' }}>{locale.toUpperCase()}</Typography>
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={t.header.undo}>
+            <span>
+              <IconButton color="inherit" onClick={undo} disabled={!canUndo} aria-label="Rückgängig">
+                <UndoIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title={t.header.redo}>
+            <span>
+              <IconButton color="inherit" onClick={redo} disabled={!canRedo} aria-label="Wiederholen">
+                <RedoIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
+
+          <Divider orientation="vertical" flexItem sx={{ mx: 0.5, borderColor: 'rgba(255,255,255,0.2)' }} />
+
+          <Tooltip title={t.header.template}>
+            <IconButton color="inherit" onClick={() => setTemplateOpen(true)} aria-label="Vorlage laden">
+              <LibraryBooksIcon />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={t.header.copySchema}>
+            <IconButton color="inherit" onClick={handleCopySchema} aria-label="Schema kopieren">
+              <ContentCopyIcon />
+            </IconButton>
+          </Tooltip>
+
+          <Divider orientation="vertical" flexItem sx={{ mx: 0.5, borderColor: 'rgba(255,255,255,0.2)' }} />
+
+          <Tooltip title={isCode ? t.header.codeModeOff : t.header.codeModeOn}>
+            <IconButton
+              color="inherit"
+              onClick={() => onModeChange(isCode ? 'visual' : 'code')}
+              aria-label={isCode ? 'Visueller Modus' : 'Code-Modus'}
+              sx={{ color: isCode ? 'secondary.light' : 'inherit' }}
+            >
+              <CodeIcon />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={isPreview ? t.header.previewOff : t.header.previewOn}>
+            <IconButton
+              color="inherit"
+              onClick={() => onModeChange(isPreview ? 'visual' : 'preview')}
+              aria-label={isPreview ? 'Bearbeiten' : 'Vorschau'}
+              sx={{ color: isPreview ? 'secondary.light' : 'inherit' }}
+            >
+              {isPreview ? <EditIcon /> : <PreviewIcon />}
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={lineNumbers ? 'Zeilennummern ausblenden' : 'Zeilennummern einblenden'}>
+            <IconButton
+              color="inherit"
+              onClick={() => (dispatch as any)(createToggleLineNumbersAction())}
+              aria-label="Zeilennummern umschalten"
+              sx={{ color: lineNumbers ? 'secondary.light' : 'inherit' }}
+            >
+              <FormatListNumberedIcon />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={t.header.exportImport}>
+            <IconButton color="inherit" onClick={() => setExportOpen(true)} aria-label="Export / Import">
+              <CloudDownloadIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Toolbar>
+
+      <ImportExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        fieldState={fieldState}
+        onImport={(state) => {
+          (dispatch as any)(createSetFieldStateAction(state));
+          setExportOpen(false);
+        }}
+      />
+
+      <TemplatePickerDialog
+        open={templateOpen}
+        onClose={() => setTemplateOpen(false)}
+        onSelect={handleTemplateSelect}
+      />
+    </AppBar>
+  );
+};

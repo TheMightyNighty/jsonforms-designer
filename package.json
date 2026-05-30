@@ -1,0 +1,35 @@
+{
+  "name": "jsonforms-designer-root",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Modernized fork of eclipsesource/jsonforms-editor \u2014 visual editor for JSON Schema and JSON Forms UI Schema",
+  "license": "MIT",
+  "workspaces": [
+    "packages/editor",
+    "packages/app"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=packages/app",
+    "build": "npm run build --workspace=packages/editor && npm run build --workspace=packages/app",
+    "build:editor": "npm run build --workspace=packages/editor",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint . --ext ts,tsx",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.0",
+    "eslint-plugin-simple-import-sort": "^12.1.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "overrides": {
+    "monaco-editor": "0.52.2"
+  }
+}
