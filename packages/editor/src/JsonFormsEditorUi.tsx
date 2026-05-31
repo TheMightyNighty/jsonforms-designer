@@ -20,11 +20,27 @@ import { FieldPalettePanel } from './palette-panel/FieldPalettePanel';
 import { FieldPropertiesPanel } from './properties/FieldPropertiesPanel';
 
 const handleSx = {
-  width: '6px', height: '100%', backgroundColor: 'divider',
-  cursor: 'col-resize', transition: 'background-color 0.15s',
-  '&:hover': { backgroundColor: 'primary.main' },
+  width: '4px', height: '100%',
+  backgroundColor: 'divider',
+  cursor: 'col-resize', transition: 'background-color 0.2s',
+  '&:hover': { backgroundColor: 'primary.light' },
 };
-const paneSx = { height: '100%', minHeight: '200px', overflow: 'auto', px: 1 };
+
+// Gemeinsame Basis für alle Panels
+const panelBase = { height: '100%', minHeight: '200px', overflow: 'auto' } as const;
+
+// Seitenleisten: hellgrau (background.default)
+const sidePanelSx = { ...panelBase, px: 1, backgroundColor: 'background.default' } as const;
+
+// Editor-Canvas: weiß (background.paper) mit subtiler Einrahmung
+const centerPanelSx = {
+  ...panelBase,
+  px: 1.5,
+  backgroundColor: 'background.paper',
+  borderLeft:  '1px solid',
+  borderRight: '1px solid',
+  borderColor: 'divider',
+} as const;
 
 interface JsonFormsEditorUiProps {
   editorRenderers: JsonFormsRendererRegistryEntry[];
@@ -54,7 +70,7 @@ function MobileLayout({ editorRenderers, mode }: { editorRenderers: JsonFormsRen
         <Tab label={t.mobile.editor} sx={{ minHeight: 36, py: 0.5, fontSize: '0.75rem' }} />
         <Tab label={t.mobile.properties} sx={{ minHeight: 36, py: 0.5, fontSize: '0.75rem' }} />
       </Tabs>
-      <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 1, backgroundColor: mobileTab === 1 ? 'background.paper' : 'background.default' }}>
         {mobileTab === 0 && <FieldPalettePanel />}
         {mobileTab === 1 && (
           mode === 'code'
@@ -115,11 +131,11 @@ export const JsonFormsEditorUi = ({
       ) : (
         <Group defaultLayout={defaultLayout} onLayoutChange={onLayoutChange} style={{ height: '100%' }}>
           <Panel minSize="15%">
-            <Box sx={paneSx}><FieldPalettePanel /></Box>
+            <Box sx={sidePanelSx}><FieldPalettePanel /></Box>
           </Panel>
           <Separator><Box sx={handleSx} /></Separator>
           <Panel minSize="20%">
-            <Box sx={{ ...paneSx, alignItems: 'stretch' }}>
+            <Box sx={centerPanelSx}>
               {mode === 'code'
                 ? <CodeModePanel fieldState={fieldState} previewData={previewData}
                     onFieldStateChange={handleFieldStateChange} onPreviewDataChange={setPreviewData} />
@@ -129,7 +145,7 @@ export const JsonFormsEditorUi = ({
           </Panel>
           <Separator><Box sx={handleSx} /></Separator>
           <Panel minSize="15%">
-            <Box sx={paneSx}>
+            <Box sx={sidePanelSx}>
               <FieldPropertiesPanel selectedScope={selectedScope} schema={fieldState.schema}
                 uiSchema={fieldState.uiSchema} dispatch={dispatch} />
             </Box>

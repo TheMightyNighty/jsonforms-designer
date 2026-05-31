@@ -11,6 +11,16 @@ export const en: EditorTranslations = {
   palette: {
     groups: { eingabe: 'Input', auswahl: 'Selection', struktur: 'Text & Structure', layout: 'Layout & Columns', opencode: 'OpenCode' },
     validators: 'Validators', uiBausteine: 'UI components',
+    fim: {
+      title: 'FIM building blocks',
+      datenfeldgruppen: 'Field groups',
+      datenfelder: 'Single fields',
+      suche: 'Search FIM fields …',
+      sucheHint: 'Enter a search term to find individual fields',
+      sucheMinLength: 'Enter at least 2 characters …',
+      keineTreffer: 'No results',
+      quelle: 'Source: FIM Portal / FitKo',
+    },
   },
   editor: {
     dropHint: 'Drag a field from the palette to start your form.',

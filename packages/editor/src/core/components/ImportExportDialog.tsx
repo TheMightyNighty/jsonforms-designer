@@ -11,6 +11,7 @@ import { FieldAwareState } from '../model/addFieldReducer';
 import { useI18n } from '../../i18n';
 import { FlatElement, fromLegacy, toLegacy } from '../model/uiElements';
 import { FormattedJson } from './Formatted';
+import { downloadXdf } from '../util/xdfExport';
 
 interface ImportExportDialogProps {
   open: boolean;
@@ -114,6 +115,7 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
         <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 1 }}>
           <Tab label={t.dialog.schemaTab} />
           <Tab label={t.dialog.uiSchemaTab} />
+          <Tab label="XDF 2.0" />
           <Tab label={t.dialog.importTab} />
         </Tabs>
 
@@ -140,6 +142,24 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
           </Box>
         )}
         {tab === 2 && (
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Alert severity="info">
+              Exportiert das Formular als <strong>XDatenfelder 2.0 (XDF2)</strong> — dem bundesweit gültigen
+              Standard für FIM-Bausteine. Die XML-Datei kann in FIM-Portal-kompatible Systeme importiert werden.
+            </Alert>
+            <Box>
+              <Button variant="contained" startIcon={<DownloadIcon />}
+                onClick={() => downloadXdf(fieldState)}>
+                XDF 2.0 herunterladen
+              </Button>
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+              Enthält: alle Datenfelder des Formulars, Metadaten (Titel, Behörde, Rechtsgrundlage),
+              Datentypen und Einschränkungen. FIM-Identifier (x-fim-id) werden übernommen.
+            </Typography>
+          </Box>
+        )}
+        {tab === 3 && (
           <Box sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               JSON-Datei hochladen mit <code>schema</code> und <code>uiSchema</code>.
@@ -154,6 +174,7 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
             </Button>
           </Box>
         )}
+
       </DialogContent>
       <DialogActions>
         <Button startIcon={<CancelIcon />} onClick={onClose}>{t.dialog.close}</Button>

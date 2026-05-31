@@ -1,53 +1,102 @@
+import { Box, Collapse, Divider, Typography } from '@mui/material';
+import { useState } from 'react';
+
 import { useI18n } from '../i18n';
-import { Box, Divider, Typography } from '@mui/material';
-import {
-  FIELD_GROUPS,
-  FieldGroup,
-  getFieldTypesByGroup,
-} from '../field-types/fieldTypes';
+import { FIELD_GROUPS, FieldGroup, getFieldTypesByGroup } from '../field-types/fieldTypes';
 import { FieldPaletteItem } from './FieldPaletteItem';
 import { OpenCodePaletteSection } from '../opencode/OpenCodePaletteSection';
+import { FimPaletteSection } from '../fim/FimPaletteSection';
+import { useEditorConfig } from '../config/EditorConfigContext';
 
-function GroupHeader({ label, first = false }: { label: string; first?: boolean }) {
+// ---------------------------------------------------------------------------
+// Einklappbare Feldtyp-Gruppe
+// ---------------------------------------------------------------------------
+
+interface CollapsibleGroupProps {
+  groupId: FieldGroup;
+  defaultOpen: boolean;
+}
+
+function CollapsibleFieldGroup({ groupId, defaultOpen }: CollapsibleGroupProps) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(defaultOpen);
+  const label = t.palette.groups[groupId as keyof typeof t.palette.groups] ?? groupId;
+  const items = getFieldTypesByGroup(groupId);
+
   return (
-    <Box sx={{ mt: first ? 1 : 2, mb: 0.5 }}>
-      {!first && <Divider sx={{ mb: 1.5 }} />}
-      <Typography
-        variant="caption"
+    <Box>
+      <Box
+        onClick={() => setOpen((v) => !v)}
         sx={{
-          px: 1.5, color: 'text.disabled', fontWeight: 500,
-          textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block',
+          display: 'flex', alignItems: 'center', gap: 0.5,
+          px: 1.5, py: 0.5, cursor: 'pointer', userSelect: 'none',
+          borderRadius: 1,
+          '&:hover': { backgroundColor: 'action.hover' },
         }}
       >
-        {label}
-      </Typography>
+        <Box
+          component="i"
+          className={`ti ti-chevron-${open ? 'down' : 'right'}`}
+          sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }}
+        />
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'text.disabled', fontWeight: 500, flex: 1,
+            textTransform: 'uppercase', letterSpacing: '0.06em',
+          }}
+        >
+          {label}
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.68rem' }}>
+          ({items.length})
+        </Typography>
+      </Box>
+
+      <Collapse in={open} timeout={150}>
+        <Box role="group" aria-label={label}>
+          {items.map((ft) => (
+            <Box key={ft.id} role="listitem">
+              <FieldPaletteItem fieldType={ft} />
+            </Box>
+          ))}
+        </Box>
+      </Collapse>
     </Box>
   );
 }
 
-function FieldPaletteGroup({ groupId, label: _label, first }: { groupId: FieldGroup; label: string; first?: boolean }) {
-  const { t } = useI18n();
-  const label = t.palette.groups[groupId as keyof typeof t.palette.groups] ?? _label;
-  const items = getFieldTypesByGroup(groupId);
-  return (
-    <Box role="group" aria-label={label}>
-      <GroupHeader label={label} first={first} />
-      {items.map((ft) => (
-        <Box key={ft.id} role="listitem">
-          <FieldPaletteItem fieldType={ft} />
-        </Box>
-      ))}
-    </Box>
-  );
-}
+// ---------------------------------------------------------------------------
+// Palette Panel
+// ---------------------------------------------------------------------------
 
 export function FieldPalettePanel() {
+  const config = useEditorConfig();
+  const collapsedByDefault = config.palette?.collapsedByDefault ?? [];
+
   return (
-    <Box sx={{ height: '100%', overflowY: 'auto', pb: 2 }} role="list" aria-label="Feldtypen-Palette">
-      {FIELD_GROUPS.map(({ id, label }, idx) => (
-        <FieldPaletteGroup key={id} groupId={id} label={label} first={idx === 0} />
+    <Box
+      sx={{ height: '100%', overflowY: 'auto', pb: 2 }}
+      role="list"
+      aria-label="Feldtypen-Palette"
+    >
+      {FIELD_GROUPS.map(({ id }, idx) => (
+        <Box key={id} role="listitem">
+          {idx > 0 && <Divider sx={{ my: 0.5 }} />}
+          <CollapsibleFieldGroup
+            groupId={id}
+            defaultOpen={!collapsedByDefault.includes(id)}
+          />
+        </Box>
       ))}
-      <OpenCodePaletteSection />
+
+      {config.modules?.openCode?.enabled && (
+        <OpenCodePaletteSection service={config.modules.openCode.service} />
+      )}
+
+      {config.modules?.fim?.enabled && (
+        <FimPaletteSection service={config.modules.fim.service} />
+      )}
     </Box>
   );
 }

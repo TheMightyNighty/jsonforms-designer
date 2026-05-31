@@ -154,12 +154,16 @@ export interface ColumnDropPayload {
   containerId: string;
   /** Spalten-Index (0-basiert) */
   columnIndex: number;
-  /** Feldtyp-ID aus der Palette */
+  /** Feldtyp-ID aus der Palette (beginnt mit 'fim:' für FIM-Felder) */
   fieldTypeId: string;
   /** Gewünschter Property-Key */
   propertyKey: string;
   /** Optional: nach welchem Element-ID einfügen */
   insertAfterId?: string;
+  /** Nur für FIM-Datenfelder: vollständiges Schema-Fragment */
+  fimSchema?: JsonSchema7 & { title?: string };
+  /** Nur für FIM-Datenfelder: UI-Schema-Optionen */
+  fimUiOptions?: Record<string, unknown>;
 }
 
 export interface ColumnDropAction {
@@ -247,6 +251,58 @@ export function createReorderInColumnAction(
 // TOGGLE_LINE_NUMBERS + SET_SECTION_COLOR
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// SET_FORM_METADATA — Formular-Metadaten (Titel, Behörde, Rechtsgrundlage …)
+// ---------------------------------------------------------------------------
+
+export const SET_FORM_METADATA = 'SET_FORM_METADATA' as const;
+
+export interface FormMetadata {
+  title?: string;
+  description?: string;
+  publisher?: string;   // x-publisher
+  legalBasis?: string;  // x-legal-basis
+  version?: string;     // x-version
+  validFrom?: string;   // x-valid-from (ISO date)
+}
+
+export interface SetFormMetadataAction {
+  type: typeof SET_FORM_METADATA;
+  payload: FormMetadata;
+}
+
+export function createSetFormMetadataAction(meta: FormMetadata): SetFormMetadataAction {
+  return { type: SET_FORM_METADATA, payload: meta };
+}
+
+// ---------------------------------------------------------------------------
+// ADD_FIM_GRUPPE — fügt mehrere Felder als benannte Gruppe ein
+// ---------------------------------------------------------------------------
+
+export const ADD_FIM_GRUPPE = 'ADD_FIM_GRUPPE' as const;
+
+export interface AddFimGruppePayload {
+  gruppenName: string;
+  insertAfterScope?: string;
+  tabIndex?: number;
+  felder: Array<{
+    propertyKey: string;
+    schemaFragment: JsonSchema7 & { title?: string };
+    uiSchemaOptions?: Record<string, unknown>;
+    label: string;
+  }>;
+}
+
+export interface AddFimGruppeAction {
+  type: typeof ADD_FIM_GRUPPE;
+  payload: AddFimGruppePayload;
+}
+
+export function createAddFimGruppeAction(payload: AddFimGruppePayload): AddFimGruppeAction {
+  return { type: ADD_FIM_GRUPPE, payload };
+}
+
+// ---------------------------------------------------------------------------
 export const TOGGLE_LINE_NUMBERS = 'TOGGLE_LINE_NUMBERS' as const;
 export interface ToggleLineNumbersAction { type: typeof TOGGLE_LINE_NUMBERS }
 export function createToggleLineNumbersAction(): ToggleLineNumbersAction {

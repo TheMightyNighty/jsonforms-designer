@@ -17,7 +17,7 @@ import { FieldAwareState } from '../../core/model/addFieldReducer';
 import { EditorAction } from '../../core/model/actions';
 import { FIELD_TYPE_CATALOG } from '../../field-types/fieldTypes';
 import { useFieldDrop } from '../../palette-panel/useFieldDrop';
-import type { AddFieldAction } from '../../core/model/addFieldActions';
+
 import { TabBar } from './TabBar';
 import { useI18n } from '../../i18n';
 import { StructuralElementRow } from './StructuralElementRow';
@@ -48,7 +48,7 @@ interface DropZoneProps {
 function DropZone({ dispatch, insertAfterScope, tabIndex }: DropZoneProps) {
   // Palette-Drop
   const [{ isOver: isOverPalette }, paletteRef] = useFieldDrop(
-    dispatch as Dispatch<AddFieldAction>,
+    dispatch,
     insertAfterScope,
     tabIndex
   );

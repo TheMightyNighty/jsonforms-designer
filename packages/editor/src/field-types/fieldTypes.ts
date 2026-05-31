@@ -238,6 +238,26 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     defaults: { label: 'Datei', description: 'Erlaubte Formate: PDF, JPG, PNG', required: false },
   },
 
+  // ── Wiederholung ─────────────────────────────────────────────────────────
+
+  {
+    id: 'repeat-group',
+    displayName: 'Wiederholungsgruppe',
+    group: 'eingabe',
+    icon: 'copy-plus',
+    schema: {
+      type: 'array',
+      title: 'Einträge',
+      items: { type: 'object', properties: {} },
+    } as FieldSchemaFragment,
+    uiSchema: { type: 'Control', scope: '' },
+    defaults: {
+      label: 'Wiederholungsgruppe',
+      description: 'Mehrere Einträge hinzufügen (z. B. Personen, Kinder)',
+      required: false,
+    },
+  },
+
   // ── Struktur (kein Dateneintrag) ──────────────────────────────────────────
 
   {

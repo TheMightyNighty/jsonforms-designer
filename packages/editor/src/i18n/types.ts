@@ -8,6 +8,16 @@ export interface EditorTranslations {
   palette: {
     groups: { eingabe: string; auswahl: string; struktur: string; layout: string; opencode: string };
     validators: string; uiBausteine: string;
+    fim: {
+      title: string;
+      datenfeldgruppen: string;
+      datenfelder: string;
+      suche: string;
+      sucheHint: string;
+      sucheMinLength: string;
+      keineTreffer: string;
+      quelle: string;
+    };
   };
   editor: {
     dropHint: string; dropHere: string; ablegen: string; spalte: string;

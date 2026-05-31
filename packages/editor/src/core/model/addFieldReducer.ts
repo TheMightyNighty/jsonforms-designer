@@ -9,6 +9,7 @@ import {
   SET_FIELD_STATE, SetFieldStateAction,
   ADD_TAB, REMOVE_TAB, RENAME_TAB, REORDER_TABS, SET_ACTIVE_TAB,
   AddTabAction, RemoveTabAction, RenameTabAction, ReorderTabsAction, SetActiveTabAction,
+  ADD_FIM_GRUPPE, AddFimGruppeAction,
 } from './addFieldActions';
 
 // ---------------------------------------------------------------------------
@@ -260,6 +261,65 @@ export function insertControl(
   const idx = elements.findIndex((el) => el.scope === insertAfterScope);
   if (idx === -1) return [...elements, newControl];
   return [...elements.slice(0, idx + 1), newControl, ...elements.slice(idx + 1)];
+}
+
+// ---------------------------------------------------------------------------
+// fimGruppeReducer
+// ---------------------------------------------------------------------------
+
+export function fimGruppeReducer<S extends FieldAwareState>(state: S, action: AddFimGruppeAction): S {
+  if (action.type !== ADD_FIM_GRUPPE) return state;
+  const { gruppenName, felder, insertAfterScope, tabIndex } = action.payload;
+
+  const existingKeys = [...Object.keys(state.schema.properties ?? {})];
+
+  // Duplikat-sichere Keys für alle Felder aufbauen
+  const resolvedFelder = felder.map((f) => {
+    const safeKey = resolveKey(f.propertyKey, existingKeys);
+    existingKeys.push(safeKey);
+    const safeScope = buildScope(safeKey);
+    return { ...f, safeKey, safeScope };
+  });
+
+  // Schema-Properties
+  const addedProperties: Record<string, JsonSchema7 & { title?: string }> = {};
+  for (const f of resolvedFelder) {
+    addedProperties[f.safeKey] = f.schemaFragment;
+  }
+
+  // GroupContainer mit vorbefüllten Kindern
+  const groupControl = {
+    id: newId('grp'),
+    type: 'GroupContainer' as const,
+    label: gruppenName,
+    children: resolvedFelder.map((f) => ({
+      id: newId('ctrl'),
+      type: 'Control' as const,
+      scope: f.safeScope,
+      ...(f.uiSchemaOptions && Object.keys(f.uiSchemaOptions).length > 0
+        ? { options: f.uiSchemaOptions }
+        : {}),
+    })),
+  };
+
+  const effectiveTabIndex = tabIndex ?? (state.tabs.length > 0 ? state.activeTabIndex : undefined);
+  const newTabAssignments =
+    effectiveTabIndex !== undefined
+      ? Object.fromEntries(resolvedFelder.map((f) => [f.safeScope, effectiveTabIndex]))
+      : {};
+
+  return {
+    ...state,
+    schema: {
+      ...state.schema,
+      properties: { ...(state.schema.properties ?? {}), ...addedProperties },
+    },
+    uiSchema: {
+      ...state.uiSchema,
+      elements: insertControl(state.uiSchema.elements, groupControl, insertAfterScope),
+    },
+    tabAssignments: { ...state.tabAssignments, ...newTabAssignments },
+  };
 }
 
 // ---------------------------------------------------------------------------

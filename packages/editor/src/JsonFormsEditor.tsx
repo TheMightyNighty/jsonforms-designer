@@ -6,6 +6,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import { CategorizationService, CategorizationServiceImpl } from './core/api/categorizationService';
 import { DefaultPaletteService, PaletteService } from './core/api/paletteService';
+import { EditorConfig, EditorConfigProvider } from './config';
 import { EmptySchemaService, SchemaService } from './core/api/schemaService';
 import { EditorContextInstance } from './core/context';
 import { Actions } from './core/model';
@@ -53,6 +54,8 @@ export interface JsonFormsEditorProps {
   propertyRenderers?: JsonFormsRendererRegistryEntry[];
   header?: ComponentType | null;
   footer?: ComponentType | null;
+  /** Konfiguration für Module und Palette-Verhalten */
+  config?: EditorConfig;
 }
 
 export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
@@ -66,6 +69,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   propertyRenderers = defaultPropertyRenderers,
   header,
   footer,
+  config,
 }) => {
   const propertiesService = React.useMemo(
     () => propertiesServiceProvider(schemaProviders, schemaDecorators),
@@ -155,6 +159,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   const footerComponent = footer === null ? undefined : footer;
 
   return (
+    <EditorConfigProvider config={config}>
     <I18nProvider defaultLocale="de">
     <DndProvider backend={HTML5Backend}>
       <EditorContextInstance.Provider
@@ -186,5 +191,6 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
       </EditorContextInstance.Provider>
     </DndProvider>
     </I18nProvider>
+    </EditorConfigProvider>
   );
 };

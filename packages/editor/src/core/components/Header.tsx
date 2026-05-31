@@ -2,6 +2,7 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CodeIcon from '@mui/icons-material/Code';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import PreviewIcon from '@mui/icons-material/Visibility';
 import RedoIcon from '@mui/icons-material/Redo';
@@ -19,8 +20,9 @@ import React, { useState } from 'react';
 
 import { useEditorContext, useUndoRedo } from '../context';
 import { useI18n } from '../../i18n';
-import { createLoadTemplateAction, createSetFieldStateAction, createToggleLineNumbersAction } from '../model/addFieldActions';
+import { createLoadTemplateAction, createSetFieldStateAction, createToggleLineNumbersAction, createSetFormMetadataAction } from '../model/addFieldActions';
 import { ImportExportDialog } from './ImportExportDialog';
+import { MetadataDialog } from './MetadataDialog';
 import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
 import { FormTemplate } from '../../field-types/formTemplates';
 import { EditorMode } from '../../editor/editorMode';
@@ -35,8 +37,9 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
   const { dispatch, fieldState } = useEditorContext();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const { t, locale, setLocale } = useI18n();
-  const [exportOpen, setExportOpen] = useState(false);
+  const [exportOpen, setExportOpen]     = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [metaOpen, setMetaOpen]         = useState(false);
 
   const handleTemplateSelect = (tpl: FormTemplate) => {
     (dispatch as any)(createLoadTemplateAction(tpl.state));
@@ -56,9 +59,16 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
   return (
     <AppBar position="static" elevation={0}>
       <Toolbar>
-        <Typography variant="h6" noWrap sx={{ flexGrow: 1, fontWeight: 600 }}>
-          {t.header.title}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexGrow: 1, minWidth: 0 }}>
+          <Typography variant="h6" noWrap sx={{ fontWeight: 700, color: 'primary.dark', letterSpacing: '-0.02em' }}>
+            {t.header.title}
+          </Typography>
+          {(fieldState.schema as any).title && (
+            <Typography variant="body2" noWrap sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+              — {(fieldState.schema as any).title}
+            </Typography>
+          )}
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
           <Tooltip title={locale === 'de' ? 'English' : 'Deutsch'}>
@@ -83,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
             </span>
           </Tooltip>
 
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5, borderColor: 'rgba(255,255,255,0.2)' }} />
+          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
           <Tooltip title={t.header.template}>
             <IconButton color="inherit" onClick={() => setTemplateOpen(true)} aria-label="Vorlage laden">
@@ -97,14 +107,14 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
             </IconButton>
           </Tooltip>
 
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5, borderColor: 'rgba(255,255,255,0.2)' }} />
+          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
           <Tooltip title={isCode ? t.header.codeModeOff : t.header.codeModeOn}>
             <IconButton
               color="inherit"
               onClick={() => onModeChange(isCode ? 'visual' : 'code')}
               aria-label={isCode ? 'Visueller Modus' : 'Code-Modus'}
-              sx={{ color: isCode ? 'secondary.light' : 'inherit' }}
+              sx={{ color: isCode ? 'primary.main' : 'text.secondary' }}
             >
               <CodeIcon />
             </IconButton>
@@ -115,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
               color="inherit"
               onClick={() => onModeChange(isPreview ? 'visual' : 'preview')}
               aria-label={isPreview ? 'Bearbeiten' : 'Vorschau'}
-              sx={{ color: isPreview ? 'secondary.light' : 'inherit' }}
+              sx={{ color: isPreview ? 'primary.main' : 'text.secondary' }}
             >
               {isPreview ? <EditIcon /> : <PreviewIcon />}
             </IconButton>
@@ -126,14 +136,20 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
               color="inherit"
               onClick={() => (dispatch as any)(createToggleLineNumbersAction())}
               aria-label="Zeilennummern umschalten"
-              sx={{ color: lineNumbers ? 'secondary.light' : 'inherit' }}
+              sx={{ color: lineNumbers ? 'primary.main' : 'text.secondary' }}
             >
               <FormatListNumberedIcon />
             </IconButton>
           </Tooltip>
 
+          <Tooltip title="Formular-Metadaten">
+            <IconButton onClick={() => setMetaOpen(true)} aria-label="Formular-Metadaten bearbeiten">
+              <InfoOutlinedIcon />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title={t.header.exportImport}>
-            <IconButton color="inherit" onClick={() => setExportOpen(true)} aria-label="Export / Import">
+            <IconButton onClick={() => setExportOpen(true)} aria-label="Export / Import">
               <CloudDownloadIcon />
             </IconButton>
           </Tooltip>
@@ -154,6 +170,13 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
         open={templateOpen}
         onClose={() => setTemplateOpen(false)}
         onSelect={handleTemplateSelect}
+      />
+
+      <MetadataDialog
+        open={metaOpen}
+        onClose={() => setMetaOpen(false)}
+        schema={fieldState.schema}
+        onSave={(meta) => (dispatch as any)(createSetFormMetadataAction(meta))}
       />
     </AppBar>
   );

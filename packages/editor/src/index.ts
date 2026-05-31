@@ -28,5 +28,7 @@ export * from './JsonFormsEditorUi';
 export * from './field-types';
 
 export * from './opencode';
+export * from './fim';
+export * from './config';
 
 export * from './i18n';
