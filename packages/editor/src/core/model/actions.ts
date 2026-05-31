@@ -15,7 +15,8 @@ import type { ReorderInColumnAction } from './addFieldActions';
 import type { ToggleLineNumbersAction } from './addFieldActions';
 import type { SetSectionColorAction } from './addFieldActions';
 import type { ReorderElementAction } from './addFieldActions';
-import type { UpdateFieldPropertyAction } from '../../properties/fieldPropertiesActions';
+import type { AddFimGruppeAction, SetFormMetadataAction } from './addFieldActions';
+import type { UpdateFieldPropertyAction, SetFieldRuleAction } from '../../properties/fieldPropertiesActions';
 
 export type UiSchemaAction = AddUnscopedElementToLayout | UpdateUiSchemaElement;
 
@@ -42,7 +43,10 @@ export type EditorAction =
   | ReorderInColumnAction
   | ToggleLineNumbersAction
   | SetSectionColorAction
-  | UpdateFieldPropertyAction;
+  | AddFimGruppeAction
+  | SetFormMetadataAction
+  | UpdateFieldPropertyAction
+  | SetFieldRuleAction;
 
 export const SET_SCHEMA = 'jsonforms-editor/SET_SCHEMA' as const;
 export const SET_UISCHEMA = 'jsonforms-editor/SET_UISCHEMA' as const;
@@ -58,6 +62,8 @@ export const ADD_DETAIL = 'jsonforms-editor/ADD_DETAIL' as const;
 export { ADD_FIELD } from './addFieldActions';
 export { REMOVE_FIELD } from './addFieldActions';
 export { LOAD_TEMPLATE } from './addFieldActions';
+export { ADD_FIM_GRUPPE } from './addFieldActions';
+export { SET_FORM_METADATA } from './addFieldActions';
 export { SET_FIELD_STATE } from './addFieldActions';
 export { ADD_TAB, REMOVE_TAB, RENAME_TAB, REORDER_TABS, SET_ACTIVE_TAB } from './addFieldActions';
 export { COLUMN_DROP, MOVE_ELEMENT, REORDER_ELEMENT, REORDER_IN_COLUMN, TOGGLE_LINE_NUMBERS, SET_SECTION_COLOR } from './addFieldActions';

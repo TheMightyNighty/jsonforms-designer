@@ -38,6 +38,8 @@ import { EditorAction } from '../core/model/actions';
 import { ValidatorSection } from './ValidatorSection';
 import { EnumEditor } from './EnumEditor';
 import { StructuralPropertiesPanel } from './StructuralPropertiesPanel';
+import { ConditionEditor } from './ConditionEditor';
+import { TranslationEditor } from './TranslationEditor';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -237,6 +239,19 @@ export function FieldPropertiesPanel({
         schema={schema}
         uiSchema={uiSchema}
         dispatch={dispatch}
+      />
+
+      <ConditionEditor
+        selectedScope={selectedScope}
+        schema={schema}
+        uiSchema={uiSchema}
+        dispatch={dispatch as any}
+      />
+
+      <TranslationEditor
+        selectedScope={selectedScope}
+        schema={schema}
+        dispatch={dispatch as any}
       />
     </Box>
   );

@@ -1,11 +1,13 @@
 /**
  * useDrop-Hook für einzelne Spalten innerhalb eines ColumnContainer.
- * Akzeptiert FIELD_TYPE-Items und dispatcht COLUMN_DROP.
+ * Akzeptiert FIELD_TYPE-Items und FIM-Datenfelder (keine Gruppen).
  */
 import { useDrop } from 'react-dnd';
 import { Dispatch } from 'react';
 import { FIELD_TYPE_DND_TYPE, FieldTypeDragItem } from './FieldPaletteItem';
 import { createColumnDropAction, ColumnDropAction } from '../core/model/addFieldActions';
+import { FIM_DND_TYPE, FimDragItem } from '../fim/FimPaletteSection';
+import { mapDatenfeld } from '../fim/fimMapper';
 
 function deriveKey(fieldTypeId: string): string {
   const map: Record<string, string> = {
@@ -18,7 +20,7 @@ function deriveKey(fieldTypeId: string): string {
     'file-upload': 'datei', 'label-heading': '_label', 'label-text': '_hinweis',
     'alert-info': '_info', 'alert-warning': '_warnung',
     'col-2': '_spalten2', 'col-3': '_spalten3', 'col-4': '_spalten4', 'col-custom': '_spalten_frei',
-    'col-1-2': '_spalten12', 'col-2-1': '_spalten21', 'group': '_gruppe',
+    'col-1-2': '_spalten12', 'col-2-1': '_spalten21', 'group': '_gruppe', 'repeat-group': 'eintraege',
   };
   return map[fieldTypeId] ?? fieldTypeId.replace(/[^a-z0-9]/gi, '_');
 }
@@ -33,15 +35,34 @@ export function useColumnDrop(
   dispatch: Dispatch<ColumnDropAction | any>,
   { containerId, columnIndex, insertAfterId }: UseColumnDropOptions
 ) {
-  return useDrop<FieldTypeDragItem, unknown, { isOver: boolean }>(
+  return useDrop<FieldTypeDragItem | FimDragItem, unknown, { isOver: boolean }>(
     () => ({
-      accept: FIELD_TYPE_DND_TYPE,
-      drop: (item: FieldTypeDragItem) => {
+      accept: [FIELD_TYPE_DND_TYPE, FIM_DND_TYPE],
+      canDrop: (item) => {
+        // Datenfeldgruppen können nicht in eine Spalte fallen
+        if (item.dndType === FIM_DND_TYPE && item.type === 'datenfeldgruppe') return false;
+        return true;
+      },
+      drop: (item) => {
+        if (item.dndType === FIM_DND_TYPE && item.type === 'datenfeld') {
+          const mapping = mapDatenfeld(item.feld);
+          dispatch(createColumnDropAction({
+            containerId,
+            columnIndex,
+            fieldTypeId: `fim:${item.identifier}`,
+            propertyKey: mapping.propertyKey,
+            insertAfterId,
+            fimSchema: mapping.schema,
+            fimUiOptions: mapping.uiSchemaOptions,
+          }));
+          return;
+        }
+        const fi = item as FieldTypeDragItem;
         dispatch(createColumnDropAction({
           containerId,
           columnIndex,
-          fieldTypeId: item.fieldTypeId,
-          propertyKey: deriveKey(item.fieldTypeId),
+          fieldTypeId: fi.fieldTypeId,
+          propertyKey: deriveKey(fi.fieldTypeId),
           insertAfterId,
         }));
       },

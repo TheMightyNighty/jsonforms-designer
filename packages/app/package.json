@@ -1,6 +1,6 @@
 {
   "name": "@jsonforms-designer/app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "JSONForms Designer development application",

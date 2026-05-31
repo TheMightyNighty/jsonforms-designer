@@ -5,11 +5,9 @@ import {
   GroupContainer,
   newId,
 } from './uiElements';
-import { FieldAwareState } from './addFieldReducer';
-import { COLUMN_DROP, ColumnDropAction, MOVE_ELEMENT, MoveElementAction, REORDER_IN_COLUMN, ReorderInColumnAction } from './addFieldActions';
+import { FieldAwareState, resolveKey } from './addFieldReducer';
+import { COLUMN_DROP, ColumnDropAction, MOVE_ELEMENT, MoveElementAction, REORDER_IN_COLUMN, ReorderInColumnAction, buildScope } from './addFieldActions';
 import { getFieldType } from '../../field-types/fieldTypes';
-import { buildScope } from './addFieldActions';
-import { resolveKey } from './addFieldReducer';
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen: Baum traversieren
@@ -80,43 +78,72 @@ export function columnDropReducer<S extends FieldAwareState>(
 ): S {
   if (action.type !== COLUMN_DROP) return state;
 
-  const { containerId, columnIndex, fieldTypeId, propertyKey, insertAfterId } = action.payload;
-  const fieldType = getFieldType(fieldTypeId);
+  const { containerId, columnIndex, fieldTypeId, propertyKey, insertAfterId, fimSchema, fimUiOptions } = action.payload;
+  const isFim = fieldTypeId.startsWith('fim:');
 
   // Existierende Felder auflösen
   const existingKeys = Object.keys(state.schema.properties ?? {});
-  const safeKey = fieldType.isStructural ? propertyKey : resolveKey(propertyKey, existingKeys);
-  const safeScope = buildScope(safeKey);
 
-  // Neues UiElement erzeugen
   let newEl: UiElement;
-  if (fieldType.isStructural) {
-    if (fieldType.uiSchema.type === 'Label') {
-      newEl = {
-        id: newId('lbl'),
-        type: 'Label',
-        label: fieldType.defaults.label,
-        variant: (fieldType.uiSchema.options?.variant ?? 'text') as any,
-        options: fieldType.uiSchema.options,
-      };
-    } else if (fieldType.uiSchema.type === 'HorizontalLayout') {
-      const widths = (fieldType.uiSchema.options?.widths as number[]) ?? [1, 1];
-      newEl = {
-        id: newId('col'),
-        type: 'ColumnContainer',
-        widths,
-        columns: widths.map(() => []),
-      };
-    } else {
-      newEl = {
-        id: newId('grp'),
-        type: 'GroupContainer',
-        label: fieldType.defaults.label,
-        children: [],
-      };
-    }
+  let nextSchema: FieldAwareState['schema'];
+
+  if (isFim && fimSchema) {
+    const safeKey = resolveKey(propertyKey, existingKeys);
+    const safeScope = buildScope(safeKey);
+    newEl = {
+      id: newId('ctrl'),
+      type: 'Control',
+      scope: safeScope,
+      ...(fimUiOptions && Object.keys(fimUiOptions).length > 0 ? { options: fimUiOptions } : {}),
+    };
+    nextSchema = {
+      ...state.schema,
+      properties: { ...(state.schema.properties ?? {}), [safeKey]: fimSchema },
+    };
   } else {
-    newEl = { id: newId('ctrl'), type: 'Control', scope: safeScope, options: fieldType.uiSchema.options };
+    const fieldType = getFieldType(fieldTypeId);
+    const safeKey = fieldType.isStructural ? propertyKey : resolveKey(propertyKey, existingKeys);
+    const safeScope = buildScope(safeKey);
+
+    // Neues UiElement erzeugen
+    if (fieldType.isStructural) {
+      if (fieldType.uiSchema.type === 'Label') {
+        newEl = {
+          id: newId('lbl'),
+          type: 'Label',
+          label: fieldType.defaults.label,
+          variant: (fieldType.uiSchema.options?.variant ?? 'text') as any,
+          options: fieldType.uiSchema.options,
+        };
+      } else if (fieldType.uiSchema.type === 'HorizontalLayout') {
+        const widths = (fieldType.uiSchema.options?.widths as number[]) ?? [1, 1];
+        newEl = {
+          id: newId('col'),
+          type: 'ColumnContainer',
+          widths,
+          columns: widths.map(() => []),
+        };
+      } else {
+        newEl = {
+          id: newId('grp'),
+          type: 'GroupContainer',
+          label: fieldType.defaults.label,
+          children: [],
+        };
+      }
+    } else {
+      newEl = { id: newId('ctrl'), type: 'Control', scope: safeScope, options: fieldType.uiSchema.options };
+    }
+
+    nextSchema = fieldType.isStructural
+      ? state.schema
+      : {
+          ...state.schema,
+          properties: {
+            ...(state.schema.properties ?? {}),
+            [safeKey]: { ...fieldType.schema, title: fieldType.defaults.label },
+          },
+        };
   }
 
   // ColumnContainer finden und Spalte aktualisieren
@@ -129,17 +156,6 @@ export function columnDropReducer<S extends FieldAwareState>(
     );
     return { ...col, columns: nextColumns };
   });
-
-  // Schema-Property ergänzen (nur bei nicht-strukturell)
-  const nextSchema = fieldType.isStructural
-    ? state.schema
-    : {
-        ...state.schema,
-        properties: {
-          ...(state.schema.properties ?? {}),
-          [safeKey]: { ...fieldType.schema, title: fieldType.defaults.label },
-        },
-      };
 
   return {
     ...state,

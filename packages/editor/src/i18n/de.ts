@@ -11,6 +11,16 @@ export const de: EditorTranslations = {
   palette: {
     groups: { eingabe: 'Eingabe', auswahl: 'Auswahl', struktur: 'Text & Struktur', layout: 'Layout & Spalten', opencode: 'OpenCode' },
     validators: 'Validatoren', uiBausteine: 'UI-Bausteine',
+    fim: {
+      title: 'FIM-Bausteine',
+      datenfeldgruppen: 'Datenfeldgruppen',
+      datenfelder: 'Einzelfelder',
+      suche: 'FIM-Felder suchen …',
+      sucheHint: 'Suchbegriff eingeben um Einzelfelder zu finden',
+      sucheMinLength: 'Mindestens 2 Zeichen eingeben …',
+      keineTreffer: 'Keine Treffer',
+      quelle: 'Quelle: FIM-Portal / FitKo',
+    },
   },
   editor: {
     dropHint: 'Feld aus der Palette hierher ziehen, um das Formular zu beginnen.',

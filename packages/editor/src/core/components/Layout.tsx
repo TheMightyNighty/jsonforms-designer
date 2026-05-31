@@ -30,7 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({
       <header>{HeaderComponent ? <HeaderComponent /> : null}</header>
       <Box
         component="main"
-        sx={{ marginTop: 2, marginBottom: 2, minHeight: 0 }}
+        sx={{ marginTop: 0, marginBottom: 0, minHeight: 0 }}
       >
         {children}
       </Box>

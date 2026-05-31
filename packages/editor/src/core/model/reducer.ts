@@ -21,6 +21,8 @@ import {
 import {
   ADD_DETAIL,
   ADD_FIELD,
+  ADD_FIM_GRUPPE,
+  SET_FORM_METADATA,
   ADD_SCOPED_ELEMENT_TO_LAYOUT,
   ADD_UNSCOPED_ELEMENT_TO_LAYOUT,
   CombinedAction,
@@ -61,9 +63,11 @@ import {
   loadTemplateReducer,
   tabReducer,
   reorderElementReducer,
+  fimGruppeReducer,
   FieldAwareState,
 } from './addFieldReducer';
 import { fieldPropertiesReducer } from '../../properties/fieldPropertiesReducer';
+import { SET_FIELD_RULE } from '../../properties/fieldPropertiesActions';
 import { columnDropReducer, moveElementReducer, reorderInColumnReducer } from './columnReducer';
 
 // ---------------------------------------------------------------------------
@@ -406,6 +410,11 @@ export const editorReducer = (
     return { ...state, fieldState: addFieldReducer(state.fieldState, action) };
   }
 
+  // ADD_FIM_GRUPPE
+  if (action.type === ADD_FIM_GRUPPE) {
+    return { ...state, fieldState: fimGruppeReducer(state.fieldState, action) };
+  }
+
   // REMOVE_FIELD
   if (action.type === REMOVE_FIELD) {
     return { ...state, fieldState: removeFieldReducer(state.fieldState, action) };
@@ -460,9 +469,27 @@ export const editorReducer = (
     return { ...state, fieldState: loadTemplateReducer(state.fieldState, action) };
   }
 
-  // UPDATE_FIELD_PROPERTY
-  if (action.type === UPDATE_FIELD_PROPERTY) {
-    return { ...state, fieldState: fieldPropertiesReducer(state.fieldState, action) };
+  // SET_FORM_METADATA
+  if (action.type === SET_FORM_METADATA) {
+    const payload = (action as any).payload;
+    const patch: Record<string, unknown> = {};
+    if (payload.title        !== undefined) patch['title']          = payload.title;
+    if (payload.description  !== undefined) patch['description']    = payload.description;
+    if (payload.publisher    !== undefined) patch['x-publisher']    = payload.publisher;
+    if (payload.legalBasis   !== undefined) patch['x-legal-basis']  = payload.legalBasis;
+    if (payload.version      !== undefined) patch['x-version']      = payload.version;
+    if (payload.validFrom    !== undefined) patch['x-valid-from']   = payload.validFrom;
+    // Durchreichen beliebiger x-* Felder (z. B. x-translations)
+    for (const [k, v] of Object.entries(payload)) {
+      if (k.startsWith('x-') && !(k in patch)) patch[k] = v;
+    }
+    const schema = { ...state.fieldState.schema, ...patch };
+    return { ...state, fieldState: { ...state.fieldState, schema } };
+  }
+
+  // SET_FIELD_RULE + UPDATE_FIELD_PROPERTY
+  if (action.type === SET_FIELD_RULE || action.type === UPDATE_FIELD_PROPERTY) {
+    return { ...state, fieldState: fieldPropertiesReducer(state.fieldState, action as any) };
   }
 
   // Bestehende Actions

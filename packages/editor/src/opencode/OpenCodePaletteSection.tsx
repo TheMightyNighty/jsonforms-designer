@@ -8,6 +8,7 @@
 import {
   Box,
   CircularProgress,
+  Collapse,
   Divider,
   Tooltip,
   Typography,
@@ -92,6 +93,7 @@ export function OpenCodePaletteSection({
   const { t } = useI18n();
   const [bausteine, setBausteine] = useState<OpenCodeBaustein[]>([]);
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     service.getBausteine().then((b) => {
@@ -100,45 +102,65 @@ export function OpenCodePaletteSection({
     });
   }, [service]);
 
-  const validators = bausteine.filter((b) => b.kategorie === 'validator');
+  const validators  = bausteine.filter((b) => b.kategorie === 'validator');
   const uiBausteine = bausteine.filter((b) => b.kategorie === 'ui-baustein');
 
   return (
     <Box>
       <Divider sx={{ my: 1.5 }} />
-      <Typography
-        variant="caption"
+
+      {/* Einklappbarer Header */}
+      <Box
+        onClick={() => setOpen((v) => !v)}
         sx={{
-          px: 1.5, color: 'text.disabled', fontWeight: 500,
-          textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', mb: 0.5,
+          display: 'flex', alignItems: 'center', gap: 0.5,
+          px: 1.5, py: 0.5, cursor: 'pointer', userSelect: 'none',
+          borderRadius: 1, '&:hover': { backgroundColor: 'action.hover' },
         }}
       >
-        OpenCode
-      </Typography>
-
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-          <CircularProgress size={20} />
-        </Box>
-      )}
-
-      {!loading && validators.length > 0 && (
-        <Box role="group" aria-label="Validatoren">
-          <Typography variant="caption" sx={{ px: 1.5, color: 'text.disabled', display: 'block', mt: 1, mb: 0.25, fontSize: '0.68rem' }}>
-            {t.palette.validators}
+        <Box
+          component="i"
+          className={`ti ti-chevron-${open ? 'down' : 'right'}`}
+          sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }}
+        />
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.disabled', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}
+        >
+          OpenCode
+        </Typography>
+        {!loading && (
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.68rem' }}>
+            ({bausteine.length})
           </Typography>
-          {validators.map((b) => <OpenCodeItem key={b.id} baustein={b} />)}
-        </Box>
-      )}
+        )}
+      </Box>
 
-      {!loading && uiBausteine.length > 0 && (
-        <Box role="group" aria-label="UI-Bausteine" sx={{ mt: 1 }}>
-          <Typography variant="caption" sx={{ px: 1.5, color: 'text.disabled', display: 'block', mb: 0.25, fontSize: '0.68rem' }}>
-            {t.palette.uiBausteine}
-          </Typography>
-          {uiBausteine.map((b) => <OpenCodeItem key={b.id} baustein={b} />)}
-        </Box>
-      )}
+      <Collapse in={open} timeout={150}>
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <CircularProgress size={18} />
+          </Box>
+        )}
+
+        {!loading && validators.length > 0 && (
+          <Box role="group" aria-label="Validatoren">
+            <Typography variant="caption" sx={{ px: 1.5, color: 'text.disabled', display: 'block', mt: 1, mb: 0.25, fontSize: '0.68rem' }}>
+              {t.palette.validators}
+            </Typography>
+            {validators.map((b) => <OpenCodeItem key={b.id} baustein={b} />)}
+          </Box>
+        )}
+
+        {!loading && uiBausteine.length > 0 && (
+          <Box role="group" aria-label="UI-Bausteine" sx={{ mt: 1 }}>
+            <Typography variant="caption" sx={{ px: 1.5, color: 'text.disabled', display: 'block', mb: 0.25, fontSize: '0.68rem' }}>
+              {t.palette.uiBausteine}
+            </Typography>
+            {uiBausteine.map((b) => <OpenCodeItem key={b.id} baustein={b} />)}
+          </Box>
+        )}
+      </Collapse>
     </Box>
   );
 }

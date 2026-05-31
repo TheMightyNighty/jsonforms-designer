@@ -1,7 +1,8 @@
 import { materialCells, materialRenderers } from '@jsonforms/material-renderers';
 import { ThemeProvider, createTheme, useTheme } from '@mui/material/styles';
 import { JsonForms } from '@jsonforms/react';
-import { Alert, Box } from '@mui/material';
+import { Alert, Box, Button, Chip, Step, StepLabel, Stepper, Tooltip } from '@mui/material';
+import PrintIcon from '@mui/icons-material/Print';
 import { useState, useMemo } from 'react';
 
 import { FieldAwareState, FormTab } from '../../core/model/addFieldReducer';
@@ -192,48 +193,96 @@ interface PreviewPanelProps {
 }
 
 export function PreviewPanel({ fieldState, initialData = {} }: PreviewPanelProps) {
-  const [data, setData] = useState<Record<string, unknown>>(initialData);
+  const [data, setData]       = useState<Record<string, unknown>>(initialData);
+  const [activeStep, setActiveStep] = useState(0);
+
   const hasContent =
     Object.keys(fieldState.schema.properties ?? {}).length > 0 ||
     fieldState.uiSchema.elements.length > 0;
+
   const previewSchema   = useMemo(() => buildPreviewSchema(fieldState), [fieldState]);
   const previewUiSchema = useMemo(() => buildPreviewUiSchema(fieldState), [fieldState]);
   const showLineNumbers = fieldState.lineNumbersEnabled;
-  const hasColors = Object.keys(fieldState.sectionColors).length > 0;
+  const hasColors       = Object.keys(fieldState.sectionColors).length > 0;
+  const hasTabs         = fieldState.tabs.length > 1;
+  const formTitle       = (fieldState.schema as any).title;
+
+  // Toolbar (Print + Formular-Titel)
+  const toolbar = (
+    <Box
+      className="no-print"
+      sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1, borderBottom: '1px solid', borderColor: 'divider', gap: 1 }}
+    >
+      {formTitle && (
+        <Chip label={formTitle} size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+      )}
+      <Box sx={{ flex: 1 }} />
+      <Tooltip title="Formular drucken (Strg+P)">
+        <Button size="small" startIcon={<PrintIcon />} onClick={() => window.print()} variant="outlined">
+          Drucken
+        </Button>
+      </Tooltip>
+    </Box>
+  );
 
   if (!hasContent) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="info">
-          Noch keine Felder vorhanden. Im visuellen Modus Felder aus der Palette hinzufügen.
-        </Alert>
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {toolbar}
+        <Box sx={{ p: 3 }}>
+          <Alert severity="info">
+            Noch keine Felder vorhanden. Im visuellen Modus Felder aus der Palette hinzufügen.
+          </Alert>
+        </Box>
       </Box>
     );
   }
 
+  // Seitenumbruch-Stepper (mehrstufige Formulare)
+  const stepper = hasTabs ? (
+    <Box className="no-print" sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+      <Stepper activeStep={activeStep} alternativeLabel>
+        {fieldState.tabs.map((tab, i) => (
+          <Step key={i} completed={i < activeStep} onClick={() => setActiveStep(i)}
+            sx={{ cursor: 'pointer' }}>
+            <StepLabel>{tab.label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+    </Box>
+  ) : null;
+
   if (showLineNumbers || hasColors) {
     return (
-      <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
-        <PreviewWrapper
-          elements={fieldState.uiSchema.elements as any[]}
-          schema={previewSchema}
-          lineNumbers={showLineNumbers}
-          sectionColors={fieldState.sectionColors}
-        />
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {toolbar}
+        {stepper}
+        <Box sx={{ flex: 1, p: 2, overflowY: 'auto' }} className="print-area">
+          <PreviewWrapper
+            elements={fieldState.uiSchema.elements as any[]}
+            schema={previewSchema}
+            lineNumbers={showLineNumbers}
+            sectionColors={fieldState.sectionColors}
+          />
+        </Box>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
-      <JsonForms
-        schema={previewSchema as any}
-        uischema={previewUiSchema as any}
-        data={data}
-        renderers={materialRenderers}
-        cells={materialCells}
-        onChange={({ data: d }) => setData(d)}
-      />
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {toolbar}
+      {stepper}
+      <Box sx={{ flex: 1, p: 2, overflowY: 'auto' }} className="print-area">
+        <JsonForms
+          schema={previewSchema as any}
+          uischema={previewUiSchema as any}
+          data={data}
+          renderers={materialRenderers}
+          cells={materialCells}
+          onChange={({ data: d }) => setData(d)}
+        />
+      </Box>
     </Box>
   );
 }
