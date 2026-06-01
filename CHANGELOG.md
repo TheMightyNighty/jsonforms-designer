@@ -7,6 +7,24 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+---
+
+## [0.2.1] — 2026-06-01
+
+### Sicherheit
+- Alle bekannten Abhängigkeits-CVEs behoben (`npm audit`: 7 moderate → 0): `vitest` auf 3.x angehoben; die Monaco-Runtime wird auf die auditierte Version `0.52.2` gepinnt statt ungepinnt vom CDN geladen (umgeht die DOMPurify-Advisories der Monaco-Builds ≥ 0.54).
+- **Tabler-Icons** werden self-hosted gebündelt statt ohne Subresource Integrity vom CDN geladen.
+- **Content-Security-Policy** für den Produktions-Build ergänzt (greift nur im Build, damit der Dev-HMR funktioniert).
+- Schutz gegen **Prototype Pollution** (`__proto__`/`constructor`/`prototype`) beim Datei-Import und beim Laden aus `localStorage`.
+- Clipboard nutzt die `navigator.clipboard`-API mit Legacy-Fallback.
+
+### Dokumentiert
+- **FimApiService**: Vertrauensanforderung an `baseUrl`/`headers` (Schutz vor SSRF / Credential-Leak) im Code dokumentiert.
+
+---
+
+## [0.2.0] — 2026-05-31
+
 ### Hinzugefügt
 - **FIM-Bausteine-Integration**: Vollständige Anbindung an das Föderale Informationsmanagement (FIM) über die FitKo-API (`fimportal.de/api/v1`). Datenfelder und Datenfeldgruppen werden per Drag & Drop in den Editor übernommen.
 - **EditorConfig**: Props-basierte Konfigurationsschicht am `<JsonFormsEditor>`-Component. Module (FIM, OpenCode) sowie Palette-Defaults sind vollständig konfigurierbar.
@@ -48,5 +66,7 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - OpenCode-Integration (Validatoren, UI-Bausteine)
 - DE/EN-Lokalisierung
 
-[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/releases/tag/v0.1.0

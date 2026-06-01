@@ -156,6 +156,10 @@ export class FimApiService implements FimService {
   private readonly normGruppe: (raw: Record<string, unknown>) => FimDatenfeldgruppe;
 
   constructor(options: FimApiOptions = {}) {
+    // SECURITY: `baseUrl` and `headers` must come from trusted configuration
+    // only. `headers` (e.g. an Authorization token) is sent with every request
+    // to `baseUrl`; deriving either from untrusted/user-controlled input would
+    // allow SSRF and credential exfiltration to an attacker-chosen host.
     this.baseUrl     = (options.baseUrl ?? 'https://fimportal.de/api/v1').replace(/\/$/, '');
     this.endpoints   = {
       datenfelder:      options.endpoints?.datenfelder      ?? '/fields',

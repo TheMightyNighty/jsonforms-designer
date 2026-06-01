@@ -11,6 +11,7 @@ import { FieldAwareState } from '../model/addFieldReducer';
 import { useI18n } from '../../i18n';
 import { FlatElement, fromLegacy, toLegacy } from '../model/uiElements';
 import { FormattedJson } from './Formatted';
+import { sanitizeParsedJson } from '../util/sanitizeJson';
 import { downloadXdf } from '../util/xdfExport';
 
 interface ImportExportDialogProps {
@@ -83,7 +84,7 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const parsed = JSON.parse(ev.target?.result as string);
+        const parsed = sanitizeParsedJson(JSON.parse(ev.target?.result as string));
         if (parsed?.schema && parsed?.uiSchema) {
           const importedElements = buildImportElements(parsed.uiSchema);
           onImport({

@@ -19,6 +19,10 @@ export * as treeUtil from './core/util/tree';
 export * from './core/util/generators/uiSchema';
 
 export const EDITOR_VERSION = '0.1.0';
+
+// Side effect: pin the Monaco runtime version before any editor mounts.
+import './text-editor/monacoLoader';
+
 export * from './text-editor';
 export * from './core/jsonschema';
 export * from './properties';

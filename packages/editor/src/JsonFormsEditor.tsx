@@ -20,6 +20,7 @@ import {
 } from './core/model/historyReducer';
 import { EditorAction } from './core/model/actions';
 import { SelectedElement } from './core/selection';
+import { sanitizeParsedJson } from './core/util/sanitizeJson';
 import { tryFindByUUID } from './core/util/schemasUtil';
 import { defaultEditorRenderers } from './editor';
 import { JsonFormsEditorUi } from './JsonFormsEditorUi';
@@ -86,7 +87,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
           try {
         const saved = localStorage.getItem('jfd_fieldState_v1');
         if (saved) {
-          const parsed = JSON.parse(saved);
+          const parsed = sanitizeParsedJson(JSON.parse(saved));
           if (parsed?.schema && parsed?.uiSchema) {
             base.fieldState = {
               schema: parsed.schema,
