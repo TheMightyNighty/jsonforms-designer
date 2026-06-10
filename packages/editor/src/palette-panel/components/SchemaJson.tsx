@@ -20,8 +20,13 @@ import { copyToClipBoard } from '../../core/util/clipboard';
 import { env } from '../../env';
 import { JsonEditorDialog, TextType } from '../../text-editor';
 
-interface UpdateOk { success: true; }
-interface UpdateFail { success: false; message: string; }
+interface UpdateOk {
+  success: true;
+}
+interface UpdateFail {
+  success: false;
+  message: string;
+}
 export type UpdateResult = UpdateOk | UpdateFail;
 
 interface SchemaJsonProps {
@@ -33,7 +38,11 @@ interface SchemaJsonProps {
 }
 
 export const SchemaJson: React.FC<SchemaJsonProps> = ({
-  title, schema, debugSchema, type, updateSchema,
+  title,
+  schema,
+  debugSchema,
+  type,
+  updateSchema,
 }) => {
   const [showSchemaEditor, setShowSchemaEditor] = useState(false);
   const [updateErrorText, setUpdateErrorText] = useState('');
@@ -42,7 +51,10 @@ export const SchemaJson: React.FC<SchemaJsonProps> = ({
 
   const onApply = (newSchema: unknown) => {
     const result = updateSchema(newSchema);
-    if (result.success) { setShowSchemaEditor(false); return; }
+    if (result.success) {
+      setShowSchemaEditor(false);
+      return;
+    }
     setUpdateErrorText(result.message);
   };
 
@@ -50,12 +62,19 @@ export const SchemaJson: React.FC<SchemaJsonProps> = ({
     <>
       <Toolbar>
         <IconButton
-          onClick={() => copyToClipBoard(showDebugSchema && debugSchema ? debugSchema : schema)}
+          onClick={() =>
+            copyToClipBoard(
+              showDebugSchema && debugSchema ? debugSchema : schema,
+            )
+          }
           data-cy="copy-clipboard"
         >
           <ContentCopyIcon />
         </IconButton>
-        <IconButton onClick={() => setShowSchemaEditor(true)} data-cy="edit-schema">
+        <IconButton
+          onClick={() => setShowSchemaEditor(true)}
+          data-cy="edit-schema"
+        >
           <EditIcon />
         </IconButton>
         {showDebugControls && (

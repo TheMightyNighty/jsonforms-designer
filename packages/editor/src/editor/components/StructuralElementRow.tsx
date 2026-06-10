@@ -1,11 +1,18 @@
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Alert, Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
-import { useEditorContext } from '../../core/context';
-import { useI18n } from '../../i18n';
+import {
+  Alert,
+  Box,
+  Chip,
+  IconButton,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { Dispatch } from 'react';
 
-import { createRemoveFieldAction } from '../../core/model/addFieldActions';
+import { useEditorContext } from '../../core/context';
 import { EditorAction } from '../../core/model/actions';
+import { createRemoveFieldAction } from '../../core/model/addFieldActions';
+import { useI18n } from '../../i18n';
 
 export interface StructuralElement {
   scope: string;
@@ -22,7 +29,10 @@ interface StructuralElementRowProps {
 }
 
 export function StructuralElementRow({
-  el, isSelected, onSelect, dispatch,
+  el,
+  isSelected,
+  onSelect,
+  dispatch,
 }: StructuralElementRowProps) {
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,23 +69,40 @@ export function StructuralElementRow({
   if (el.type === 'HorizontalLayout') {
     const widths: number[] = (el.options?.widths as number[]) ?? [];
     const cols = widths.length > 0 ? widths.length : 2;
-    const colLabels = widths.length > 0
-      ? widths.map((w) => `${w} Teil${w > 1 ? 'e' : ''}`)
-      : Array(cols).fill('1 Teil');
+    const colLabels =
+      widths.length > 0
+        ? widths.map((w) => `${w} Teil${w > 1 ? 'e' : ''}`)
+        : Array(cols).fill('1 Teil');
 
     return (
       <Box
         onClick={() => onSelect(el.scope)}
-        sx={{ ...baseSx, p: 1, backgroundColor: isSelected ? 'action.selected' : 'action.hover' }}
-        role="button" tabIndex={0}
+        sx={{
+          ...baseSx,
+          p: 1,
+          backgroundColor: isSelected ? 'action.selected' : 'action.hover',
+        }}
+        role="button"
+        tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-          <Box component="i" className="ti ti-layout-columns" sx={{ fontSize: 14, color: 'primary.main' }} />
-          <Typography variant="caption" sx={{ fontWeight: 600, color: 'primary.main', flex: 1 }}>
+          <Box
+            component="i"
+            className="ti ti-layout-columns"
+            sx={{ fontSize: 14, color: 'primary.main' }}
+          />
+          <Typography
+            variant="caption"
+            sx={{ fontWeight: 600, color: 'primary.main', flex: 1 }}
+          >
             {cols} Spalten{widths.length > 0 ? ` (${widths.join(':')})` : ''}
           </Typography>
-          <Chip label="Layout" size="small" sx={{ height: 16, fontSize: '0.6rem' }} />
+          <Chip
+            label="Layout"
+            size="small"
+            sx={{ height: 16, fontSize: '0.6rem' }}
+          />
           <DeleteBtn />
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -94,7 +121,11 @@ export function StructuralElementRow({
                 justifyContent: 'center',
               }}
             >
-              <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                sx={{ fontSize: '0.65rem' }}
+              >
                 {lbl}
               </Typography>
             </Box>
@@ -109,16 +140,31 @@ export function StructuralElementRow({
     return (
       <Box
         onClick={() => onSelect(el.scope)}
-        sx={{ ...baseSx, p: 1, backgroundColor: isSelected ? 'action.selected' : (bgColor ?? 'transparent') }}
-        role="button" tabIndex={0}
+        sx={{
+          ...baseSx,
+          p: 1,
+          backgroundColor: isSelected
+            ? 'action.selected'
+            : (bgColor ?? 'transparent'),
+        }}
+        role="button"
+        tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box component="i" className="ti ti-layout-list" sx={{ fontSize: 14, color: 'secondary.main' }} />
+          <Box
+            component="i"
+            className="ti ti-layout-list"
+            sx={{ fontSize: 14, color: 'secondary.main' }}
+          />
           <Typography variant="caption" sx={{ fontWeight: 600, flex: 1 }}>
             {el.label ?? 'Gruppe'}
           </Typography>
-          <Chip label="Gruppe" size="small" sx={{ height: 16, fontSize: '0.6rem' }} />
+          <Chip
+            label="Gruppe"
+            size="small"
+            sx={{ height: 16, fontSize: '0.6rem' }}
+          />
           <DeleteBtn />
         </Box>
       </Box>
@@ -131,11 +177,25 @@ export function StructuralElementRow({
 
     if (variant === 'info') {
       return (
-        <Box onClick={() => onSelect(el.scope)} sx={{ ...baseSx, cursor: 'pointer' }}
-          role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}>
+        <Box
+          onClick={() => onSelect(el.scope)}
+          sx={{ ...baseSx, cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
+        >
           <Alert severity="info" sx={{ py: 0.25, pr: 4, position: 'relative' }}>
-            <Typography variant="caption">{el.label ?? 'Information'}</Typography>
-            <Box sx={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)' }}>
+            <Typography variant="caption">
+              {el.label ?? 'Information'}
+            </Typography>
+            <Box
+              sx={{
+                position: 'absolute',
+                right: 4,
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
+            >
               <DeleteBtn />
             </Box>
           </Alert>
@@ -145,11 +205,26 @@ export function StructuralElementRow({
 
     if (variant === 'warning') {
       return (
-        <Box onClick={() => onSelect(el.scope)} sx={{ ...baseSx, cursor: 'pointer' }}
-          role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}>
-          <Alert severity="warning" sx={{ py: 0.25, pr: 4, position: 'relative' }}>
+        <Box
+          onClick={() => onSelect(el.scope)}
+          sx={{ ...baseSx, cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
+        >
+          <Alert
+            severity="warning"
+            sx={{ py: 0.25, pr: 4, position: 'relative' }}
+          >
             <Typography variant="caption">{el.label ?? 'Hinweis'}</Typography>
-            <Box sx={{ position: 'absolute', right: 4, top: '50%', transform: 'translateY(-50%)' }}>
+            <Box
+              sx={{
+                position: 'absolute',
+                right: 4,
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
+            >
               <DeleteBtn />
             </Box>
           </Alert>
@@ -161,16 +236,37 @@ export function StructuralElementRow({
     return (
       <Box
         onClick={() => onSelect(el.scope)}
-        sx={{ ...baseSx, px: 1.5, py: 0.75, display: 'flex', alignItems: 'center', gap: 1,
-          backgroundColor: isSelected ? 'action.selected' : 'transparent' }}
-        role="button" tabIndex={0}
+        sx={{
+          ...baseSx,
+          px: 1.5,
+          py: 0.75,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          backgroundColor: isSelected ? 'action.selected' : 'transparent',
+        }}
+        role="button"
+        tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
       >
-        <Box component="i" className="ti ti-text-size" sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0 }} />
-        <Typography variant="body2" sx={{ flex: 1, fontStyle: 'italic', color: 'text.secondary' }} noWrap>
+        <Box
+          component="i"
+          className="ti ti-text-size"
+          sx={{ fontSize: 14, color: 'text.disabled', flexShrink: 0 }}
+        />
+        <Typography
+          variant="body2"
+          sx={{ flex: 1, fontStyle: 'italic', color: 'text.secondary' }}
+          noWrap
+        >
           {el.label ?? 'Text'}
         </Typography>
-        <Chip label="Text" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.6rem' }} />
+        <Chip
+          label="Text"
+          size="small"
+          variant="outlined"
+          sx={{ height: 16, fontSize: '0.6rem' }}
+        />
         <DeleteBtn />
       </Box>
     );
@@ -181,16 +277,31 @@ export function StructuralElementRow({
     return (
       <Box
         onClick={() => onSelect(el.scope)}
-        sx={{ ...baseSx, p: 1, backgroundColor: isSelected ? 'action.selected' : (bgColor ?? 'transparent') }}
-        role="button" tabIndex={0}
+        sx={{
+          ...baseSx,
+          p: 1,
+          backgroundColor: isSelected
+            ? 'action.selected'
+            : (bgColor ?? 'transparent'),
+        }}
+        role="button"
+        tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box component="i" className="ti ti-layout-list" sx={{ fontSize: 14, color: 'secondary.main' }} />
+          <Box
+            component="i"
+            className="ti ti-layout-list"
+            sx={{ fontSize: 14, color: 'secondary.main' }}
+          />
           <Typography variant="caption" sx={{ fontWeight: 600, flex: 1 }}>
             {el.label ?? 'Gruppe'}
           </Typography>
-          <Chip label="Gruppe" size="small" sx={{ height: 16, fontSize: '0.6rem' }} />
+          <Chip
+            label="Gruppe"
+            size="small"
+            sx={{ height: 16, fontSize: '0.6rem' }}
+          />
           <DeleteBtn />
         </Box>
       </Box>
@@ -199,28 +310,56 @@ export function StructuralElementRow({
 
   // Abschnittskopf (section-header)
   if (el.type === 'Label' && el.options?.variant === 'section-header') {
-    const bgColor = (el.options?.bgColor as string) ?? fieldState.sectionColors[el.scope] ?? '#004A99';
+    const bgColor =
+      (el.options?.bgColor as string) ??
+      fieldState.sectionColors[el.scope] ??
+      '#004A99';
     const textColor = (el.options?.textColor as string) ?? '#ffffff';
     return (
       <Box
         onClick={() => onSelect(el.scope)}
-        sx={{ ...baseSx, p: 0, overflow: 'hidden', cursor: 'pointer', backgroundColor: isSelected ? undefined : bgColor }}
-        role="button" tabIndex={0}
+        sx={{
+          ...baseSx,
+          p: 0,
+          overflow: 'hidden',
+          cursor: 'pointer',
+          backgroundColor: isSelected ? undefined : bgColor,
+        }}
+        role="button"
+        tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
       >
-        <Box sx={{
-          display: 'flex', alignItems: 'center', gap: 1,
-          px: 1.5, py: 0.75,
-          backgroundColor: isSelected ? 'action.selected' : bgColor,
-          borderRadius: 0.5,
-        }}>
-          <Typography variant="body2" sx={{ flex: 1, fontWeight: 700, color: isSelected ? 'text.primary' : textColor }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 1.5,
+            py: 0.75,
+            backgroundColor: isSelected ? 'action.selected' : bgColor,
+            borderRadius: 0.5,
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              flex: 1,
+              fontWeight: 700,
+              color: isSelected ? 'text.primary' : textColor,
+            }}
+          >
             {el.label ?? 'Abschnittstitel'}
           </Typography>
-          <Chip label="Abschnitt" size="small"
-            sx={{ height: 16, fontSize: '0.6rem',
+          <Chip
+            label="Abschnitt"
+            size="small"
+            sx={{
+              height: 16,
+              fontSize: '0.6rem',
               backgroundColor: isSelected ? 'default' : 'rgba(255,255,255,0.2)',
-              color: isSelected ? 'text.primary' : textColor }} />
+              color: isSelected ? 'text.primary' : textColor,
+            }}
+          />
           <DeleteBtn />
         </Box>
       </Box>
@@ -232,19 +371,44 @@ export function StructuralElementRow({
     return (
       <Box
         onClick={() => onSelect(el.scope)}
-        sx={{ ...baseSx, px: 1.5, py: 0.5, display: 'flex', alignItems: 'flex-start', gap: 1,
+        sx={{
+          ...baseSx,
+          px: 1.5,
+          py: 0.5,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 1,
           backgroundColor: isSelected ? 'action.selected' : 'rgba(0,0,0,0.02)',
-          borderLeft: '3px solid', borderLeftColor: isSelected ? 'primary.main' : 'text.disabled',
+          borderLeft: '3px solid',
+          borderLeftColor: isSelected ? 'primary.main' : 'text.disabled',
           cursor: 'pointer',
         }}
-        role="button" tabIndex={0}
+        role="button"
+        tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(el.scope)}
       >
-        <Box component="i" className="ti ti-notes" sx={{ fontSize: 13, color: 'text.disabled', flexShrink: 0, mt: 0.1 }} />
-        <Typography variant="caption" sx={{ flex: 1, color: 'text.secondary', fontStyle: 'italic', fontSize: '0.72rem' }} >
+        <Box
+          component="i"
+          className="ti ti-notes"
+          sx={{ fontSize: 13, color: 'text.disabled', flexShrink: 0, mt: 0.1 }}
+        />
+        <Typography
+          variant="caption"
+          sx={{
+            flex: 1,
+            color: 'text.secondary',
+            fontStyle: 'italic',
+            fontSize: '0.72rem',
+          }}
+        >
           {el.label ?? 'Annotation'}
         </Typography>
-        <Chip label="Hinweis" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.6rem' }} />
+        <Chip
+          label="Hinweis"
+          size="small"
+          variant="outlined"
+          sx={{ height: 16, fontSize: '0.6rem' }}
+        />
         <DeleteBtn />
       </Box>
     );

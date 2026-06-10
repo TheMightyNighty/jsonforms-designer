@@ -6,10 +6,10 @@
  * ---------------------------------------------------------------------
  */
 import {
+  BaseUISchemaElement,
   Categorization,
   Category,
   ControlElement,
-  BaseUISchemaElement,
   Layout,
 } from '@jsonforms/core';
 import { cloneDeep } from 'lodash';
@@ -27,8 +27,7 @@ import {
 import { getHierarchy, TreeElement } from '../util/tree';
 
 export interface EditorUISchemaElement
-  extends BaseUISchemaElement,
-    TreeElement<EditorUISchemaElement> {
+  extends BaseUISchemaElement, TreeElement<EditorUISchemaElement> {
   linkedSchemaElement?: string;
 }
 
@@ -37,8 +36,7 @@ export interface EditorCategoryElement extends Category, EditorUISchemaElement {
 }
 
 export interface CategorizationLayout
-  extends Omit<Categorization, 'elements'>,
-    EditorUISchemaElement {
+  extends Omit<Categorization, 'elements'>, EditorUISchemaElement {
   type: 'Categorization';
   elements: EditorCategoryElement[];
 }
@@ -48,13 +46,12 @@ export interface EditorControl extends ControlElement, EditorUISchemaElement {
 }
 
 export interface EditorLayout
-  extends Omit<Layout, 'elements'>,
-    EditorUISchemaElement {
+  extends Omit<Layout, 'elements'>, EditorUISchemaElement {
   elements: EditorUISchemaElement[];
 }
 
 export const getUiSchemaChildren = (
-  schemaElement: EditorUISchemaElement
+  schemaElement: EditorUISchemaElement,
 ): Array<EditorUISchemaElement> => {
   const children: Array<EditorUISchemaElement> = [];
   if (isEditorLayout(schemaElement)) {
@@ -72,10 +69,12 @@ export const hasChildren = (schemaElement: EditorUISchemaElement): boolean => {
  * like 'parent' and 'linked schema elements'.
  */
 export const buildEditorUiSchemaTree = (
-  uiSchema: BaseUISchemaElement
-): EditorUISchemaElement => {
-  // cast to any so we can freely modify it
-  const editorUiSchema: any = cloneDeep(uiSchema);
+  uiSchema: BaseUISchemaElement | undefined,
+): EditorUISchemaElement | undefined => {
+  if (!uiSchema) {
+    return undefined;
+  }
+  const editorUiSchema = cloneDeep(uiSchema) as EditorUISchemaElement;
   traverse(editorUiSchema, (current, parent) => {
     if (current) {
       current.parent = parent;
@@ -90,7 +89,7 @@ export const buildEditorUiSchemaTree = (
  * related fields.
  */
 export const buildUiSchema = (
-  uiSchema: EditorUISchemaElement
+  uiSchema: EditorUISchemaElement,
 ): BaseUISchemaElement => {
   const clone: EditorUISchemaElement = cloneDeep(uiSchema);
   traverse(clone, (current) => {
@@ -103,17 +102,18 @@ export const buildUiSchema = (
 };
 
 export const buildDebugUISchema = (
-  uiSchema: EditorUISchemaElement
+  uiSchema: EditorUISchemaElement,
 ): BaseUISchemaElement => {
-  const clone: any = cloneDeep(uiSchema);
+  const clone = cloneDeep(uiSchema);
   traverse(clone, (current) => {
-    current.parent = current.parent?.uuid;
+    // Für die Debug-Ausgabe wird die Parent-Referenz durch ihre UUID ersetzt.
+    (current as { parent?: unknown }).parent = current.parent?.uuid;
   });
   return clone;
 };
 
 export const getUISchemaPath = (
-  uiSchema: EditorUISchemaElement
+  uiSchema: EditorUISchemaElement,
 ): string | PathError => {
   const root = getRoot(uiSchema);
   const path = calculatePath(root, uiSchema);
@@ -128,7 +128,7 @@ export const getUISchemaPath = (
  * Returns the closes element whose detail contains the given element
  */
 export const getDetailContainer = (
-  element: EditorUISchemaElement
+  element: EditorUISchemaElement,
 ): EditorUISchemaElement | undefined => {
   const parentIsDetail = (el: EditorUISchemaElement) =>
     el.parent?.options?.detail?.uuid === el.uuid;
@@ -147,11 +147,11 @@ export const containsControls = (element: EditorUISchemaElement): boolean =>
         acc.containsControls = true;
       }
     },
-    { containsControls: false }
+    { containsControls: false },
   ).containsControls;
 
 export const cleanUiSchemaLinks = (
-  element: EditorUISchemaElement | undefined
+  element: EditorUISchemaElement | undefined,
 ): EditorUISchemaElement | undefined => {
   if (!element) {
     return element;

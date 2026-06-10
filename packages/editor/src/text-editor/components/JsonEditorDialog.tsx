@@ -3,6 +3,7 @@
  * Licensed under MIT
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  */
+import Editor, { Monaco, OnMount } from '@monaco-editor/react';
 import CloseIcon from '@mui/icons-material/Close';
 import AppBar from '@mui/material/AppBar';
 import Button from '@mui/material/Button';
@@ -11,9 +12,8 @@ import DialogContent from '@mui/material/DialogContent';
 import Fade from '@mui/material/Fade';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
 import type { TransitionProps } from '@mui/material/transitions';
-import Editor, { Monaco, OnMount } from '@monaco-editor/react';
+import Typography from '@mui/material/Typography';
 import React, { useCallback, useMemo } from 'react';
 
 import {
@@ -24,7 +24,7 @@ import {
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & { children: React.ReactElement },
-  ref: React.Ref<unknown>
+  ref: React.Ref<unknown>,
 ) {
   return <Fade ref={ref} {...props} />;
 });
@@ -47,7 +47,7 @@ export const JsonEditorDialog: React.FC<JsonEditorDialogProps> = ({
   onApply,
   onCancel,
 }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const modelUri = useMemo(() => {
     // Uri is accessed via the monaco instance at beforeMount time
     return 'json://core/specification/schema.json';
@@ -61,7 +61,7 @@ export const JsonEditorDialog: React.FC<JsonEditorDialogProps> = ({
         configureJsonSchemaValidation(monaco, uri);
       }
     },
-    [type, modelUri]
+    [type, modelUri],
   );
 
   // Memoize initial value
@@ -70,7 +70,7 @@ export const JsonEditorDialog: React.FC<JsonEditorDialogProps> = ({
       initialContent !== undefined
         ? JSON.stringify(initialContent, null, 2)
         : '',
-    [initialContent]
+    [initialContent],
   );
 
   // onMount replaces editorDidMount: set model and focus
@@ -83,7 +83,7 @@ export const JsonEditorDialog: React.FC<JsonEditorDialogProps> = ({
       }
       editor.focus();
     },
-    [modelUri, initialValue]
+    [modelUri, initialValue],
   );
 
   // Get value from editor on apply — type extracted from OnMount signature
@@ -94,7 +94,7 @@ export const JsonEditorDialog: React.FC<JsonEditorDialogProps> = ({
       editorRef.current = editor;
       handleMount(editor, monaco);
     },
-    [handleMount]
+    [handleMount],
   );
 
   const handleApply = useCallback(() => {
@@ -147,9 +147,7 @@ export const JsonEditorDialog: React.FC<JsonEditorDialogProps> = ({
           </Button>
         </Toolbar>
       </AppBar>
-      <DialogContent
-        sx={{ overflow: 'hidden', marginTop: 2, flex: 1 }}
-      >
+      <DialogContent sx={{ overflow: 'hidden', marginTop: 2, flex: 1 }}>
         <Editor
           language="json"
           height="100%"

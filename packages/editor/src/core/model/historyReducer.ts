@@ -14,8 +14,12 @@
  *   const canRedo = historyState.future.length > 0;
  */
 
-import { EditorState, editorReducer, createInitialEditorState } from './reducer';
 import { EditorAction } from './actions';
+import {
+  createInitialEditorState,
+  editorReducer,
+  EditorState,
+} from './reducer';
 
 const MAX_HISTORY = 50;
 
@@ -27,8 +31,12 @@ export const UNDO = 'UNDO' as const;
 export const REDO = 'REDO' as const;
 export const HISTORY_WRAP = 'HISTORY_WRAP' as const;
 
-export interface UndoAction { type: typeof UNDO }
-export interface RedoAction { type: typeof REDO }
+export interface UndoAction {
+  type: typeof UNDO;
+}
+export interface RedoAction {
+  type: typeof REDO;
+}
 export interface HistoryWrapAction {
   type: typeof HISTORY_WRAP;
   action: EditorAction;
@@ -59,9 +67,9 @@ export function createInitialHistoryState(): HistoryState {
 // ---------------------------------------------------------------------------
 
 const NO_HISTORY_ACTIONS = new Set([
-  'jsonforms-editor/SET_SCHEMA',  // Initial-Load
+  'jsonforms-editor/SET_SCHEMA', // Initial-Load
   'jsonforms-editor/SET_UISCHEMA', // Initial-Load
-  'SET_ACTIVE_TAB',               // Tab-Navigation ist kein undo-würdiger Schritt
+  'SET_ACTIVE_TAB', // Tab-Navigation ist kein undo-würdiger Schritt
 ]);
 
 // ---------------------------------------------------------------------------
@@ -70,7 +78,7 @@ const NO_HISTORY_ACTIONS = new Set([
 
 export function historyReducer(
   state: HistoryState,
-  action: HistoryAction
+  action: HistoryAction,
 ): HistoryState {
   switch (action.type) {
     case UNDO: {
@@ -106,7 +114,8 @@ export function historyReducer(
 
       const newPast = [...state.past, state.present];
       return {
-        past: newPast.length > MAX_HISTORY ? newPast.slice(-MAX_HISTORY) : newPast,
+        past:
+          newPast.length > MAX_HISTORY ? newPast.slice(-MAX_HISTORY) : newPast,
         present: nextPresent,
         future: [], // Bei neuer Aktion Future leeren
       };

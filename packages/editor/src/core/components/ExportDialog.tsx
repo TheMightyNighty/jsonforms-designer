@@ -4,6 +4,7 @@
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  */
 import Cancel from '@mui/icons-material/Cancel';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -11,7 +12,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import Box from '@mui/material/Box';
 import React, { useState } from 'react';
 
 import { FormattedJson } from './Formatted';
@@ -40,10 +40,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       maxWidth="md"
       fullWidth
     >
-      <DialogTitle
-        id="export-dialog-title"
-        sx={{ textAlign: 'center' }}
-      >
+      <DialogTitle id="export-dialog-title" sx={{ textAlign: 'center' }}>
         Export
       </DialogTitle>
       <DialogContent sx={{ maxHeight: '90vh', height: '90vh' }}>

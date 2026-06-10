@@ -5,16 +5,27 @@
  *   { "en": { "properties": { "vorname": { "title": "First name" } } },
  *     "fr": { ... } }
  */
-import {
-  Box, Button, Chip, Divider, FormControl, IconButton,
-  InputLabel, MenuItem, Select, TextField, Tooltip, Typography,
-} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import {
+  Box,
+  Button,
+  Chip,
+  Divider,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import { Dispatch, useState } from 'react';
-import { FieldAwareState } from '../core/model/addFieldReducer';
+
 import { EditorAction } from '../core/model/actions';
 import { createSetFormMetadataAction } from '../core/model/addFieldActions';
+import { FieldAwareState } from '../core/model/addFieldReducer';
 import { propertyKeyFromScope } from './fieldPropertiesActions';
 
 const SUPPORTED_LANGS: Array<{ code: string; name: string }> = [
@@ -32,10 +43,15 @@ interface FieldTranslation {
   placeholder?: string;
 }
 
-type Translations = Record<string, { properties: Record<string, FieldTranslation> }>;
+type Translations = Record<
+  string,
+  { properties: Record<string, FieldTranslation> }
+>;
 
 function getTranslations(schema: FieldAwareState['schema']): Translations {
-  return ((schema as any)['x-translations'] as Translations) ?? {};
+  return (
+    ((schema as Record<string, unknown>)['x-translations'] as Translations) ?? {}
+  );
 }
 
 interface TranslationEditorProps {
@@ -44,21 +60,27 @@ interface TranslationEditorProps {
   dispatch: Dispatch<EditorAction>;
 }
 
-export function TranslationEditor({ selectedScope, schema, dispatch }: TranslationEditorProps) {
-  const key          = propertyKeyFromScope(selectedScope);
+export function TranslationEditor({
+  selectedScope,
+  schema,
+  dispatch,
+}: TranslationEditorProps) {
+  const key = propertyKeyFromScope(selectedScope);
   const translations = getTranslations(schema);
-  const usedLangs    = Object.keys(translations);
-  const available    = SUPPORTED_LANGS.filter((l) => !usedLangs.includes(l.code));
+  const usedLangs = Object.keys(translations);
+  const available = SUPPORTED_LANGS.filter((l) => !usedLangs.includes(l.code));
 
   const [newLang, setNewLang] = useState('');
 
   function save(updated: Translations) {
-    (dispatch as any)(
-      createSetFormMetadataAction({ 'x-translations': updated } as any)
-    );
+    dispatch(createSetFormMetadataAction({ 'x-translations': updated }));
   }
 
-  function setFieldTrans(lang: string, field: keyof FieldTranslation, value: string) {
+  function setFieldTrans(
+    lang: string,
+    field: keyof FieldTranslation,
+    value: string,
+  ) {
     const next: Translations = {
       ...translations,
       [lang]: {
@@ -93,19 +115,42 @@ export function TranslationEditor({ selectedScope, schema, dispatch }: Translati
   return (
     <Box>
       <Divider sx={{ mb: 2 }} />
-      <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 600, mb: 1.5 }}>
+      <Typography
+        variant="subtitle2"
+        sx={{ color: 'text.secondary', fontWeight: 600, mb: 1.5 }}
+      >
         Übersetzungen
       </Typography>
 
       {/* Vorhandene Sprachen */}
       {usedLangs.map((lang) => {
-        const label = SUPPORTED_LANGS.find((l) => l.code === lang)?.name ?? lang.toUpperCase();
+        const label =
+          SUPPORTED_LANGS.find((l) => l.code === lang)?.name ??
+          lang.toUpperCase();
         const ft = translations[lang]?.properties?.[key] ?? {};
         return (
-          <Box key={lang} sx={{ mb: 2, p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+          <Box
+            key={lang}
+            sx={{
+              mb: 2,
+              p: 1.5,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1.5,
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Chip label={lang.toUpperCase()} size="small" sx={{ fontWeight: 700, mr: 0.5 }} />
-              <Typography variant="caption" sx={{ flex: 1, color: 'text.secondary' }}>{label}</Typography>
+              <Chip
+                label={lang.toUpperCase()}
+                size="small"
+                sx={{ fontWeight: 700, mr: 0.5 }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ flex: 1, color: 'text.secondary' }}
+              >
+                {label}
+              </Typography>
               <Tooltip title="Sprache entfernen">
                 <IconButton size="small" onClick={() => removeLang(lang)}>
                   <DeleteIcon fontSize="small" />
@@ -113,15 +158,33 @@ export function TranslationEditor({ selectedScope, schema, dispatch }: Translati
               </Tooltip>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <TextField size="small" fullWidth label="Label"
+              <TextField
+                size="small"
+                fullWidth
+                label="Label"
                 value={ft.title ?? ''}
-                onChange={(e) => setFieldTrans(lang, 'title', e.target.value)} />
-              <TextField size="small" fullWidth label="Hinweistext" multiline minRows={1}
+                onChange={(e) => setFieldTrans(lang, 'title', e.target.value)}
+              />
+              <TextField
+                size="small"
+                fullWidth
+                label="Hinweistext"
+                multiline
+                minRows={1}
                 value={ft.description ?? ''}
-                onChange={(e) => setFieldTrans(lang, 'description', e.target.value)} />
-              <TextField size="small" fullWidth label="Platzhalter"
+                onChange={(e) =>
+                  setFieldTrans(lang, 'description', e.target.value)
+                }
+              />
+              <TextField
+                size="small"
+                fullWidth
+                label="Platzhalter"
                 value={ft.placeholder ?? ''}
-                onChange={(e) => setFieldTrans(lang, 'placeholder', e.target.value)} />
+                onChange={(e) =>
+                  setFieldTrans(lang, 'placeholder', e.target.value)
+                }
+              />
             </Box>
           </Box>
         );
@@ -132,15 +195,25 @@ export function TranslationEditor({ selectedScope, schema, dispatch }: Translati
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           <FormControl size="small" sx={{ flex: 1 }}>
             <InputLabel>Sprache hinzufügen</InputLabel>
-            <Select label="Sprache hinzufügen" value={newLang}
-              onChange={(e) => setNewLang(e.target.value)}>
+            <Select
+              label="Sprache hinzufügen"
+              value={newLang}
+              onChange={(e) => setNewLang(e.target.value)}
+            >
               {available.map((l) => (
-                <MenuItem key={l.code} value={l.code}>{l.name} ({l.code})</MenuItem>
+                <MenuItem key={l.code} value={l.code}>
+                  {l.name} ({l.code})
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
-          <Button variant="outlined" size="small" startIcon={<AddIcon />}
-            onClick={addLang} disabled={!newLang}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={addLang}
+            disabled={!newLang}
+          >
             Hinzufügen
           </Button>
         </Box>

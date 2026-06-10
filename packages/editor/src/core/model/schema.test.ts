@@ -32,7 +32,9 @@ test('set uuids on nested elements', () => {
 
 test('getArrayContainer', () => {
   const array = simpleArray();
-  (array as any).items.properties.nestedArray = simpleArray();
+  (
+    array as { items: { properties: Record<string, unknown> } }
+  ).items.properties.nestedArray = simpleArray();
 
   const enrichedArray = buildSchemaTree(array) as SchemaElement;
   expect(enrichedArray).toBeTruthy();

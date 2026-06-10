@@ -5,10 +5,15 @@
 import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 import { materialCells } from '@jsonforms/material-renderers';
 import { JsonForms } from '@jsonforms/react';
-import { Grid, ThemeProvider, createTheme } from '@mui/material';
+import { createTheme,Grid, ThemeProvider } from '@mui/material';
 import React from 'react';
 
-import { useDispatch, useFieldState, useSelectedScope, useUiSchema } from '../../core/context';
+import {
+  useDispatch,
+  useFieldState,
+  useSelectedScope,
+  useUiSchema,
+} from '../../core/context';
 import { useExportSchema } from '../../core/util/hooks';
 import { EmptyEditor } from './EmptyEditor';
 import { FieldFormPreview } from './FieldFormPreview';

@@ -32,7 +32,9 @@ export const PalettePanel: React.FC = () => {
         <Tab label="UI Schema" />
       </Tabs>
       <Box sx={{ flex: 1, overflow: 'auto', pt: 1 }}>
-        {tab === 0 && <UIElementsTree elements={paletteService.getPaletteElements()} />}
+        {tab === 0 && (
+          <UIElementsTree elements={paletteService.getPaletteElements()} />
+        )}
         {tab === 1 && <SchemaTreeView schema={schema} />}
         {tab === 2 && <JsonSchemaPanel />}
         {tab === 3 && <UISchemaPanel />}

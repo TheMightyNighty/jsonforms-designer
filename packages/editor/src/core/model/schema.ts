@@ -5,23 +5,23 @@
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  * ---------------------------------------------------------------------
  */
-import { JsonSchema } from '@jsonforms/core';
+import { JsonSchema7 } from '@jsonforms/core';
 import traverse from 'json-schema-traverse';
 import { assign, cloneDeep, omit } from 'lodash';
 import { v4 as uuid } from 'uuid';
 
 import { getHierarchy, TreeElement } from '../util/tree';
 
-export const OBJECT: 'object' = 'object';
-export const ARRAY: 'array' = 'array';
-export const PRIMITIVE: 'primitive' = 'primitive';
-export const OTHER: 'other' = 'other';
+export const OBJECT = 'object' as const;
+export const ARRAY = 'array' as const;
+export const PRIMITIVE = 'primitive' as const;
+export const OTHER = 'other' as const;
 
 export type SchemaElementType = 'object' | 'array' | 'primitive' | 'other';
 
 interface SchemaElementBase extends TreeElement<SchemaElement> {
   type: SchemaElementType;
-  schema: any;
+  schema: JsonSchema7;
   other?: Map<string, SchemaElement>;
   linkedUISchemaElements?: Set<string>;
 }
@@ -51,19 +51,20 @@ export interface OtherElement extends SchemaElementBase {
 }
 
 export const getChildren = (
-  schemaElement: SchemaElement
+  schemaElement: SchemaElement,
 ): Array<SchemaElement> => {
   const children: Array<SchemaElement> = [];
   switch (schemaElement.type) {
     case OBJECT:
       children.push(...Array.from(schemaElement.properties.values()));
       break;
-    case ARRAY:
+    case ARRAY: {
       const items = Array.isArray(schemaElement.items)
         ? schemaElement.items
         : [schemaElement.items];
       children.push(...items);
       break;
+    }
   }
   if (schemaElement.other) {
     children.push(...Array.from(schemaElement.other.values()));
@@ -72,19 +73,20 @@ export const getChildren = (
 };
 
 const containsAs = (
-  schemaElement: SchemaElement
+  schemaElement: SchemaElement,
 ): Map<SchemaElement, string> => {
   const containments: [SchemaElement, string][] = [];
   switch (schemaElement.type) {
-    case OBJECT:
+    case OBJECT: {
       const propertyEntries: [SchemaElement, string][] = Array.from(
-        schemaElement.properties.entries()
+        schemaElement.properties.entries(),
       ).map(([prop, element]) => [element, `properties/${prop}`]);
       containments.push(...propertyEntries);
       break;
-    case ARRAY:
+    }
+    case ARRAY: {
       const itemEntries: [SchemaElement, string][] = Array.isArray(
-        schemaElement.items
+        schemaElement.items,
       )
         ? schemaElement.items.map((element, index) => [
             element,
@@ -93,10 +95,11 @@ const containsAs = (
         : [[schemaElement.items, 'items']];
       containments.push(...itemEntries);
       break;
+    }
   }
   if (schemaElement.other) {
     const entries: [SchemaElement, string][] = Array.from(
-      schemaElement.other.entries()
+      schemaElement.other.entries(),
     ).map(([prop, element]) => [element, prop]);
     containments.push(...entries);
   }
@@ -109,7 +112,7 @@ export const getPath = (schemaElement: SchemaElement): string => {
     return '';
   }
   return `${getPath(schemaElement.parent)}/${containsAs(
-    schemaElement.parent
+    schemaElement.parent,
   ).get(schemaElement)}`;
 };
 
@@ -122,13 +125,15 @@ export const getScope = (schemaElement: SchemaElement): string => {
     return '';
   }
   return `${getScope(schemaElement.parent)}/${containsAs(
-    schemaElement.parent
+    schemaElement.parent,
   ).get(schemaElement)}`;
 };
 
-export const toPrintableObject = (debugSchema: SchemaElement): any => {
+export const toPrintableObject = (
+  debugSchema: SchemaElement,
+): Record<string, unknown> => {
   const clone = cloneDeep(debugSchema);
-  const printableProps: any = {
+  const printableProps: Record<string, unknown> = {
     parent: debugSchema.parent?.uuid,
     linkedUISchemaElements: debugSchema.linkedUISchemaElements
       ? Array.from(debugSchema.linkedUISchemaElements.values())
@@ -140,7 +145,7 @@ export const toPrintableObject = (debugSchema: SchemaElement): any => {
         printableProps.properties = Array.from(debugSchema.properties).map(
           ([key, value]) => {
             return { name: key, value: toPrintableObject(value) };
-          }
+          },
         );
       }
       break;
@@ -175,7 +180,7 @@ export const getLabel = (schemaElement: SchemaElement) => {
   }
   if (isObjectElement(schemaElement.parent)) {
     for (const [prop, element] of Array.from(
-      schemaElement.parent.properties.entries()
+      schemaElement.parent.properties.entries(),
     )) {
       if (element === schemaElement) {
         return prop;
@@ -196,16 +201,18 @@ export const getLabel = (schemaElement: SchemaElement) => {
 };
 
 const createNewElementForType = (
-  schema: JsonSchema,
-  type: SchemaElementType
+  schema: JsonSchema7,
+  type: SchemaElementType,
 ): SchemaElement => {
   switch (type) {
-    case OBJECT:
+    case OBJECT: {
       const objectCopy = cloneDeep(omit(schema, ['properties']));
       return { type, schema: objectCopy, properties: new Map(), uuid: uuid() };
-    case ARRAY:
+    }
+    case ARRAY: {
       const arrayCopy = cloneDeep(omit(schema, ['items']));
       return { type, schema: arrayCopy, items: [], uuid: uuid() };
+    }
     case PRIMITIVE:
       return { type, schema: cloneDeep(schema), uuid: uuid() };
     default:
@@ -213,14 +220,17 @@ const createNewElementForType = (
   }
 };
 
-const createSingleElement = (schema: JsonSchema) =>
+const createSingleElement = (schema: JsonSchema7) =>
   createNewElementForType(schema, determineType(schema));
 
 const getUndefined = (): SchemaElement | undefined => undefined;
 
 export const buildSchemaTree = (
-  schema: JsonSchema
+  schema: JsonSchema7 | undefined,
 ): SchemaElement | undefined => {
+  if (!schema) {
+    return undefined;
+  }
   // workaround needed because of TS compiler issue
   // https://github.com/Microsoft/TypeScript/issues/11498
   let currentElement: SchemaElement | undefined = getUndefined();
@@ -228,13 +238,13 @@ export const buildSchemaTree = (
   traverse(schema, {
     cb: {
       pre: (
-        currentSchema: JsonSchema,
+        currentSchema: JsonSchema7,
         pointer,
         _rootSchema,
         _parentPointer,
         _parentKeyword,
         _parentSchema,
-        indexOrProp
+        indexOrProp,
       ) => {
         const newElement = createSingleElement(currentSchema);
         newElement.parent = currentElement;
@@ -275,7 +285,7 @@ export const buildSchemaTree = (
   return currentElement;
 };
 
-const determineType = (schema: JsonSchema): SchemaElementType => {
+const determineType = (schema: JsonSchema7): SchemaElementType => {
   if (!schema) {
     return OTHER;
   }
@@ -307,17 +317,19 @@ const determineType = (schema: JsonSchema): SchemaElementType => {
   return OTHER;
 };
 
-export const buildJsonSchema = (element: SchemaElement): JsonSchema => {
+export const buildJsonSchema = (element: SchemaElement): JsonSchema7 => {
   const result = cloneDeep(element.schema);
   switch (element.type) {
-    case OBJECT:
+    case OBJECT: {
       if (element.properties.size > 0) {
-        result.properties = {};
+        const properties: Record<string, JsonSchema7> = {};
         element.properties.forEach((propertyElement, propName) => {
-          result.properties[propName] = buildJsonSchema(propertyElement);
+          properties[propName] = buildJsonSchema(propertyElement);
         });
+        result.properties = properties;
       }
       break;
+    }
     case ARRAY:
       if (Array.isArray(element.items)) {
         result.items = element.items.map(buildJsonSchema);
@@ -331,7 +343,7 @@ export const buildJsonSchema = (element: SchemaElement): JsonSchema => {
 
 /** Removes all linkedUiSchemaElements from the given schema */
 export const cleanLinkedElements = (
-  schema: SchemaElement | undefined
+  schema: SchemaElement | undefined,
 ): SchemaElement | undefined => {
   if (!schema) {
     return schema;
@@ -349,7 +361,7 @@ export const cleanLinkedElements = (
             }
             return acc;
           },
-          new Map<string, SchemaElement>()
+          new Map<string, SchemaElement>(),
         );
       }
       break;
@@ -370,13 +382,13 @@ export const cleanLinkedElements = (
  * Returns the closest array which contains the given element
  */
 export const getArrayContainer = (
-  element: SchemaElement
+  element: SchemaElement,
 ): SchemaElement | undefined =>
   getHierarchy(element).splice(1).find(isArrayElement);
 
 export const generateEmptyData = (
   schema: SchemaElement,
-  data: any = {}
+  data: Record<string, unknown> = {},
 ): object => {
   if (isObjectElement(schema)) {
     Array.from(schema.properties).forEach(([key, value]) => {

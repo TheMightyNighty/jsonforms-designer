@@ -50,7 +50,7 @@ export const JsonSchemaPanel: React.FC<JsonSchemaPanelProps> = ({
           ? jsonToText(toPrintableObject(schema))
           : undefined
       }
-      type='JSON Schema'
+      type="JSON Schema"
       updateSchema={handleSchemaUpdate}
     />
   );

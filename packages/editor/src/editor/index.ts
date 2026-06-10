@@ -18,10 +18,10 @@ import {
   DroppableVerticalLayoutRegistration,
 } from '../core/renderers/DroppableLayout';
 
-export * from './components/EditorPanel';
 export * from './components/Editor';
-export * from './components/EmptyEditor';
 export { EditorElement } from './components/EditorElement';
+export * from './components/EditorPanel';
+export * from './components/EmptyEditor';
 
 export const defaultEditorRenderers: JsonFormsRendererRegistryEntry[] = [
   ...materialRenderers,
@@ -33,11 +33,10 @@ export const defaultEditorRenderers: JsonFormsRendererRegistryEntry[] = [
   DroppableArrayControlRegistration,
   DroppableCategorizationLayoutRegistration,
 ];
-export * from './components/FieldFormPreview';
 export * from './components/CodeModePanel';
-export * from './components/PreviewPanel';
-export * from './editorMode';
-export * from './components/TabBar';
-
-export * from './components/StructuralElementRow';
 export * from './components/ColumnContainerRow';
+export * from './components/FieldFormPreview';
+export * from './components/PreviewPanel';
+export * from './components/StructuralElementRow';
+export * from './components/TabBar';
+export * from './editorMode';

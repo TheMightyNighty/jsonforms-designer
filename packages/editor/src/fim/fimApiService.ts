@@ -14,28 +14,31 @@ import {
 
 const DATENTYP_MAP: Record<string, FimDatentyp> = {
   // Datumstypen
-  date:          'datum',
-  datetime:      'datumZeit',
-  date_time:     'datumZeit',
+  date: 'datum',
+  datetime: 'datumZeit',
+  date_time: 'datumZeit',
   // Numerische Typen
-  integer:       'ganzzahl',
-  num_int:       'ganzzahl',
-  decimal:       'dezimalzahl',
-  num_gk:        'dezimalzahl',
-  number:        'dezimalzahl',
+  integer: 'ganzzahl',
+  num_int: 'ganzzahl',
+  decimal: 'dezimalzahl',
+  num_gk: 'dezimalzahl',
+  number: 'dezimalzahl',
   // Bool
-  boolean:       'boolean',
-  bool:          'boolean',
+  boolean: 'boolean',
+  bool: 'boolean',
   // Codeliste / Auswahl
-  select:        'codeliste',
-  codeliste:     'codeliste',
-  code_list:     'codeliste',
+  select: 'codeliste',
+  codeliste: 'codeliste',
+  code_list: 'codeliste',
   // Text (Fallback)
-  text:          'text',
-  string:        'text',
+  text: 'text',
+  string: 'text',
 };
 
-function mapDatentyp(apiValue: string | null | undefined, codeListId?: string | null): FimDatentyp {
+function mapDatentyp(
+  apiValue: string | null | undefined,
+  codeListId?: string | null,
+): FimDatentyp {
   if (codeListId) return 'codeliste';
   if (!apiValue) return 'text';
   return DATENTYP_MAP[apiValue.toLowerCase()] ?? 'text';
@@ -86,10 +89,10 @@ interface FimPortalListResponse<T> {
 
 function normalizeFimPortalField(raw: FimPortalField): FimDatenfeld {
   return {
-    identifier:   raw.fim_id,
-    name:         raw.name ?? raw.fim_id,
+    identifier: raw.fim_id,
+    name: raw.name ?? raw.fim_id,
     beschreibung: raw.beschreibung ?? raw.definition ?? '',
-    datentyp:     mapDatentyp(raw.datentyp, raw.code_list_id),
+    datentyp: mapDatentyp(raw.datentyp, raw.code_list_id),
     // Einschränkungen und Codelisten-Werte sind im List-Endpoint nicht enthalten.
     // Sie können via /fields/{fim_id}/{version} nachgeladen werden.
   };
@@ -97,10 +100,10 @@ function normalizeFimPortalField(raw: FimPortalField): FimDatenfeld {
 
 function normalizeFimPortalGroup(raw: FimPortalGroup): FimDatenfeldgruppe {
   return {
-    identifier:   raw.fim_id,
-    name:         raw.name ?? raw.fim_id,
+    identifier: raw.fim_id,
+    name: raw.name ?? raw.fim_id,
     beschreibung: raw.beschreibung ?? raw.definition ?? '',
-    felder:       [],   // Felder werden bei Bedarf nachgeladen
+    felder: [], // Felder werden bei Bedarf nachgeladen
   };
 }
 
@@ -137,7 +140,9 @@ export interface FimApiOptions {
   /** Custom Normalisierer für Datenfelder */
   normalizeDatenfeld?: (raw: Record<string, unknown>) => FimDatenfeld;
   /** Custom Normalisierer für Datenfeldgruppen */
-  normalizeDatenfeldgruppe?: (raw: Record<string, unknown>) => FimDatenfeldgruppe;
+  normalizeDatenfeldgruppe?: (
+    raw: Record<string, unknown>,
+  ) => FimDatenfeldgruppe;
 }
 
 // ---------------------------------------------------------------------------
@@ -153,48 +158,76 @@ export class FimApiService implements FimService {
   private readonly searchParam: string;
   private readonly pageSize: number;
   private readonly normFeld: (raw: Record<string, unknown>) => FimDatenfeld;
-  private readonly normGruppe: (raw: Record<string, unknown>) => FimDatenfeldgruppe;
+  private readonly normGruppe: (
+    raw: Record<string, unknown>,
+  ) => FimDatenfeldgruppe;
 
   constructor(options: FimApiOptions = {}) {
     // SECURITY: `baseUrl` and `headers` must come from trusted configuration
     // only. `headers` (e.g. an Authorization token) is sent with every request
     // to `baseUrl`; deriving either from untrusted/user-controlled input would
     // allow SSRF and credential exfiltration to an attacker-chosen host.
-    this.baseUrl     = (options.baseUrl ?? 'https://fimportal.de/api/v1').replace(/\/$/, '');
-    this.endpoints   = {
-      datenfelder:      options.endpoints?.datenfelder      ?? '/fields',
+    this.baseUrl = (options.baseUrl ?? 'https://fimportal.de/api/v1').replace(
+      /\/$/,
+      '',
+    );
+    this.endpoints = {
+      datenfelder: options.endpoints?.datenfelder ?? '/fields',
       datenfeldgruppen: options.endpoints?.datenfeldgruppen ?? '/groups',
     };
-    this.headers     = { 'Accept': 'application/json', ...options.headers };
+    this.headers = { Accept: 'application/json', ...options.headers };
     this.searchParam = options.searchParam ?? 'name';
-    this.pageSize    = options.pageSize    ?? 100;
-    this.normFeld    = (options.normalizeDatenfeld   as any) ?? ((r: Record<string, unknown>) => normalizeFimPortalField(r as FimPortalField));
-    this.normGruppe  = (options.normalizeDatenfeldgruppe as any) ?? ((r: Record<string, unknown>) => normalizeFimPortalGroup(r as FimPortalGroup));
+    this.pageSize = options.pageSize ?? 100;
+    this.normFeld =
+      options.normalizeDatenfeld ??
+      ((r: Record<string, unknown>) =>
+        normalizeFimPortalField(r as FimPortalField));
+    this.normGruppe =
+      options.normalizeDatenfeldgruppe ??
+      ((r: Record<string, unknown>) =>
+        normalizeFimPortalGroup(r as FimPortalGroup));
   }
 
-  async getDatenfelder(suchbegriff = '', options?: FimQueryOptions): Promise<FimDatenfeld[]> {
+  async getDatenfelder(
+    suchbegriff = '',
+    options?: FimQueryOptions,
+  ): Promise<FimDatenfeld[]> {
     const url = this.buildUrl(this.endpoints.datenfelder, suchbegriff, options);
-    const data = await this.fetchJson<FimPortalListResponse<FimPortalField>>(url);
-    return this.extractItems(data).map((r) => this.normFeld(r as Record<string, unknown>));
+    const data =
+      await this.fetchJson<FimPortalListResponse<FimPortalField>>(url);
+    return this.extractItems(data).map((r) =>
+      this.normFeld(r as Record<string, unknown>),
+    );
   }
 
-  async getDatenfeldgruppen(suchbegriff = '', options?: FimQueryOptions): Promise<FimDatenfeldgruppe[]> {
-    const url = this.buildUrl(this.endpoints.datenfeldgruppen, suchbegriff, options);
-    const data = await this.fetchJson<FimPortalListResponse<FimPortalGroup>>(url);
-    return this.extractItems(data).map((r) => this.normGruppe(r as Record<string, unknown>));
+  async getDatenfeldgruppen(
+    suchbegriff = '',
+    options?: FimQueryOptions,
+  ): Promise<FimDatenfeldgruppe[]> {
+    const url = this.buildUrl(
+      this.endpoints.datenfeldgruppen,
+      suchbegriff,
+      options,
+    );
+    const data =
+      await this.fetchJson<FimPortalListResponse<FimPortalGroup>>(url);
+    return this.extractItems(data).map((r) =>
+      this.normGruppe(r as Record<string, unknown>),
+    );
   }
 
   private buildUrl(path: string, q: string, options?: FimQueryOptions): string {
     const url = new URL(`${this.baseUrl}${path}`);
     if (q.trim()) url.searchParams.set(this.searchParam, q.trim());
-    url.searchParams.set('limit',  String(options?.limit  ?? this.pageSize));
+    url.searchParams.set('limit', String(options?.limit ?? this.pageSize));
     url.searchParams.set('offset', String(options?.offset ?? 0));
     return url.toString();
   }
 
   private async fetchJson<T>(url: string): Promise<T> {
     const res = await fetch(url, { headers: this.headers });
-    if (!res.ok) throw new Error(`FIM API ${res.status}: ${res.statusText} (${url})`);
+    if (!res.ok)
+      throw new Error(`FIM API ${res.status}: ${res.statusText} (${url})`);
     return res.json() as Promise<T>;
   }
 
@@ -203,7 +236,7 @@ export class FimApiService implements FimService {
     if (data && typeof data === 'object') {
       const d = data as Record<string, unknown>;
       if (Array.isArray(d['items'])) return d['items'] as T[];
-      if (Array.isArray(d['data']))  return d['data']  as T[];
+      if (Array.isArray(d['data'])) return d['data'] as T[];
     }
     return [];
   }

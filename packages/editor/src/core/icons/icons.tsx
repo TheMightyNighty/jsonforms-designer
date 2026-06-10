@@ -3,7 +3,6 @@
  * Licensed under MIT
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  */
-import { styled } from '@mui/material/styles';
 import CropFreeIcon from '@mui/icons-material/CropFree';
 import Height from '@mui/icons-material/Height';
 import InsertLinkIcon from '@mui/icons-material/InsertLink';
@@ -13,6 +12,7 @@ import QueueOutlinedIcon from '@mui/icons-material/QueueOutlined';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import TabIcon from '@mui/icons-material/Tab';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
+import { styled } from '@mui/material/styles';
 import React from 'react';
 
 import { ARRAY, OBJECT, PRIMITIVE, SchemaElementType } from '../model';

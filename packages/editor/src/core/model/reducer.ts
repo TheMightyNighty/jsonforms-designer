@@ -5,6 +5,8 @@
  */
 import { assign } from 'lodash';
 
+import { SET_FIELD_RULE } from '../../properties/fieldPropertiesActions';
+import { fieldPropertiesReducer } from '../../properties/fieldPropertiesReducer';
 import { CategorizationService } from '../api/categorizationService';
 import { withCloneTree, withCloneTrees } from '../util/clone';
 import {
@@ -22,53 +24,56 @@ import {
   ADD_DETAIL,
   ADD_FIELD,
   ADD_FIM_GRUPPE,
-  SET_FORM_METADATA,
   ADD_SCOPED_ELEMENT_TO_LAYOUT,
+  ADD_TAB,
   ADD_UNSCOPED_ELEMENT_TO_LAYOUT,
+  COLUMN_DROP,
   CombinedAction,
   EditorAction,
+  LOAD_TEMPLATE,
+  MOVE_ELEMENT,
   MOVE_UISCHEMA_ELEMENT,
   REMOVE_FIELD,
+  REMOVE_TAB,
   REMOVE_UISCHEMA_ELEMENT,
-  SET_SCHEMA,
-  SET_SCHEMAS,
-  SET_UISCHEMA,
-  UPDATE_FIELD_PROPERTY,
-  LOAD_TEMPLATE,
-  SET_FIELD_STATE,
-  COLUMN_DROP,
-  MOVE_ELEMENT,
+  RENAME_TAB,
   REORDER_ELEMENT,
   REORDER_IN_COLUMN,
-  TOGGLE_LINE_NUMBERS,
-  SET_SECTION_COLOR,
-  ADD_TAB,
-  REMOVE_TAB,
-  RENAME_TAB,
   REORDER_TABS,
   SET_ACTIVE_TAB,
+  SET_FIELD_STATE,
+  SET_FORM_METADATA,
+  SET_SCHEMA,
+  SET_SCHEMAS,
+  SET_SECTION_COLOR,
+  SET_UISCHEMA,
+  TOGGLE_LINE_NUMBERS,
   UiSchemaAction,
+  UPDATE_FIELD_PROPERTY,
   UPDATE_UISCHEMA_ELEMENT,
 } from './actions';
+import {
+  addFieldReducer,
+  FieldAwareState,
+  fimGruppeReducer,
+  loadTemplateReducer,
+  removeFieldReducer,
+  reorderElementReducer,
+  tabReducer,
+} from './addFieldReducer';
+import {
+  columnDropReducer,
+  moveElementReducer,
+  reorderInColumnReducer,
+} from './columnReducer';
 import { buildSchemaTree, cleanLinkedElements, SchemaElement } from './schema';
 import {
   buildEditorUiSchemaTree,
   cleanUiSchemaLinks,
+  EditorControl,
   EditorLayout,
   EditorUISchemaElement,
 } from './uischema';
-import {
-  addFieldReducer,
-  removeFieldReducer,
-  loadTemplateReducer,
-  tabReducer,
-  reorderElementReducer,
-  fimGruppeReducer,
-  FieldAwareState,
-} from './addFieldReducer';
-import { fieldPropertiesReducer } from '../../properties/fieldPropertiesReducer';
-import { SET_FIELD_RULE } from '../../properties/fieldPropertiesActions';
-import { columnDropReducer, moveElementReducer, reorderInColumnReducer } from './columnReducer';
 
 // ---------------------------------------------------------------------------
 // State
@@ -97,7 +102,7 @@ export const emptyFieldState: FieldAwareState = {
 
 function syncFieldState(
   schema: SchemaElement | undefined,
-  uiSchema: EditorUISchemaElement | undefined
+  uiSchema: EditorUISchemaElement | undefined,
 ): FieldAwareState {
   const flatSchema: FieldAwareState['schema'] = {
     type: 'object',
@@ -105,11 +110,12 @@ function syncFieldState(
   };
   if (schema) {
     try {
-      const root = getRoot(schema) as any;
-      const src = root?.schema ?? schema;
+      const src = getRoot(schema)?.schema;
       if (src?.properties) flatSchema.properties = src.properties;
       if (src?.required) flatSchema.required = src.required;
-    } catch (_) {}
+    } catch {
+      /* defekte Schemas tolerieren — flatSchema bleibt leer */
+    }
   }
 
   const flatUiSchema: FieldAwareState['uiSchema'] = {
@@ -118,18 +124,29 @@ function syncFieldState(
   };
   if (uiSchema) {
     try {
-      const root = getRoot(uiSchema) as any;
-      const elements = root?.elements ?? (uiSchema as any).elements ?? [];
+      const root = getRoot(uiSchema) as EditorLayout;
+      const elements: EditorUISchemaElement[] =
+        root?.elements ?? (uiSchema as EditorLayout).elements ?? [];
       flatUiSchema.type = root?.type ?? 'VerticalLayout';
-      flatUiSchema.elements = elements.map((el: any) => ({
+      flatUiSchema.elements = elements.map((el) => ({
         type: el.type,
-        scope: el.scope,
+        scope: (el as EditorControl).scope,
         options: el.options,
       }));
-    } catch (_) {}
+    } catch {
+      /* defekte UI-Schemas tolerieren — flatUiSchema bleibt leer */
+    }
   }
 
-  return { schema: flatSchema, uiSchema: flatUiSchema, tabs: [], activeTabIndex: 0, tabAssignments: {}, lineNumbersEnabled: false, sectionColors: {} };
+  return {
+    schema: flatSchema,
+    uiSchema: flatUiSchema,
+    tabs: [],
+    activeTabIndex: 0,
+    tabAssignments: {},
+    lineNumbersEnabled: false,
+    sectionColors: {},
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -138,7 +155,7 @@ function syncFieldState(
 
 export const uiSchemaReducer = (
   uiSchema: EditorUISchemaElement | undefined,
-  action: UiSchemaAction
+  action: UiSchemaAction,
 ) => {
   switch (action.type) {
     case ADD_UNSCOPED_ELEMENT_TO_LAYOUT:
@@ -153,10 +170,10 @@ export const uiSchemaReducer = (
               (newUiSchema as EditorLayout).elements.splice(
                 action.index,
                 0,
-                newUIElement
+                newUIElement,
               );
               return getRoot(newUiSchema as EditorUISchemaElement);
-            }
+            },
           )
         : uiSchema;
     case UPDATE_UISCHEMA_ELEMENT:
@@ -173,7 +190,7 @@ export const uiSchemaReducer = (
                 newUiSchema.options.detail = optionsDetail;
               }
               return getRoot(newUiSchema);
-            }
+            },
           )
         : uiSchema;
   }
@@ -186,32 +203,28 @@ export const uiSchemaReducer = (
 
 export const combinedReducer = (
   state: EditorState,
-  action: CombinedAction
+  action: CombinedAction,
 ): EditorState => {
   switch (action.type) {
     case SET_SCHEMA:
-      return withCloneTree(
-        state.uiSchema,
-        undefined,
-        state,
-        (clonedUiSchema) =>
-          linkSchemas(
-            buildSchemaTree(action.schema),
-            cleanUiSchemaLinks(clonedUiSchema)
-          )
+      return withCloneTree(state.uiSchema, undefined, state, (clonedUiSchema) =>
+        linkSchemas(
+          buildSchemaTree(action.schema),
+          cleanUiSchemaLinks(clonedUiSchema),
+        ),
       );
     case SET_UISCHEMA:
       return withCloneTree(state.schema, undefined, state, (clonedSchema) => {
         state.categorizationService?.clearTabSelections();
         return linkSchemas(
           cleanLinkedElements(clonedSchema),
-          buildEditorUiSchemaTree(action.uiSchema)
+          buildEditorUiSchemaTree(action.uiSchema),
         );
       });
     case SET_SCHEMAS:
       return linkSchemas(
         buildSchemaTree(action.schema),
-        buildEditorUiSchemaTree(action.uiSchema)
+        buildEditorUiSchemaTree(action.uiSchema),
       );
     case ADD_SCOPED_ELEMENT_TO_LAYOUT:
       return withCloneTrees(
@@ -226,7 +239,7 @@ export const combinedReducer = (
           (newUiSchema as EditorLayout).elements.splice(
             action.index,
             0,
-            newUIElement
+            newUIElement,
           );
           if (!newSchema || !linkElements(newUIElement, newSchema)) {
             console.error('Could not add new UI element', newUIElement);
@@ -237,7 +250,7 @@ export const combinedReducer = (
             uiSchema: getRoot(newUiSchema),
             fieldState: emptyFieldState,
           };
-        }
+        },
       );
     case MOVE_UISCHEMA_ELEMENT:
       return withCloneTrees(
@@ -249,12 +262,17 @@ export const combinedReducer = (
         (newContainer, newSchema) => {
           const elementToMove = findByUUID(newContainer, action.elementUUID);
           if (isUUIDError(elementToMove)) {
-            console.error('Could not find corresponding element', elementToMove);
+            console.error(
+              'Could not find corresponding element',
+              elementToMove,
+            );
             return state;
           }
           const oldParentUUID = elementToMove.parent?.uuid;
           const oldIndexInParent = elementToMove.parent
-            ? (elementToMove.parent as EditorLayout).elements.indexOf(elementToMove)
+            ? (elementToMove.parent as EditorLayout).elements.indexOf(
+                elementToMove,
+              )
             : -1;
           const removeResult = removeUiElement(elementToMove, newSchema);
           if (isUUIDError(removeResult)) {
@@ -268,16 +286,25 @@ export const combinedReducer = (
               oldIndexInParent !== -1 &&
               oldIndexInParent < action.index;
             const idx = moveRight ? action.index - 1 : action.index;
-            (newContainer as EditorLayout).elements.splice(idx, 0, elementToMove);
+            (newContainer as EditorLayout).elements.splice(
+              idx,
+              0,
+              elementToMove,
+            );
           } else if (newContainer && isEditorControl(newContainer)) {
-            newContainer.options = { ...newContainer.options, detail: elementToMove };
+            newContainer.options = {
+              ...newContainer.options,
+              detail: elementToMove,
+            };
           } else {
             console.error('Move encountered an invalid case');
             return state;
           }
           if (elementToMove.linkedSchemaElement) {
             (newSchema!.linkedUISchemaElements =
-              newSchema!.linkedUISchemaElements || new Set()).add(elementToMove.uuid);
+              newSchema!.linkedUISchemaElements || new Set()).add(
+              elementToMove.uuid,
+            );
           }
           const schemaToReturn =
             action.schemaUUID !== undefined ? getRoot(newSchema) : state.schema;
@@ -286,7 +313,7 @@ export const combinedReducer = (
             uiSchema: getRoot(newContainer as EditorUISchemaElement),
             fieldState: emptyFieldState,
           };
-        }
+        },
       );
     case REMOVE_UISCHEMA_ELEMENT:
       return withCloneTrees(
@@ -303,7 +330,7 @@ export const combinedReducer = (
           const removeResult = removeUiElement(
             elementToRemove,
             newSchema,
-            state.categorizationService
+            state.categorizationService,
           );
           if (isUUIDError(removeResult)) {
             console.error('Could not remove ui element', removeResult);
@@ -312,8 +339,12 @@ export const combinedReducer = (
           const uiSchemaToReturn = elementToRemove.parent
             ? getRoot(elementToRemove)
             : undefined;
-          return { schema: newSchema, uiSchema: uiSchemaToReturn, fieldState: emptyFieldState };
-        }
+          return {
+            schema: newSchema,
+            uiSchema: uiSchemaToReturn,
+            fieldState: emptyFieldState,
+          };
+        },
       );
     case ADD_DETAIL:
       return withCloneTrees(
@@ -323,7 +354,10 @@ export const combinedReducer = (
         undefined,
         state,
         (schema, uiSchema) => {
-          const elementForDetail = findByUUID(uiSchema, action.uiSchemaElementId);
+          const elementForDetail = findByUUID(
+            uiSchema,
+            action.uiSchemaElementId,
+          );
           if (isUUIDError(elementForDetail)) {
             console.error('Could not find ui schema element', elementForDetail);
             return state;
@@ -332,23 +366,28 @@ export const combinedReducer = (
             action.detail,
             (uiSchemaElement, _parent, acc) => {
               if (uiSchemaElement.linkedSchemaElement) {
-                const schemaEl = findByUUID(schema, uiSchemaElement.linkedSchemaElement);
+                const schemaEl = findByUUID(
+                  schema,
+                  uiSchemaElement.linkedSchemaElement,
+                );
                 if (isUUIDError(schemaEl)) {
                   acc.error = true;
                 } else {
                   (schemaEl.linkedUISchemaElements =
-                    schemaEl.linkedUISchemaElements || new Set()).add(action.detail.uuid);
+                    schemaEl.linkedUISchemaElements || new Set()).add(
+                    action.detail.uuid,
+                  );
                 }
               }
             },
-            { error: false }
+            { error: false },
           );
           if (linkResult.error) return state;
           elementForDetail.options = elementForDetail.options || {};
           elementForDetail.options.detail = action.detail;
           action.detail.parent = elementForDetail;
           return { schema, uiSchema, fieldState: emptyFieldState };
-        }
+        },
       );
   }
   return state;
@@ -361,22 +400,24 @@ export const combinedReducer = (
 const removeUiElement = (
   elementToRemove: EditorUISchemaElement,
   schema?: SchemaElement,
-  categorizationService?: CategorizationService
+  categorizationService?: CategorizationService,
 ): true | UUIDError => {
   if (schema && elementToRemove.linkedSchemaElement) {
     const uuidToRemove = elementToRemove.uuid;
     if (!uuidToRemove) return { id: 'noUUIDError', element: elementToRemove };
-    const linkedSchemaElement: SchemaElement = findByUUID(
+    const linkedSchemaElement = findByUUID(
       getRoot(schema),
-      elementToRemove.linkedSchemaElement
+      elementToRemove.linkedSchemaElement,
     );
     if (!isUUIDError(linkedSchemaElement)) {
-      linkedSchemaElement.linkedUISchemaElements?.delete(uuidToRemove);
+      linkedSchemaElement?.linkedUISchemaElements?.delete(uuidToRemove);
     }
   }
   if (elementToRemove.parent) {
     if ((elementToRemove.parent as EditorLayout).elements) {
-      const index = (elementToRemove.parent as EditorLayout).elements.indexOf(elementToRemove);
+      const index = (elementToRemove.parent as EditorLayout).elements.indexOf(
+        elementToRemove,
+      );
       if (index !== -1) {
         (elementToRemove.parent as EditorLayout).elements.splice(index, 1);
       }
@@ -403,7 +444,7 @@ const removeUiElement = (
 
 export const editorReducer = (
   state: EditorState,
-  action: EditorAction
+  action: EditorAction,
 ): EditorState => {
   // ADD_FIELD
   if (action.type === ADD_FIELD) {
@@ -417,7 +458,10 @@ export const editorReducer = (
 
   // REMOVE_FIELD
   if (action.type === REMOVE_FIELD) {
-    return { ...state, fieldState: removeFieldReducer(state.fieldState, action) };
+    return {
+      ...state,
+      fieldState: removeFieldReducer(state.fieldState, action),
+    };
   }
 
   // Tab-Actions
@@ -433,52 +477,84 @@ export const editorReducer = (
 
   // REORDER_IN_COLUMN
   if (action.type === REORDER_IN_COLUMN) {
-    return { ...state, fieldState: reorderInColumnReducer(state.fieldState, action) };
+    return {
+      ...state,
+      fieldState: reorderInColumnReducer(state.fieldState, action),
+    };
   }
 
   // TOGGLE_LINE_NUMBERS
   if (action.type === TOGGLE_LINE_NUMBERS) {
-    return { ...state, fieldState: { ...state.fieldState, lineNumbersEnabled: !state.fieldState.lineNumbersEnabled } };
+    return {
+      ...state,
+      fieldState: {
+        ...state.fieldState,
+        lineNumbersEnabled: !state.fieldState.lineNumbersEnabled,
+      },
+    };
   }
   // SET_SECTION_COLOR
   if (action.type === SET_SECTION_COLOR) {
-    const { elementId, color } = (action as any).payload;
+    const { elementId, color } = action.payload;
     const nextColors = color
       ? { ...state.fieldState.sectionColors, [elementId]: color }
-      : Object.fromEntries(Object.entries(state.fieldState.sectionColors).filter(([k]) => k !== elementId));
-    return { ...state, fieldState: { ...state.fieldState, sectionColors: nextColors } };
+      : Object.fromEntries(
+          Object.entries(state.fieldState.sectionColors).filter(
+            ([k]) => k !== elementId,
+          ),
+        );
+    return {
+      ...state,
+      fieldState: { ...state.fieldState, sectionColors: nextColors },
+    };
   }
 
   // REORDER_ELEMENT
   if (action.type === REORDER_ELEMENT) {
-    return { ...state, fieldState: reorderElementReducer(state.fieldState, action) };
+    return {
+      ...state,
+      fieldState: reorderElementReducer(state.fieldState, action),
+    };
   }
 
   // COLUMN_DROP
   if (action.type === COLUMN_DROP) {
-    return { ...state, fieldState: columnDropReducer(state.fieldState, action) };
+    return {
+      ...state,
+      fieldState: columnDropReducer(state.fieldState, action),
+    };
   }
 
   // MOVE_ELEMENT
   if (action.type === MOVE_ELEMENT) {
-    return { ...state, fieldState: moveElementReducer(state.fieldState, action) };
+    return {
+      ...state,
+      fieldState: moveElementReducer(state.fieldState, action),
+    };
   }
 
   // LOAD_TEMPLATE / SET_FIELD_STATE
   if (action.type === LOAD_TEMPLATE || action.type === SET_FIELD_STATE) {
-    return { ...state, fieldState: loadTemplateReducer(state.fieldState, action) };
+    return {
+      ...state,
+      fieldState: loadTemplateReducer(state.fieldState, action),
+    };
   }
 
   // SET_FORM_METADATA
   if (action.type === SET_FORM_METADATA) {
-    const payload = (action as any).payload;
+    const payload = action.payload;
     const patch: Record<string, unknown> = {};
-    if (payload.title        !== undefined) patch['title']          = payload.title;
-    if (payload.description  !== undefined) patch['description']    = payload.description;
-    if (payload.publisher    !== undefined) patch['x-publisher']    = payload.publisher;
-    if (payload.legalBasis   !== undefined) patch['x-legal-basis']  = payload.legalBasis;
-    if (payload.version      !== undefined) patch['x-version']      = payload.version;
-    if (payload.validFrom    !== undefined) patch['x-valid-from']   = payload.validFrom;
+    if (payload.title !== undefined) patch['title'] = payload.title;
+    if (payload.description !== undefined)
+      patch['description'] = payload.description;
+    if (payload.publisher !== undefined)
+      patch['x-publisher'] = payload.publisher;
+    if (payload.legalBasis !== undefined)
+      patch['x-legal-basis'] = payload.legalBasis;
+    if (payload.version !== undefined) patch['x-version'] = payload.version;
+    if (payload.validFrom !== undefined)
+      patch['x-valid-from'] = payload.validFrom;
     // Durchreichen beliebiger x-* Felder (z. B. x-translations)
     for (const [k, v] of Object.entries(payload)) {
       if (k.startsWith('x-') && !(k in patch)) patch[k] = v;
@@ -489,7 +565,10 @@ export const editorReducer = (
 
   // SET_FIELD_RULE + UPDATE_FIELD_PROPERTY
   if (action.type === SET_FIELD_RULE || action.type === UPDATE_FIELD_PROPERTY) {
-    return { ...state, fieldState: fieldPropertiesReducer(state.fieldState, action as any) };
+    return {
+      ...state,
+      fieldState: fieldPropertiesReducer(state.fieldState, action),
+    };
   }
 
   // Bestehende Actions

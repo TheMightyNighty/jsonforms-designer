@@ -3,8 +3,8 @@
  * Licensed under MIT
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  */
-import { Grid, IconButton, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Grid, IconButton, Typography } from '@mui/material';
 import React from 'react';
 import { useDrag } from 'react-dnd';
 
@@ -38,7 +38,7 @@ export const EditorElement: React.FC<EditorElementProps> = ({
     React.useState(false);
   const elementSchema = tryFindByUUID(
     schema,
-    wrappedElement.linkedSchemaElement
+    wrappedElement.linkedSchemaElement,
   );
   const [{ isDragging }, drag] = useDrag(() => ({
     type: DndItems.moveUISchemaElement(wrappedElement, elementSchema).type,
@@ -138,9 +138,11 @@ export const EditorElement: React.FC<EditorElementProps> = ({
             data-cy={`editorElement-${uiPath}-removeButton`}
             size="small"
             onClick={() => {
-              hasChildren(wrappedElement)
-                ? setOpenConfirmRemoveDialog(true)
-                : dispatch(Actions.removeUiSchemaElement(wrappedElement.uuid));
+              if (hasChildren(wrappedElement)) {
+                setOpenConfirmRemoveDialog(true);
+              } else {
+                dispatch(Actions.removeUiSchemaElement(wrappedElement.uuid));
+              }
             }}
           >
             <DeleteIcon />

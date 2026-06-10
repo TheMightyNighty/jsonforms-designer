@@ -51,7 +51,7 @@ export const UISchemaPanel: React.FC<UISchemaPanelProps> = ({
           ? jsonToText(buildDebugUISchema(uiSchema))
           : undefined
       }
-      type='UI Schema'
+      type="UI Schema"
       updateSchema={handleUiSchemaUpdate}
     />
   );

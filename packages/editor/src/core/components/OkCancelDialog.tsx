@@ -37,10 +37,10 @@ export const OkCancelDialog: React.FC<OkCancelDialogProps> = ({
         <DialogContentText>{text}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel} color='primary' data-cy='cancel-button'>
+        <Button onClick={onCancel} color="primary" data-cy="cancel-button">
           Cancel
         </Button>
-        <Button onClick={onOk} color='primary' autoFocus data-cy='ok-button'>
+        <Button onClick={onOk} color="primary" autoFocus data-cy="ok-button">
           Ok
         </Button>
       </DialogActions>

@@ -1,28 +1,41 @@
 import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
-import React, { ComponentType, useCallback, useEffect, useReducer, useState } from 'react';
+import React, {
+  ComponentType,
+  useCallback,
+  useEffect,
+  useReducer,
+  useState,
+} from 'react';
 import { DndProvider } from 'react-dnd';
-import { I18nProvider } from './i18n';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { CategorizationService, CategorizationServiceImpl } from './core/api/categorizationService';
-import { DefaultPaletteService, PaletteService } from './core/api/paletteService';
 import { EditorConfig, EditorConfigProvider } from './config';
+import {
+  CategorizationService,
+  CategorizationServiceImpl,
+} from './core/api/categorizationService';
+import {
+  DefaultPaletteService,
+  PaletteService,
+} from './core/api/paletteService';
 import { EmptySchemaService, SchemaService } from './core/api/schemaService';
 import { EditorContextInstance } from './core/context';
 import { Actions } from './core/model';
-import { createInitialEditorState } from './core/model/reducer';
-import {
-  historyReducer,
-  HISTORY_WRAP,
-  UNDO,
-  REDO,
-  HistoryAction,
-} from './core/model/historyReducer';
 import { EditorAction } from './core/model/actions';
+import {
+  HISTORY_WRAP,
+  HistoryAction,
+  historyReducer,
+  REDO,
+  UNDO,
+} from './core/model/historyReducer';
+import { createInitialEditorState } from './core/model/reducer';
+import { FlatElement } from './core/model/uiElements';
 import { SelectedElement } from './core/selection';
 import { sanitizeParsedJson } from './core/util/sanitizeJson';
 import { tryFindByUUID } from './core/util/schemasUtil';
 import { defaultEditorRenderers } from './editor';
+import { I18nProvider } from './i18n';
 import { JsonFormsEditorUi } from './JsonFormsEditorUi';
 import {
   defaultPropertyRenderers,
@@ -38,7 +51,7 @@ const defaultPaletteService = new DefaultPaletteService();
 const defaultCategorizationService = new CategorizationServiceImpl();
 const defaultPropertiesServiceFactory = (
   providers: PropertySchemasProvider[],
-  decorators: PropertySchemasDecorator[]
+  decorators: PropertySchemasDecorator[],
 ): PropertiesService => new PropertiesServiceImpl(providers, decorators);
 
 export interface JsonFormsEditorProps {
@@ -49,7 +62,7 @@ export interface JsonFormsEditorProps {
   categorizationService?: CategorizationService;
   propertiesServiceProvider?: (
     providers: PropertySchemasProvider[],
-    decorators: PropertySchemasDecorator[]
+    decorators: PropertySchemasDecorator[],
   ) => PropertiesService;
   editorRenderers?: JsonFormsRendererRegistryEntry[];
   propertyRenderers?: JsonFormsRendererRegistryEntry[];
@@ -75,7 +88,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   const propertiesService = React.useMemo(
     () => propertiesServiceProvider(schemaProviders, schemaDecorators),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [],
   );
 
   // History-Reducer statt direktem editorReducer
@@ -84,7 +97,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     undefined,
     () => {
       const base = createInitialEditorState({ categorizationService });
-          try {
+      try {
         const saved = localStorage.getItem('jfd_fieldState_v1');
         if (saved) {
           const parsed = sanitizeParsedJson(JSON.parse(saved));
@@ -100,9 +113,11 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
             };
           }
         }
-      } catch { /* corrupted or missing — start fresh */ }
+      } catch {
+        /* corrupted or missing — start fresh */
+      }
       return { past: [], present: base, future: [] };
-    }
+    },
   );
 
   const { present: editorState } = historyState;
@@ -112,7 +127,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     (action: EditorAction) => {
       historyDispatch({ type: HISTORY_WRAP, action } as HistoryAction);
     },
-    [historyDispatch]
+    [historyDispatch],
   );
 
   const undo = useCallback(() => historyDispatch({ type: UNDO }), []);
@@ -127,13 +142,19 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fieldState));
-    } catch { /* storage quota or private mode — ignore */ }
+    } catch {
+      /* storage quota or private mode — ignore */
+    }
   }, [fieldState]);
 
   useEffect(() => {
-    schemaService.getSchema().then((s) => { if (s) dispatch(Actions.setSchema(s)); });
-    schemaService.getUiSchema().then((u) => { if (u) dispatch(Actions.setUiSchema(u)); });
-  }, [schemaService]);
+    schemaService.getSchema().then((s) => {
+      if (s) dispatch(Actions.setSchema(s));
+    });
+    schemaService.getUiSchema().then((u) => {
+      if (u) dispatch(Actions.setUiSchema(u));
+    });
+  }, [schemaService, dispatch]);
 
   useEffect(() => {
     setSelection((prev) => {
@@ -144,15 +165,23 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
 
   useEffect(() => {
     if (!selectedScope) return;
-    function existsInUiSchema(elements: any[], key: string): boolean {
+    function existsInUiSchema(elements: FlatElement[], key: string): boolean {
       for (const el of elements) {
         if (el.scope === key || el.id === key) return true;
-        if (el.columns) for (const col of el.columns) { if (existsInUiSchema(col, key)) return true; }
-        if (el.children) { if (existsInUiSchema(el.children, key)) return true; }
+        if (el.columns)
+          for (const col of el.columns) {
+            if (existsInUiSchema(col, key)) return true;
+          }
+        if (el.children) {
+          if (existsInUiSchema(el.children, key)) return true;
+        }
       }
       return false;
     }
-    const stillExists = existsInUiSchema(fieldState.uiSchema.elements as any[], selectedScope);
+    const stillExists = existsInUiSchema(
+      fieldState.uiSchema.elements as FlatElement[],
+      selectedScope,
+    );
     if (!stillExists) setSelectedScope(null);
   }, [fieldState, selectedScope]);
 
@@ -161,37 +190,37 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
 
   return (
     <EditorConfigProvider config={config}>
-    <I18nProvider defaultLocale="de">
-    <DndProvider backend={HTML5Backend}>
-      <EditorContextInstance.Provider
-        value={{
-          schemaService,
-          paletteService,
-          propertiesService,
-          schema,
-          uiSchema,
-          dispatch,
-          selection,
-          setSelection,
-          categorizationService,
-          fieldState,
-          selectedScope,
-          setSelectedScope,
-          undo,
-          redo,
-          canUndo,
-          canRedo,
-        }}
-      >
-        <JsonFormsEditorUi
-          editorRenderers={editorRenderers}
-          propertyRenderers={propertyRenderers}
-          header={headerComponent}
-          footer={footerComponent}
-        />
-      </EditorContextInstance.Provider>
-    </DndProvider>
-    </I18nProvider>
+      <I18nProvider defaultLocale="de">
+        <DndProvider backend={HTML5Backend}>
+          <EditorContextInstance.Provider
+            value={{
+              schemaService,
+              paletteService,
+              propertiesService,
+              schema,
+              uiSchema,
+              dispatch,
+              selection,
+              setSelection,
+              categorizationService,
+              fieldState,
+              selectedScope,
+              setSelectedScope,
+              undo,
+              redo,
+              canUndo,
+              canRedo,
+            }}
+          >
+            <JsonFormsEditorUi
+              editorRenderers={editorRenderers}
+              propertyRenderers={propertyRenderers}
+              header={headerComponent}
+              footer={footerComponent}
+            />
+          </EditorContextInstance.Provider>
+        </DndProvider>
+      </I18nProvider>
     </EditorConfigProvider>
   );
 };

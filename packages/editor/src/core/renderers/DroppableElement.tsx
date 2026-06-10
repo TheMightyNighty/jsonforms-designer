@@ -32,7 +32,7 @@ const DroppableElement: React.FC<DroppableElementProps> = ({
         schema={schema}
         path={path}
         renderers={renderers?.filter(
-          (r) => r.renderer !== DroppableElementRenderer
+          (r) => r.renderer !== DroppableElementRenderer,
         )}
         cells={cells}
       />

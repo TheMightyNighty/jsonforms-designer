@@ -42,8 +42,14 @@ export interface FimQueryOptions {
 }
 
 export interface FimService {
-  getDatenfelder(suchbegriff?: string, options?: FimQueryOptions): Promise<FimDatenfeld[]>;
-  getDatenfeldgruppen(suchbegriff?: string, options?: FimQueryOptions): Promise<FimDatenfeldgruppe[]>;
+  getDatenfelder(
+    suchbegriff?: string,
+    options?: FimQueryOptions,
+  ): Promise<FimDatenfeld[]>;
+  getDatenfeldgruppen(
+    suchbegriff?: string,
+    options?: FimQueryOptions,
+  ): Promise<FimDatenfeldgruppe[]>;
   /**
    * Liefert true wenn der Service server-seitige Suche nutzt.
    * Die Palette zeigt dann "Bitte suchen" statt alle Felder zu laden.

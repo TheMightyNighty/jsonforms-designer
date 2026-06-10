@@ -2,17 +2,25 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import DownloadIcon from '@mui/icons-material/CloudDownload';
 import UploadIcon from '@mui/icons-material/Upload';
 import {
-  Alert, Box, Button, Dialog, DialogActions, DialogContent,
-  DialogTitle, Tab, Tabs, Typography,
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Tab,
+  Tabs,
+  Typography,
 } from '@mui/material';
 import { useRef, useState } from 'react';
 
-import { FieldAwareState } from '../model/addFieldReducer';
 import { useI18n } from '../../i18n';
+import { FieldAwareState } from '../model/addFieldReducer';
 import { FlatElement, fromLegacy, toLegacy } from '../model/uiElements';
-import { FormattedJson } from './Formatted';
 import { sanitizeParsedJson } from '../util/sanitizeJson';
 import { downloadXdf } from '../util/xdfExport';
+import { FormattedJson } from './Formatted';
 
 interface ImportExportDialogProps {
   open: boolean;
@@ -37,32 +45,44 @@ function buildExportUiSchema(fieldState: FieldAwareState): object {
       };
     }
     if (el.type === 'GroupContainer' && (el.children || el.elements)) {
-      const kids = (el.children ?? el.elements ?? []).map(convert).filter(Boolean);
+      const kids = (el.children ?? el.elements ?? [])
+        .map(convert)
+        .filter(Boolean);
       return { type: 'Group', label: el.label ?? '', elements: kids };
     }
     if (el.type === 'Label') {
       return { type: 'Label', text: el.label ?? '' };
     }
     if (el.type === 'Control' && el.scope) {
-      const { id: _id, ...rest } = el as any;
+      const { id: _id, ...rest } = el;
       return rest;
     }
     return null;
   }
 
-  return { type: 'VerticalLayout', elements: elements.map(convert).filter(Boolean) };
+  return {
+    type: 'VerticalLayout',
+    elements: elements.map(convert).filter(Boolean),
+  };
 }
 
 /** Baut aus einem importierten uiSchema einen fieldState-kompatiblen uiSchema-Eintrag */
-function buildImportElements(uiSchemaRaw: any): FlatElement[] {
-  const elements = uiSchemaRaw?.elements ?? (Array.isArray(uiSchemaRaw) ? uiSchemaRaw : []);
-  return elements.map((el: any) => {
-    const converted = fromLegacy(el);
+function buildImportElements(uiSchemaRaw: unknown): FlatElement[] {
+  const raw = uiSchemaRaw as { elements?: unknown[] };
+  const elements: unknown[] =
+    raw?.elements ?? (Array.isArray(uiSchemaRaw) ? uiSchemaRaw : []);
+  return elements.map((el) => {
+    const converted = fromLegacy(el as FlatElement);
     return toLegacy(converted) as FlatElement;
   });
 }
 
-export function ImportExportDialog({ open, onClose, fieldState, onImport }: ImportExportDialogProps) {
+export function ImportExportDialog({
+  open,
+  onClose,
+  fieldState,
+  onImport,
+}: ImportExportDialogProps) {
   const { t } = useI18n();
   const [tab, setTab] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
@@ -71,10 +91,14 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
   const exportedUiSchema = buildExportUiSchema(fieldState);
 
   const downloadJson = (obj: unknown, filename: string) => {
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
+    a.href = url;
+    a.download = filename;
+    a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -84,7 +108,9 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const parsed = sanitizeParsedJson(JSON.parse(ev.target?.result as string));
+        const parsed = sanitizeParsedJson(
+          JSON.parse(ev.target?.result as string),
+        );
         if (parsed?.schema && parsed?.uiSchema) {
           const importedElements = buildImportElements(parsed.uiSchema);
           onImport({
@@ -123,8 +149,11 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
         {tab === 0 && (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-              <Button size="small" startIcon={<DownloadIcon />}
-                onClick={() => downloadJson(fieldState.schema, 'schema.json')}>
+              <Button
+                size="small"
+                startIcon={<DownloadIcon />}
+                onClick={() => downloadJson(fieldState.schema, 'schema.json')}
+              >
                 Herunterladen
               </Button>
             </Box>
@@ -134,8 +163,11 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
         {tab === 1 && (
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-              <Button size="small" startIcon={<DownloadIcon />}
-                onClick={() => downloadJson(exportedUiSchema, 'ui-schema.json')}>
+              <Button
+                size="small"
+                startIcon={<DownloadIcon />}
+                onClick={() => downloadJson(exportedUiSchema, 'ui-schema.json')}
+              >
                 Herunterladen
               </Button>
             </Box>
@@ -145,40 +177,59 @@ export function ImportExportDialog({ open, onClose, fieldState, onImport }: Impo
         {tab === 2 && (
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Alert severity="info">
-              Exportiert das Formular als <strong>XDatenfelder 2.0 (XDF2)</strong> — dem bundesweit gültigen
-              Standard für FIM-Bausteine. Die XML-Datei kann in FIM-Portal-kompatible Systeme importiert werden.
+              Exportiert das Formular als{' '}
+              <strong>XDatenfelder 2.0 (XDF2)</strong> — dem bundesweit gültigen
+              Standard für FIM-Bausteine. Die XML-Datei kann in
+              FIM-Portal-kompatible Systeme importiert werden.
             </Alert>
             <Box>
-              <Button variant="contained" startIcon={<DownloadIcon />}
-                onClick={() => downloadXdf(fieldState)}>
+              <Button
+                variant="contained"
+                startIcon={<DownloadIcon />}
+                onClick={() => downloadXdf(fieldState)}
+              >
                 XDF 2.0 herunterladen
               </Button>
             </Box>
             <Typography variant="caption" color="text.secondary">
-              Enthält: alle Datenfelder des Formulars, Metadaten (Titel, Behörde, Rechtsgrundlage),
-              Datentypen und Einschränkungen. FIM-Identifier (x-fim-id) werden übernommen.
+              Enthält: alle Datenfelder des Formulars, Metadaten (Titel,
+              Behörde, Rechtsgrundlage), Datentypen und Einschränkungen.
+              FIM-Identifier (x-fim-id) werden übernommen.
             </Typography>
           </Box>
         )}
         {tab === 3 && (
           <Box sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              JSON-Datei hochladen mit <code>schema</code> und <code>uiSchema</code>.
-              Das aktuelle Formular wird überschrieben.
+              JSON-Datei hochladen mit <code>schema</code> und{' '}
+              <code>uiSchema</code>. Das aktuelle Formular wird überschrieben.
             </Typography>
-            {importError && <Alert severity="error" sx={{ mb: 2 }}>{importError}</Alert>}
-            <input ref={fileRef} type="file" accept=".json,application/json"
-              style={{ display: 'none' }} onChange={handleFileChange} />
-            <Button variant="outlined" startIcon={<UploadIcon />}
-              onClick={() => fileRef.current?.click()}>
+            {importError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {importError}
+              </Alert>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".json,application/json"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<UploadIcon />}
+              onClick={() => fileRef.current?.click()}
+            >
               JSON-Datei auswählen
             </Button>
           </Box>
         )}
-
       </DialogContent>
       <DialogActions>
-        <Button startIcon={<CancelIcon />} onClick={onClose}>{t.dialog.close}</Button>
+        <Button startIcon={<CancelIcon />} onClick={onClose}>
+          {t.dialog.close}
+        </Button>
       </DialogActions>
     </Dialog>
   );

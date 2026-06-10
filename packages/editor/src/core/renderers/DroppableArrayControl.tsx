@@ -7,8 +7,15 @@
  * Migrated: @material-ui -> @mui, makeStyles -> sx, useDrop v16.
  * ---------------------------------------------------------------------
  */
-import { ArrayControlProps, isObjectArrayControl, rankWith } from '@jsonforms/core';
-import { JsonFormsDispatch, withJsonFormsArrayControlProps } from '@jsonforms/react';
+import {
+  ArrayControlProps,
+  isObjectArrayControl,
+  rankWith,
+} from '@jsonforms/core';
+import {
+  JsonFormsDispatch,
+  withJsonFormsArrayControlProps,
+} from '@jsonforms/react';
 import Typography from '@mui/material/Typography';
 import React, { useMemo } from 'react';
 import { useDrop } from 'react-dnd';
@@ -22,7 +29,11 @@ import {
   NewUISchemaElement,
 } from '../dnd';
 import { Actions } from '../model';
-import { containsControls, EditorControl, EditorUISchemaElement } from '../model/uischema';
+import {
+  containsControls,
+  EditorControl,
+  EditorUISchemaElement,
+} from '../model/uischema';
 import { DroppableElementRegistration } from './DroppableElement';
 
 interface DroppableArrayControlProps extends ArrayControlProps {
@@ -30,7 +41,11 @@ interface DroppableArrayControlProps extends ArrayControlProps {
 }
 
 const DroppableArrayControl: React.FC<DroppableArrayControlProps> = ({
-  uischema, schema, path, renderers, cells,
+  uischema,
+  schema,
+  path,
+  renderers,
+  cells,
 }) => {
   const dispatch = useDispatch();
   const rootSchema = useSchema();
@@ -44,7 +59,11 @@ const DroppableArrayControl: React.FC<DroppableArrayControlProps> = ({
     canDrop: (item): boolean => {
       switch (item.type) {
         case NEW_UI_SCHEMA_ELEMENT:
-          return canDropIntoScope(item as NewUISchemaElement, rootSchema, uischema);
+          return canDropIntoScope(
+            item as NewUISchemaElement,
+            rootSchema,
+            uischema,
+          );
         case MOVE_UI_SCHEMA_ELEMENT:
           return !containsControls(uiSchemaElement as EditorUISchemaElement);
       }
@@ -61,7 +80,9 @@ const DroppableArrayControl: React.FC<DroppableArrayControlProps> = ({
           dispatch(Actions.addDetail(uischema.uuid, uiSchemaElement));
           break;
         case MOVE_UI_SCHEMA_ELEMENT:
-          dispatch(Actions.moveUiSchemaElement(uiSchemaElement.uuid, uischema.uuid, 0));
+          dispatch(
+            Actions.moveUiSchemaElement(uiSchemaElement.uuid, uischema.uuid, 0),
+          );
           break;
       }
     },
@@ -69,7 +90,7 @@ const DroppableArrayControl: React.FC<DroppableArrayControlProps> = ({
 
   const renderersToUse = useMemo(
     () => renderers && [...renderers, DroppableElementRegistration],
-    [renderers]
+    [renderers],
   );
 
   if (!uischema.options?.detail) {
@@ -82,7 +103,8 @@ const DroppableArrayControl: React.FC<DroppableArrayControlProps> = ({
           border: isOver ? '1px solid #D3D3D3' : 'none',
         }}
       >
-        Default array layout. Drag and drop an item here to customize array layout.
+        Default array layout. Drag and drop an item here to customize array
+        layout.
       </Typography>
     );
   }
@@ -101,6 +123,6 @@ const DroppableArrayControl: React.FC<DroppableArrayControlProps> = ({
 export const DroppableArrayControlRegistration = {
   tester: rankWith(40, isObjectArrayControl),
   renderer: withJsonFormsArrayControlProps(
-    DroppableArrayControl as React.FC<ArrayControlProps>
+    DroppableArrayControl as React.FC<ArrayControlProps>,
   ),
 };

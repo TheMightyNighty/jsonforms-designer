@@ -1,16 +1,16 @@
-import React, { useContext, Dispatch } from 'react';
+import React, { Dispatch,useContext } from 'react';
 
-import { PropertiesService } from '../properties/propertiesService';
+import { UpdateFieldPropertyAction } from '../../properties/fieldPropertiesActions';
 import { CategorizationService } from '../api/categorizationService';
 import { PaletteService } from '../api/paletteService';
 import { SchemaService } from '../api/schemaService';
 import { SchemaElement } from '../model';
 import { EditorAction } from '../model/actions';
-import { EditorUISchemaElement } from '../model/uischema';
-import { SelectedElement } from '../selection';
-import { FieldAwareState } from '../model/addFieldReducer';
 import { AddFieldAction } from '../model/addFieldActions';
-import { UpdateFieldPropertyAction } from '../../properties/fieldPropertiesActions';
+import { FieldAwareState } from '../model/addFieldReducer';
+import { EditorUISchemaElement } from '../model/uischema';
+import { PropertiesService } from '../properties/propertiesService';
+import { SelectedElement } from '../selection';
 
 export type FieldAction = AddFieldAction | UpdateFieldPropertyAction;
 
@@ -35,10 +35,9 @@ export interface EditorContext {
   canRedo: boolean;
 }
 
-const defaultContext: any = undefined;
-
-export const EditorContextInstance =
-  React.createContext<EditorContext>(defaultContext);
+export const EditorContextInstance = React.createContext<EditorContext>(
+  undefined as unknown as EditorContext,
+);
 
 export const useEditorContext = (): EditorContext =>
   useContext(EditorContextInstance);
@@ -60,7 +59,7 @@ export const useUiSchema = (): EditorUISchemaElement | undefined => {
 
 export const useSelection = (): [
   SelectedElement,
-  (selection: SelectedElement) => void
+  (selection: SelectedElement) => void,
 ] => {
   const { selection, setSelection } = useEditorContext();
   return [selection, setSelection];
@@ -93,7 +92,7 @@ export const useFieldState = (): FieldAwareState => {
 
 export const useSelectedScope = (): [
   string | null,
-  (scope: string | null) => void
+  (scope: string | null) => void,
 ] => {
   const { selectedScope, setSelectedScope } = useEditorContext();
   return [selectedScope, setSelectedScope];

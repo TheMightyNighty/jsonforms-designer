@@ -6,5 +6,5 @@
  * ---------------------------------------------------------------------
  */
 export { JsonEditorDialog } from './components/JsonEditorDialog';
-export type { TextType, EditorApi } from './jsonSchemaValidation';
+export type { EditorApi,TextType } from './jsonSchemaValidation';
 export { addSchema } from './jsonSchemaValidation';

@@ -1,5 +1,9 @@
 /** Hardcoded example components for development — swap via dependency injection in production. */
-import { OpenCodeBaustein, OpenCodeBausteinKategorie, OpenCodeService } from './openCodeService';
+import {
+  OpenCodeBaustein,
+  OpenCodeBausteinKategorie,
+  OpenCodeService,
+} from './openCodeService';
 
 const MOCK_BAUSTEINE: OpenCodeBaustein[] = [
   // ── Validatoren ──────────────────────────────────────────────────────────
@@ -64,7 +68,11 @@ const MOCK_BAUSTEINE: OpenCodeBaustein[] = [
     kategorie: 'ui-baustein',
     icon: 'upload',
     parameters: {
-      acceptedTypes: { label: 'Erlaubte Typen', type: 'string', default: '.pdf,.jpg,.png' },
+      acceptedTypes: {
+        label: 'Erlaubte Typen',
+        type: 'string',
+        default: '.pdf,.jpg,.png',
+      },
       maxSizeMb: { label: 'Max. Größe (MB)', type: 'number', default: 10 },
     },
   },
@@ -84,9 +92,11 @@ export class MockOpenCodeService implements OpenCodeService {
   }
 
   async getBausteineByKategorie(
-    kategorie: OpenCodeBausteinKategorie
+    kategorie: OpenCodeBausteinKategorie,
   ): Promise<OpenCodeBaustein[]> {
-    return Promise.resolve(MOCK_BAUSTEINE.filter((b) => b.kategorie === kategorie));
+    return Promise.resolve(
+      MOCK_BAUSTEINE.filter((b) => b.kategorie === kategorie),
+    );
   }
 }
 

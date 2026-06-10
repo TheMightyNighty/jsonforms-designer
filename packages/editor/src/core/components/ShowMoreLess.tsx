@@ -16,7 +16,10 @@ export interface ShowMoreLessProps {
   children?: React.ReactNode;
 }
 
-export const ShowMoreLess: React.FC<ShowMoreLessProps> = ({ className, children }) => {
+export const ShowMoreLess: React.FC<ShowMoreLessProps> = ({
+  className,
+  children,
+}) => {
   const [showMore, setShowMore] = useState(false);
   return (
     <div className={className}>

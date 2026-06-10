@@ -7,7 +7,12 @@
  * Migrated: @material-ui -> @mui/material + @mui/icons-material
  * ---------------------------------------------------------------------
  */
-import { Category, isCategorization, rankWith, StatePropsOfLayout } from '@jsonforms/core';
+import {
+  Category,
+  isCategorization,
+  rankWith,
+  StatePropsOfLayout,
+} from '@jsonforms/core';
 import { JsonFormsDispatch, withJsonFormsLayoutProps } from '@jsonforms/react';
 import PlusOneIcon from '@mui/icons-material/PlusOne';
 import TabIcon from '@mui/icons-material/Tab';
@@ -29,7 +34,9 @@ interface DroppableCategorizationLayoutProps extends StatePropsOfLayout {
   uischema: CategorizationLayout;
 }
 
-const DroppableCategorizationLayout: React.FC<DroppableCategorizationLayoutProps> = (props) => {
+const DroppableCategorizationLayout: React.FC<
+  DroppableCategorizationLayoutProps
+> = (props) => {
   const { uischema, schema, path, renderers, cells } = props;
   const [, setSelection] = useSelection();
   const categorizationService = useCategorizationService();
@@ -37,14 +44,15 @@ const DroppableCategorizationLayout: React.FC<DroppableCategorizationLayoutProps
 
   const defaultIndex = findIndex(
     categories,
-    (cat) => cat.uuid === categorizationService.getTabSelection(uischema)?.uuid
+    (cat) => cat.uuid === categorizationService.getTabSelection(uischema)?.uuid,
   );
 
   const [currentIndex, setCurrentIndex] = useState<number | undefined>(
-    defaultIndex === -1 ? undefined : defaultIndex
+    defaultIndex === -1 ? undefined : defaultIndex,
   );
 
-  const indicatorColor: 'secondary' | 'primary' = categories.length === 0 ? 'primary' : 'secondary';
+  const indicatorColor: 'secondary' | 'primary' =
+    categories.length === 0 ? 'primary' : 'secondary';
 
   const setIndex = (value: number, event?: React.SyntheticEvent) => {
     event?.stopPropagation();
@@ -58,7 +66,7 @@ const DroppableCategorizationLayout: React.FC<DroppableCategorizationLayoutProps
 
   const renderersToUse = useMemo(
     () => renderers && [...renderers, DroppableElementRegistration],
-    [renderers]
+    [renderers],
   );
 
   const handleChange = (_event: React.SyntheticEvent, value: number) => {
@@ -137,6 +145,6 @@ const DroppableCategorizationLayout: React.FC<DroppableCategorizationLayoutProps
 export const DroppableCategorizationLayoutRegistration = {
   tester: rankWith(40, isCategorization),
   renderer: withJsonFormsLayoutProps(
-    DroppableCategorizationLayout as React.FC<StatePropsOfLayout>
+    DroppableCategorizationLayout as React.FC<StatePropsOfLayout>,
   ),
 };

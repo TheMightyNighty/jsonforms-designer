@@ -36,7 +36,7 @@ export const addSchema = (monaco: Monaco, schemas: SchemaEntry[]) => {
     for (const schema of schemas) {
       const fileMatch = schema.fileMatch;
       const existing = registeredSchemas.find(
-        (s: SchemaEntry) => s.fileMatch === fileMatch && s.uri === schema.uri
+        (s: SchemaEntry) => s.fileMatch === fileMatch && s.uri === schema.uri,
       );
       if (!existing) {
         registeredSchemas.push({ ...schema });
@@ -50,7 +50,7 @@ export const addSchema = (monaco: Monaco, schemas: SchemaEntry[]) => {
  */
 export const configureJsonSchemaValidation = (
   monaco: Monaco,
-  modelUri: ReturnType<Monaco['Uri']['parse']>
+  modelUri: ReturnType<Monaco['Uri']['parse']>,
 ) => {
   addSchema(monaco, [
     { ...jsonSchemaDraft7, fileMatch: [modelUri.toString()] },
@@ -62,7 +62,7 @@ export const configureJsonSchemaValidation = (
  */
 export const configureRuleSchemaValidation = (
   monaco: Monaco,
-  modelUri: ReturnType<Monaco['Uri']['parse']>
+  modelUri: ReturnType<Monaco['Uri']['parse']>,
 ) => {
   addSchema(monaco, [
     { ...jsonSchemaDraft7 },
@@ -77,7 +77,7 @@ export const configureRuleSchemaValidation = (
 export const getMonacoModelForUri = (
   monaco: Monaco,
   modelUri: ReturnType<Monaco['Uri']['parse']>,
-  initialValue: string | undefined
+  initialValue: string | undefined,
 ) => {
   const value = initialValue ?? '';
   let model = monaco.editor.getModel(modelUri);

@@ -32,7 +32,10 @@ interface SchemaTreeItemProps {
 
 const SchemaTreeItem: React.FC<SchemaTreeItemProps> = ({ schemaElement }) => {
   const uiSchemaElement: EditorUISchemaElement = createControl(schemaElement);
-  const dndItem = DndItems.newUISchemaElement(uiSchemaElement, schemaElement.uuid);
+  const dndItem = DndItems.newUISchemaElement(
+    uiSchemaElement,
+    schemaElement.uuid,
+  );
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: dndItem.type,
@@ -75,9 +78,9 @@ const getChildrenToRender = (schemaElement: SchemaElement) =>
     return [child];
   });
 
-export const SchemaTreeView: React.FC<{ schema: SchemaElement | undefined }> = ({
-  schema,
-}) => (
+export const SchemaTreeView: React.FC<{
+  schema: SchemaElement | undefined;
+}> = ({ schema }) => (
   <>
     <Typography variant="h6" color="inherit" noWrap>
       Controls

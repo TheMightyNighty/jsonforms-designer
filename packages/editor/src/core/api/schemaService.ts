@@ -6,9 +6,11 @@
  * ---------------------------------------------------------------------
  */
 
+import { JsonSchema7, UISchemaElement } from '@jsonforms/core';
+
 export interface SchemaService {
-  getSchema(): Promise<any>;
-  getUiSchema(): Promise<any>;
+  getSchema(): Promise<JsonSchema7 | undefined>;
+  getUiSchema(): Promise<UISchemaElement | undefined>;
 }
 
 export class EmptySchemaService implements SchemaService {

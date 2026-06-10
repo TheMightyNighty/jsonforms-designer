@@ -1,14 +1,15 @@
+import { JsonSchema7 } from '@jsonforms/core';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CodeIcon from '@mui/icons-material/Code';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
-import PreviewIcon from '@mui/icons-material/Visibility';
-import RedoIcon from '@mui/icons-material/Redo';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LanguageIcon from '@mui/icons-material/Language';
+import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import RedoIcon from '@mui/icons-material/Redo';
 import UndoIcon from '@mui/icons-material/Undo';
+import PreviewIcon from '@mui/icons-material/Visibility';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -18,15 +19,21 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import React, { useState } from 'react';
 
-import { useEditorContext, useUndoRedo } from '../context';
+import { EditorMode } from '../../editor/editorMode';
+import { FormTemplate } from '../../field-types/formTemplates';
+import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
 import { useI18n } from '../../i18n';
-import { createLoadTemplateAction, createSetFieldStateAction, createToggleLineNumbersAction, createSetFormMetadataAction } from '../model/addFieldActions';
+import { useEditorContext, useUndoRedo } from '../context';
+import { EditorAction } from '../model/actions';
+import {
+  createLoadTemplateAction,
+  createSetFieldStateAction,
+  createSetFormMetadataAction,
+  createToggleLineNumbersAction,
+} from '../model/addFieldActions';
+import { copyToClipBoard } from '../util/clipboard';
 import { ImportExportDialog } from './ImportExportDialog';
 import { MetadataDialog } from './MetadataDialog';
-import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
-import { FormTemplate } from '../../field-types/formTemplates';
-import { EditorMode } from '../../editor/editorMode';
-import { copyToClipBoard } from '../util/clipboard';
 
 interface HeaderProps {
   mode: EditorMode;
@@ -37,19 +44,22 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
   const { dispatch, fieldState } = useEditorContext();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const { t, locale, setLocale } = useI18n();
-  const [exportOpen, setExportOpen]     = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
-  const [metaOpen, setMetaOpen]         = useState(false);
+  const [metaOpen, setMetaOpen] = useState(false);
 
   const handleTemplateSelect = (tpl: FormTemplate) => {
-    (dispatch as any)(createLoadTemplateAction(tpl.state));
+    dispatch(createLoadTemplateAction(tpl.state) as unknown as EditorAction);
   };
 
   const handleCopySchema = () => {
-    copyToClipBoard(JSON.stringify(
-      { schema: fieldState.schema, uiSchema: fieldState.uiSchema },
-      null, 2
-    ));
+    copyToClipBoard(
+      JSON.stringify(
+        { schema: fieldState.schema, uiSchema: fieldState.uiSchema },
+        null,
+        2,
+      ),
+    );
   };
 
   const lineNumbers = fieldState.lineNumbersEnabled;
@@ -59,35 +69,74 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
   return (
     <AppBar position="static" elevation={0}>
       <Toolbar>
-        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, flexGrow: 1, minWidth: 0 }}>
-          <Typography variant="h6" noWrap sx={{ fontWeight: 700, color: 'primary.dark', letterSpacing: '-0.02em' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: 1,
+            flexGrow: 1,
+            minWidth: 0,
+          }}
+        >
+          <Typography
+            variant="h6"
+            noWrap
+            sx={{
+              fontWeight: 700,
+              color: 'primary.dark',
+              letterSpacing: '-0.02em',
+            }}
+          >
             {t.header.title}
           </Typography>
-          {(fieldState.schema as any).title && (
-            <Typography variant="body2" noWrap sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-              — {(fieldState.schema as any).title}
+          {(fieldState.schema as JsonSchema7).title && (
+            <Typography
+              variant="body2"
+              noWrap
+              sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+            >
+              — {(fieldState.schema as JsonSchema7).title}
             </Typography>
           )}
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
           <Tooltip title={locale === 'de' ? 'English' : 'Deutsch'}>
-            <IconButton color="inherit" onClick={() => setLocale(locale === 'de' ? 'en' : 'de')} aria-label="Sprache wechseln">
+            <IconButton
+              color="inherit"
+              onClick={() => setLocale(locale === 'de' ? 'en' : 'de')}
+              aria-label="Sprache wechseln"
+            >
               <LanguageIcon />
-              <Typography variant="caption" sx={{ ml: 0.25, fontSize: '0.65rem' }}>{locale.toUpperCase()}</Typography>
+              <Typography
+                variant="caption"
+                sx={{ ml: 0.25, fontSize: '0.65rem' }}
+              >
+                {locale.toUpperCase()}
+              </Typography>
             </IconButton>
           </Tooltip>
 
           <Tooltip title={t.header.undo}>
             <span>
-              <IconButton color="inherit" onClick={undo} disabled={!canUndo} aria-label="Rückgängig">
+              <IconButton
+                color="inherit"
+                onClick={undo}
+                disabled={!canUndo}
+                aria-label="Rückgängig"
+              >
                 <UndoIcon />
               </IconButton>
             </span>
           </Tooltip>
           <Tooltip title={t.header.redo}>
             <span>
-              <IconButton color="inherit" onClick={redo} disabled={!canRedo} aria-label="Wiederholen">
+              <IconButton
+                color="inherit"
+                onClick={redo}
+                disabled={!canRedo}
+                aria-label="Wiederholen"
+              >
                 <RedoIcon />
               </IconButton>
             </span>
@@ -96,13 +145,21 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
           <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
           <Tooltip title={t.header.template}>
-            <IconButton color="inherit" onClick={() => setTemplateOpen(true)} aria-label="Vorlage laden">
+            <IconButton
+              color="inherit"
+              onClick={() => setTemplateOpen(true)}
+              aria-label="Vorlage laden"
+            >
               <LibraryBooksIcon />
             </IconButton>
           </Tooltip>
 
           <Tooltip title={t.header.copySchema}>
-            <IconButton color="inherit" onClick={handleCopySchema} aria-label="Schema kopieren">
+            <IconButton
+              color="inherit"
+              onClick={handleCopySchema}
+              aria-label="Schema kopieren"
+            >
               <ContentCopyIcon />
             </IconButton>
           </Tooltip>
@@ -131,10 +188,20 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={lineNumbers ? 'Zeilennummern ausblenden' : 'Zeilennummern einblenden'}>
+          <Tooltip
+            title={
+              lineNumbers
+                ? 'Zeilennummern ausblenden'
+                : 'Zeilennummern einblenden'
+            }
+          >
             <IconButton
               color="inherit"
-              onClick={() => (dispatch as any)(createToggleLineNumbersAction())}
+              onClick={() =>
+                dispatch(
+                  createToggleLineNumbersAction() as unknown as EditorAction,
+                )
+              }
               aria-label="Zeilennummern umschalten"
               sx={{ color: lineNumbers ? 'primary.main' : 'text.secondary' }}
             >
@@ -143,13 +210,19 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
           </Tooltip>
 
           <Tooltip title="Formular-Metadaten">
-            <IconButton onClick={() => setMetaOpen(true)} aria-label="Formular-Metadaten bearbeiten">
+            <IconButton
+              onClick={() => setMetaOpen(true)}
+              aria-label="Formular-Metadaten bearbeiten"
+            >
               <InfoOutlinedIcon />
             </IconButton>
           </Tooltip>
 
           <Tooltip title={t.header.exportImport}>
-            <IconButton onClick={() => setExportOpen(true)} aria-label="Export / Import">
+            <IconButton
+              onClick={() => setExportOpen(true)}
+              aria-label="Export / Import"
+            >
               <CloudDownloadIcon />
             </IconButton>
           </Tooltip>
@@ -161,7 +234,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
         onClose={() => setExportOpen(false)}
         fieldState={fieldState}
         onImport={(state) => {
-          (dispatch as any)(createSetFieldStateAction(state));
+          dispatch(createSetFieldStateAction(state) as unknown as EditorAction);
           setExportOpen(false);
         }}
       />
@@ -176,7 +249,9 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
         open={metaOpen}
         onClose={() => setMetaOpen(false)}
         schema={fieldState.schema}
-        onSave={(meta) => (dispatch as any)(createSetFormMetadataAction(meta))}
+        onSave={(meta) =>
+          dispatch(createSetFormMetadataAction(meta) as unknown as EditorAction)
+        }
       />
     </AppBar>
   );

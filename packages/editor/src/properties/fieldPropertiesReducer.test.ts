@@ -2,13 +2,14 @@
  * F-4: Tests für fieldPropertiesReducer und fieldPropertiesActions
  */
 
-import { describe, it, expect } from 'vitest';
-import { fieldPropertiesReducer } from './fieldPropertiesReducer';
+import { describe, expect,it } from 'vitest';
+
+import { FieldAwareState } from '../core/model/addFieldReducer';
 import {
   createUpdateFieldPropertyAction,
   propertyKeyFromScope,
 } from './fieldPropertiesActions';
-import { FieldAwareState } from '../core/model/addFieldReducer';
+import { fieldPropertiesReducer } from './fieldPropertiesReducer';
 
 // ---------------------------------------------------------------------------
 // Fixture
@@ -67,7 +68,7 @@ describe('UPDATE_FIELD_PROPERTY label', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'label',
-      'Ihr Vorname'
+      'Ihr Vorname',
     );
     const next = fieldPropertiesReducer(state, action);
     expect(next.schema.properties!['vorname'].title).toBe('Ihr Vorname');
@@ -78,7 +79,7 @@ describe('UPDATE_FIELD_PROPERTY label', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'label',
-      'X'
+      'X',
     );
     const next = fieldPropertiesReducer(state, action);
     expect(next.uiSchema).toEqual(state.uiSchema);
@@ -89,7 +90,7 @@ describe('UPDATE_FIELD_PROPERTY label', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'label',
-      'Neu'
+      'Neu',
     );
     fieldPropertiesReducer(state, action);
     expect(state.schema.properties!['vorname'].title).toBe('Vorname');
@@ -106,11 +107,11 @@ describe('UPDATE_FIELD_PROPERTY description', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'description',
-      'Bitte geben Sie Ihren Vornamen ein.'
+      'Bitte geben Sie Ihren Vornamen ein.',
     );
     const next = fieldPropertiesReducer(state, action);
     expect(next.schema.properties!['vorname'].description).toBe(
-      'Bitte geben Sie Ihren Vornamen ein.'
+      'Bitte geben Sie Ihren Vornamen ein.',
     );
   });
 });
@@ -125,11 +126,11 @@ describe('UPDATE_FIELD_PROPERTY placeholder', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'placeholder',
-      'z. B. Max'
+      'z. B. Max',
     );
     const next = fieldPropertiesReducer(state, action);
     const control = next.uiSchema.elements.find(
-      (el) => el.scope === '#/properties/vorname'
+      (el) => el.scope === '#/properties/vorname',
     );
     expect(control?.options?.['placeholder']).toBe('z. B. Max');
   });
@@ -153,7 +154,7 @@ describe('UPDATE_FIELD_PROPERTY placeholder', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/x',
       'placeholder',
-      'Beispiel'
+      'Beispiel',
     );
     const next = fieldPropertiesReducer(state, action);
     expect(next.uiSchema.elements[0].options?.['placeholder']).toBe('Beispiel');
@@ -170,7 +171,7 @@ describe('UPDATE_FIELD_PROPERTY required', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'required',
-      true
+      true,
     );
     const next = fieldPropertiesReducer(state, action);
     expect(next.schema.required).toContain('vorname');
@@ -187,7 +188,7 @@ describe('UPDATE_FIELD_PROPERTY required', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'required',
-      false
+      false,
     );
     const next = fieldPropertiesReducer(state, action);
     expect(next.schema.required).not.toContain('vorname');
@@ -201,7 +202,7 @@ describe('UPDATE_FIELD_PROPERTY required', () => {
     const action = createUpdateFieldPropertyAction(
       '#/properties/vorname',
       'required',
-      true
+      true,
     );
     const next = fieldPropertiesReducer(state, action);
     expect(next.schema.required!.filter((k) => k === 'vorname').length).toBe(1);

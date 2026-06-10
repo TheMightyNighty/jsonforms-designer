@@ -9,27 +9,38 @@
  */
 
 import { JsonSchema7 } from '@jsonforms/core';
+
+import { FieldAwareState } from '../core/model/addFieldReducer';
+import { FlatElement } from '../core/model/uiElements';
 import {
-  UpdateFieldPropertyAction,
-  UPDATE_FIELD_PROPERTY,
+  propertyKeyFromScope,
   SET_FIELD_RULE,
   SetFieldRuleAction,
-  propertyKeyFromScope,
+  UPDATE_FIELD_PROPERTY,
+  UpdateFieldPropertyAction,
 } from './fieldPropertiesActions';
-import { FieldAwareState } from '../core/model/addFieldReducer';
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktion: Element-Baum rekursiv transformieren
 // ---------------------------------------------------------------------------
 
-function mapElementsDeep(elements: any[], fn: (el: any) => any): any[] {
+/** uiSchema-Element, das zusätzlich eine JSONForms-`rule` tragen kann. */
+type UiSchemaElement = FlatElement & { rule?: unknown };
+
+function mapElementsDeep(
+  elements: UiSchemaElement[],
+  fn: (el: UiSchemaElement) => UiSchemaElement,
+): UiSchemaElement[] {
   return elements.map((el) => {
     const updated = fn(el);
     if (el.type === 'ColumnContainer') {
-      return { ...updated, columns: (el.columns as any[][]).map((col) => mapElementsDeep(col, fn)) };
+      return {
+        ...updated,
+        columns: (el.columns ?? []).map((col) => mapElementsDeep(col, fn)),
+      };
     }
     if (el.type === 'GroupContainer') {
-      return { ...updated, children: mapElementsDeep(el.children, fn) };
+      return { ...updated, children: mapElementsDeep(el.children ?? [], fn) };
     }
     return updated;
   });
@@ -41,11 +52,11 @@ function mapElementsDeep(elements: any[], fn: (el: any) => any): any[] {
 
 export function fieldPropertiesReducer<S extends FieldAwareState>(
   state: S,
-  action: UpdateFieldPropertyAction | SetFieldRuleAction
+  action: UpdateFieldPropertyAction | SetFieldRuleAction,
 ): S {
   if (action.type === SET_FIELD_RULE) {
     const { scope, rule } = action.payload;
-    const elements = mapElementsDeep(state.uiSchema.elements as any[], (el) => {
+    const elements = mapElementsDeep(state.uiSchema.elements as UiSchemaElement[], (el) => {
       if (el.scope !== scope) return el;
       if (rule === null) {
         const { rule: _r, ...rest } = el;
@@ -69,7 +80,9 @@ export function fieldPropertiesReducer<S extends FieldAwareState>(
       return updateSchemaProperty(state, key, { description: value as string });
 
     case 'placeholder':
-      return updateControlOptions(state, scope, { placeholder: value as string });
+      return updateControlOptions(state, scope, {
+        placeholder: value as string,
+      });
 
     case 'required':
       return updateRequired(state, key, value as boolean);
@@ -86,7 +99,7 @@ export function fieldPropertiesReducer<S extends FieldAwareState>(
 function updateSchemaProperty<S extends FieldAwareState>(
   state: S,
   key: string,
-  patch: Partial<JsonSchema7 & { title?: string; description?: string }>
+  patch: Partial<JsonSchema7 & { title?: string; description?: string }>,
 ): S {
   const existing = state.schema.properties?.[key];
   if (!existing) return state;
@@ -106,9 +119,9 @@ function updateSchemaProperty<S extends FieldAwareState>(
 function updateControlOptions<S extends FieldAwareState>(
   state: S,
   scope: string,
-  optionsPatch: Record<string, unknown>
+  optionsPatch: Record<string, unknown>,
 ): S {
-  const elements = mapElementsDeep(state.uiSchema.elements as any[], (el) => {
+  const elements = mapElementsDeep(state.uiSchema.elements as UiSchemaElement[], (el) => {
     if (el.scope !== scope) return el;
     return { ...el, options: { ...(el.options ?? {}), ...optionsPatch } };
   });
@@ -118,11 +131,13 @@ function updateControlOptions<S extends FieldAwareState>(
 function updateRequired<S extends FieldAwareState>(
   state: S,
   key: string,
-  required: boolean
+  required: boolean,
 ): S {
   const current = state.schema.required ?? [];
   const next = required
-    ? current.includes(key) ? current : [...current, key]
+    ? current.includes(key)
+      ? current
+      : [...current, key]
     : current.filter((k) => k !== key);
 
   return {

@@ -54,14 +54,14 @@ describe('add detail action', () => {
         elements: [
           { type: 'Control', scope: '#/properties/toys' } as ControlElement,
         ],
-      } as Layout)
+      } as Layout),
     );
     const schema = state.schema as ObjectElement;
     const uiSchema = state.uiSchema as EditorLayout;
     expect(schema).toBeDefined();
     expect(uiSchema).toBeDefined();
     schema.properties.get('toys')!.linkedUISchemaElements = new Set(
-      uiSchema.elements[0].uuid
+      uiSchema.elements[0].uuid,
     );
     uiSchema.elements[0].linkedSchemaElement =
       schema.properties.get('toys')!.uuid;
@@ -73,14 +73,14 @@ describe('add detail action', () => {
     const newDetail = createLayout('HorizontalLayout');
     const addDetailAction = Actions.addDetail(
       (uiSchema as EditorLayout).elements[0].uuid,
-      newDetail
+      newDetail,
     );
     const { uiSchema: newUiSchema } = combinedReducer(
       { schema, uiSchema, fieldState: emptyFieldState },
-      addDetailAction
+      addDetailAction,
     );
     expect(
-      (newUiSchema as EditorLayout).elements[0].options!.detail
+      (newUiSchema as EditorLayout).elements[0].options!.detail,
     ).toStrictEqual(newDetail);
   });
 
@@ -93,14 +93,14 @@ describe('add detail action', () => {
     ).properties.get('height')!.uuid;
     const addDetailAction = Actions.addDetail(
       (uiSchema as EditorLayout).elements[0].uuid,
-      newDetail
+      newDetail,
     );
     const { schema: newSchema, uiSchema: newUiSchema } = combinedReducer(
       { schema, uiSchema, fieldState: emptyFieldState },
-      addDetailAction
+      addDetailAction,
     );
     expect(
-      (newUiSchema as EditorLayout).elements[0].options!.detail
+      (newUiSchema as EditorLayout).elements[0].options!.detail,
     ).toStrictEqual(newDetail);
     expect(
       (
@@ -108,7 +108,7 @@ describe('add detail action', () => {
           .items as ObjectElement
       ).properties
         .get('height')!
-        .linkedUISchemaElements!.has(newDetail.uuid)
+        .linkedUISchemaElements!.has(newDetail.uuid),
     ).toBeTruthy();
   });
 });
@@ -125,7 +125,7 @@ describe('SET_SCHEMA action', () => {
       buildEditorUiSchemaTree({
         type: 'Control',
         scope: '#/properties/name',
-      } as ControlElement)
+      } as ControlElement),
     );
 
     const setSchemaAction = Actions.setSchema({
@@ -139,7 +139,7 @@ describe('SET_SCHEMA action', () => {
     expect(nameProperty?.uuid).toBeDefined();
     expect(uiSchema?.linkedSchemaElement).toStrictEqual(nameProperty?.uuid);
     expect(
-      nameProperty?.linkedUISchemaElements?.values().next().value
+      nameProperty?.linkedUISchemaElements?.values().next().value,
     ).toStrictEqual(uiSchema?.uuid);
   });
 
@@ -154,7 +154,7 @@ describe('SET_SCHEMA action', () => {
       buildEditorUiSchemaTree({
         type: 'Control',
         scope: '#/properties/name',
-      } as ControlElement)
+      } as ControlElement),
     );
 
     const setSchemaAction = Actions.setSchema(undefined);
@@ -175,7 +175,7 @@ describe('SET_SCHEMA action', () => {
       buildEditorUiSchemaTree({
         type: 'Control',
         scope: '#/properties/name',
-      } as ControlElement)
+      } as ControlElement),
     );
 
     const setSchemaAction = Actions.setSchema({
@@ -208,23 +208,23 @@ describe('REMOVE_UISCHEMA_ELEMENT action', () => {
           elements: [
             { type: 'Control', scope: '#/properties/name' } as ControlElement,
           ],
-        } as Layout)
+        } as Layout),
       ),
       Actions.setSchema({
         type: 'object',
         properties: {},
-      })
+      }),
     );
 
     const brokenControl = (brokenState.uiSchema as EditorLayout).elements[0];
     const removeBrokenElementAction = Actions.removeUiSchemaElement(
-      brokenControl.uuid
+      brokenControl.uuid,
     );
 
     // REMOVE BROKEN CONTROL
     const { uiSchema: updatedSchema } = combinedReducer(
       brokenState,
-      removeBrokenElementAction
+      removeBrokenElementAction,
     );
 
     expect((updatedSchema as EditorLayout).elements).toBeDefined();
@@ -244,7 +244,7 @@ describe('SET_UISCHEMA action', () => {
       buildEditorUiSchemaTree({
         type: 'Control',
         scope: '#/properties/name',
-      } as ControlElement)
+      } as ControlElement),
     );
 
     const setUiSchemaAction = Actions.setUiSchema({
@@ -255,7 +255,7 @@ describe('SET_UISCHEMA action', () => {
     } as Layout);
     const { schema, uiSchema } = combinedReducer(
       initialState,
-      setUiSchemaAction
+      setUiSchemaAction,
     );
     const nameProperty = getChildren(schema as SchemaElement)[0];
     expect(nameProperty?.uuid).toBeDefined();
@@ -263,7 +263,7 @@ describe('SET_UISCHEMA action', () => {
     expect(nameControl?.uuid).toBeDefined();
     expect(nameControl?.linkedSchemaElement).toStrictEqual(nameProperty?.uuid);
     expect(
-      nameProperty?.linkedUISchemaElements?.values().next().value
+      nameProperty?.linkedUISchemaElements?.values().next().value,
     ).toStrictEqual(nameControl?.uuid);
   });
 
@@ -278,13 +278,13 @@ describe('SET_UISCHEMA action', () => {
       buildEditorUiSchemaTree({
         type: 'Control',
         scope: '#/properties/name',
-      } as ControlElement)
+      } as ControlElement),
     );
 
     const setUiSchemaAction = Actions.setUiSchema(undefined);
     const { schema, uiSchema } = combinedReducer(
       initialState,
-      setUiSchemaAction
+      setUiSchemaAction,
     );
     expect(uiSchema).toBeUndefined();
     expect(schema).toBeDefined();
@@ -303,7 +303,7 @@ describe('SET_UISCHEMA action', () => {
       buildEditorUiSchemaTree({
         type: 'Control',
         scope: '#/properties/name',
-      } as ControlElement)
+      } as ControlElement),
     );
 
     const setUiSchemaAction = Actions.setUiSchema({

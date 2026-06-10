@@ -22,7 +22,10 @@ interface ErrorDialogProps {
 }
 
 export const ErrorDialog: React.FC<ErrorDialogProps> = ({
-  open, title, text, onClose,
+  open,
+  title,
+  text,
+  onClose,
 }) => (
   <Dialog open={open} onClose={onClose}>
     <DialogTitle>{title}</DialogTitle>
@@ -30,7 +33,9 @@ export const ErrorDialog: React.FC<ErrorDialogProps> = ({
       <DialogContentText>{text}</DialogContentText>
     </DialogContent>
     <DialogActions>
-      <Button onClick={onClose} color="primary" autoFocus>OK</Button>
+      <Button onClick={onClose} color="primary" autoFocus>
+        OK
+      </Button>
     </DialogActions>
   </Dialog>
 );

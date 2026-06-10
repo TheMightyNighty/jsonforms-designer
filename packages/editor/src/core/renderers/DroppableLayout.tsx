@@ -119,13 +119,13 @@ const DropPoint: React.FC<DropPointProps> = ({ layout, index }) => {
           return canDropIntoLayout(
             item as NewUISchemaElement,
             rootSchema,
-            layout
+            layout,
           );
         case MOVE_UI_SCHEMA_ELEMENT:
           return canMoveSchemaElementTo(
             item as MoveUISchemaElement,
             layout,
-            index
+            index,
           );
       }
       return false;
@@ -138,8 +138,7 @@ const DropPoint: React.FC<DropPointProps> = ({ layout, index }) => {
       return {
         isOver: !!mon.isOver() && mon.canDrop(),
         uiSchemaElement: item?.uiSchemaElement,
-        schemaUUID:
-          item && 'schemaUUID' in item ? item.schemaUUID : undefined,
+        schemaUUID: item && 'schemaUUID' in item ? item.schemaUUID : undefined,
       };
     },
     drop: (item) => {
@@ -148,22 +147,24 @@ const DropPoint: React.FC<DropPointProps> = ({ layout, index }) => {
       }
       switch (item.type) {
         case NEW_UI_SCHEMA_ELEMENT:
-          schemaUUID
-            ? dispatch(
-                Actions.addScopedElementToLayout(
-                  uiSchemaElement,
-                  layout.uuid,
-                  index,
-                  schemaUUID
-                )
-              )
-            : dispatch(
-                Actions.addUnscopedElementToLayout(
-                  uiSchemaElement,
-                  layout.uuid,
-                  index
-                )
-              );
+          if (schemaUUID) {
+            dispatch(
+              Actions.addScopedElementToLayout(
+                uiSchemaElement,
+                layout.uuid,
+                index,
+                schemaUUID,
+              ),
+            );
+          } else {
+            dispatch(
+              Actions.addUnscopedElementToLayout(
+                uiSchemaElement,
+                layout.uuid,
+                index,
+              ),
+            );
+          }
           break;
         case MOVE_UI_SCHEMA_ELEMENT:
           dispatch(
@@ -171,8 +172,8 @@ const DropPoint: React.FC<DropPointProps> = ({ layout, index }) => {
               uiSchemaElement.uuid,
               layout.uuid,
               index,
-              schemaUUID
-            )
+              schemaUUID,
+            ),
           );
           break;
       }

@@ -20,8 +20,8 @@ import {
 } from '../../core/context';
 import { Actions } from '../../core/model';
 import { EditorUISchemaElement } from '../../core/model/uischema';
-import { tryFindByUUID } from '../../core/util/schemasUtil';
 import { PropertySchemas } from '../../core/properties/propertiesService';
+import { tryFindByUUID } from '../../core/util/schemasUtil';
 
 export interface PropertiesProps {
   propertyRenderers: JsonFormsRendererRegistryEntry[];
@@ -36,7 +36,7 @@ export const Properties: React.FC<PropertiesProps> = ({
 
   const uiElement: EditorUISchemaElement | undefined = useMemo(
     () => tryFindByUUID(uiSchema, selection?.uuid),
-    [selection, uiSchema]
+    [selection, uiSchema],
   );
 
   const data = useMemo(
@@ -48,18 +48,18 @@ export const Properties: React.FC<PropertiesProps> = ({
         'linkedSchemaElement',
         'options.detail',
       ]),
-    [uiElement]
+    [uiElement],
   );
 
   const updateProperties = useCallback(
     ({ data: updatedProperties }: { data: Record<string, unknown> }) => {
       if (uiElement && !isEqual(data, updatedProperties)) {
         dispatch(
-          Actions.updateUISchemaElement(uiElement.uuid, updatedProperties)
+          Actions.updateUISchemaElement(uiElement.uuid, updatedProperties),
         );
       }
     },
-    [data, dispatch, uiElement]
+    [data, dispatch, uiElement],
   );
   const propertiesService = usePropertiesService();
   const [properties, setProperties] = useState<PropertySchemas>();

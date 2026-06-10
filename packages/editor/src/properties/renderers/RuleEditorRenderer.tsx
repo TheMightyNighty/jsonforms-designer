@@ -5,6 +5,7 @@
  */
 import { ControlProps, rankWith, scopeEndsWith } from '@jsonforms/core';
 import { withJsonFormsControlProps } from '@jsonforms/react';
+import Editor, { Monaco, OnMount } from '@monaco-editor/react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -13,7 +14,6 @@ import Button from '@mui/material/Button';
 import FormHelperText from '@mui/material/FormHelperText';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
-import Editor, { Monaco, OnMount } from '@monaco-editor/react';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { ShowMoreLess } from '../../core/components/ShowMoreLess';
@@ -30,18 +30,22 @@ const ruleExample = (
   <div>
     <h3>Example</h3>
     <p>
-      A rule that hides the UI Element it is contained in, when the value of
-      the control with the scope <b>&apos;#/properties/name&apos;</b> is{' '}
+      A rule that hides the UI Element it is contained in, when the value of the
+      control with the scope <b>&apos;#/properties/name&apos;</b> is{' '}
       <b>&apos;foo&apos;</b>:
     </p>
     <pre>
       {JSON.stringify(
         {
           effect: 'HIDE',
-          condition: { type: 'LEAF', scope: '#/properties/name', expectedValue: 'foo' },
+          condition: {
+            type: 'LEAF',
+            scope: '#/properties/name',
+            expectedValue: 'foo',
+          },
         },
         null,
-        2
+        2,
       )}
     </pre>
     <p>
@@ -72,14 +76,21 @@ const RuleEditor: React.FC<ControlProps> = (props) => {
     configureRuleSchemaValidation(monaco, uri);
   }, []);
 
-  const onMount = useCallback<OnMount>((editor, monaco) => {
-    editorRef.current = editor;
-    const uri = monaco.Uri.parse(MODEL_URI);
-    const model = getMonacoModelForUri(monaco, uri, JSON.stringify(data, null, 2));
-    if (!model.isDisposed()) {
-      editor.setModel(model);
-    }
-  }, [data]);
+  const onMount = useCallback<OnMount>(
+    (editor, monaco) => {
+      editorRef.current = editor;
+      const uri = monaco.Uri.parse(MODEL_URI);
+      const model = getMonacoModelForUri(
+        monaco,
+        uri,
+        JSON.stringify(data, null, 2),
+      );
+      if (!model.isDisposed()) {
+        editor.setModel(model);
+      }
+    },
+    [data],
+  );
 
   const onSubmitRule = useCallback(() => {
     const editor = editorRef.current;
@@ -108,7 +119,7 @@ const RuleEditor: React.FC<ControlProps> = (props) => {
       <AccordionDetails>
         <div style={{ width: '100%' }}>
           <FormHelperText error={false}>{ruleDescription}</FormHelperText>
-          <ShowMoreLess style={{ paddingBottom: "16px" }}>
+          <ShowMoreLess style={{ paddingBottom: '16px' }}>
             <FormHelperText error={false}>{ruleExample}</FormHelperText>
           </ShowMoreLess>
           <Editor

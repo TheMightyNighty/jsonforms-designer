@@ -1,6 +1,6 @@
-
 import { Box, Tooltip, Typography } from '@mui/material';
 import { useDrag } from 'react-dnd';
+
 import { FieldTypeDefinition } from '../field-types/fieldTypes';
 
 // ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
   }));
 
   return (
-    <Tooltip title={fieldType.displayName} placement='right' enterDelay={600}>
+    <Tooltip title={fieldType.displayName} placement="right" enterDelay={600}>
       <Box
         ref={dragRef as unknown as React.Ref<HTMLDivElement>}
         sx={{
@@ -67,7 +67,7 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
       >
         {/* Icon via Tabler (CSS-Klassen, kein Import nötig) */}
         <Box
-          component='i'
+          component="i"
           className={`ti ti-${fieldType.icon}`}
           sx={{
             fontSize: 18,
@@ -75,10 +75,10 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
             flexShrink: 0,
             lineHeight: 1,
           }}
-          aria-hidden='true'
+          aria-hidden="true"
         />
         <Typography
-          variant='body2'
+          variant="body2"
           sx={{
             color: 'text.primary',
             lineHeight: 1.3,

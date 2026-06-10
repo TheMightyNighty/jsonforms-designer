@@ -38,7 +38,7 @@ test('set uuids on detail', () => {
   const controlWithDetail = simpleControl();
   controlWithDetail.options = { detail: simpleLayout() };
   const enrichedLayout = buildEditorUiSchemaTree(
-    controlWithDetail
+    controlWithDetail,
   ) as EditorLayout;
   expect(enrichedLayout).toHaveProperty('uuid');
   expect(enrichedLayout.options!.detail.elements[0]).toHaveProperty('uuid');
@@ -49,11 +49,11 @@ test('set parent on detail', () => {
   const controlWithDetail = simpleControl();
   controlWithDetail.options = { detail: simpleLayout() };
   const enrichedLayout = buildEditorUiSchemaTree(
-    controlWithDetail
+    controlWithDetail,
   ) as EditorLayout;
   expect(getRoot(enrichedLayout.options!.detail)).toBe(enrichedLayout);
   expect(getRoot(enrichedLayout.options!.detail.elements[0])).toBe(
-    enrichedLayout
+    enrichedLayout,
   );
 });
 
@@ -61,15 +61,15 @@ test('isInDetail', () => {
   const controlWithDetail = simpleControl();
   controlWithDetail.options = { detail: simpleLayout() };
   const enrichedControlWithDetail = buildEditorUiSchemaTree(
-    controlWithDetail
+    controlWithDetail,
   ) as EditorControl;
   expect(enrichedControlWithDetail).toBeDefined();
   expect(getDetailContainer(enrichedControlWithDetail)).toBeFalsy();
   expect(getDetailContainer(enrichedControlWithDetail.options!.detail)).toBe(
-    enrichedControlWithDetail
+    enrichedControlWithDetail,
   );
   expect(
-    getDetailContainer(enrichedControlWithDetail.options!.detail.elements[0])
+    getDetailContainer(enrichedControlWithDetail.options!.detail.elements[0]),
   ).toBe(enrichedControlWithDetail);
 });
 

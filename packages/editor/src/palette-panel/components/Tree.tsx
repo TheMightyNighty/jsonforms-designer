@@ -19,7 +19,7 @@ interface StyledTreeItemProps extends TreeItemProps {
 export const StyledTreeItem = styled(
   ({ isDragging: _isDragging, ...props }: StyledTreeItemProps) => (
     <TreeItem {...props} />
-  )
+  ),
 )(({ theme, isDragging }) => ({
   opacity: isDragging ? 0.5 : 1,
   '& .MuiTreeItem-iconContainer': {

@@ -70,18 +70,31 @@ export function newId(prefix = 'el'): string {
 // ---------------------------------------------------------------------------
 export function fromLegacy(el: FlatElement): UiElement {
   if (el.type === 'Control') {
-    return { id: el.id ?? newId('ctrl'), type: 'Control', scope: el.scope ?? '', options: el.options };
+    return {
+      id: el.id ?? newId('ctrl'),
+      type: 'Control',
+      scope: el.scope ?? '',
+      options: el.options,
+    };
   }
   if (el.type === 'Label') {
     const variant = (el.options?.variant ?? 'text') as LabelElement['variant'];
-    return { id: el.id ?? newId('lbl'), type: 'Label', label: el.label ?? '', variant, options: el.options };
+    return {
+      id: el.id ?? newId('lbl'),
+      type: 'Label',
+      label: el.label ?? '',
+      variant,
+      options: el.options,
+    };
   }
   if (el.type === 'HorizontalLayout' || el.type === 'ColumnContainer') {
     const widths = (el.options?.widths ?? el.widths ?? [1, 1]) as number[];
     // Wenn .columns bereits vorhanden → direkter Import
     if (el.columns) {
       return {
-        id: el.id ?? newId('col'), type: 'ColumnContainer', widths,
+        id: el.id ?? newId('col'),
+        type: 'ColumnContainer',
+        widths,
         columns: el.columns.map((col) => col.map(fromLegacy)),
         options: el.options,
       };
@@ -91,14 +104,30 @@ export function fromLegacy(el: FlatElement): UiElement {
     (el.elements ?? []).forEach((child, i) => {
       cols[Math.min(i, cols.length - 1)].push(fromLegacy(child));
     });
-    return { id: el.id ?? newId('col'), type: 'ColumnContainer', widths, columns: cols };
+    return {
+      id: el.id ?? newId('col'),
+      type: 'ColumnContainer',
+      widths,
+      columns: cols,
+    };
   }
   if (el.type === 'Group' || el.type === 'GroupContainer') {
     const children = (el.elements ?? el.children ?? []).map(fromLegacy);
-    return { id: el.id ?? newId('grp'), type: 'GroupContainer', label: el.label ?? 'Gruppe', children, options: el.options };
+    return {
+      id: el.id ?? newId('grp'),
+      type: 'GroupContainer',
+      label: el.label ?? 'Gruppe',
+      children,
+      options: el.options,
+    };
   }
   // Fallback
-  return { id: el.id ?? newId('el'), type: 'Label', label: el.label ?? el.type, variant: 'text' };
+  return {
+    id: el.id ?? newId('el'),
+    type: 'Label',
+    label: el.label ?? el.type,
+    variant: 'text',
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -109,18 +138,30 @@ export function toLegacy(el: UiElement): FlatElement {
     return { id: el.id, type: 'Control', scope: el.scope, options: el.options };
   }
   if (el.type === 'Label') {
-    return { id: el.id, type: 'Label', label: el.label, options: { ...el.options, variant: el.variant } };
+    return {
+      id: el.id,
+      type: 'Label',
+      label: el.label,
+      options: { ...el.options, variant: el.variant },
+    };
   }
   if (el.type === 'ColumnContainer') {
     return {
-      id: el.id, type: 'ColumnContainer',
+      id: el.id,
+      type: 'ColumnContainer',
       widths: el.widths,
       columns: el.columns.map((col) => col.map(toLegacy)),
       options: el.options,
     };
   }
   if (el.type === 'GroupContainer') {
-    return { id: el.id, type: 'GroupContainer', label: el.label, children: el.children.map(toLegacy), options: el.options };
+    return {
+      id: el.id,
+      type: 'GroupContainer',
+      label: el.label,
+      children: el.children.map(toLegacy),
+      options: el.options,
+    };
   }
   return { type: 'Label', label: '' };
 }
@@ -129,32 +170,35 @@ export function toLegacy(el: UiElement): FlatElement {
 // toJsonForms: internes Format → JSONForms-uiSchema (für Vorschau + Renderer)
 // ---------------------------------------------------------------------------
 export function toJsonForms(el: UiElement | FlatElement): object | null {
-  const e = el as any;
-
-  if (e.type === 'ColumnContainer' && e.columns) {
+  if (el.type === 'ColumnContainer' && el.columns) {
+    const columns = el.columns as Array<UiElement[] | FlatElement[]>;
     return {
       type: 'HorizontalLayout',
-      elements: e.columns.map((col: any[]) => ({
+      elements: columns.map((col) => ({
         type: 'VerticalLayout',
         elements: col.map(toJsonForms).filter(Boolean),
       })),
     };
   }
-  if (e.type === 'GroupContainer' && e.children) {
+  if (el.type === 'GroupContainer' && el.children) {
     return {
-      type: 'Group', label: e.label ?? '',
-      elements: e.children.map(toJsonForms).filter(Boolean),
+      type: 'Group',
+      label: el.label ?? '',
+      elements: el.children.map(toJsonForms).filter(Boolean),
     };
   }
-  if (e.type === 'Label') {
-    return { type: 'Label', text: e.label ?? '' };
+  if (el.type === 'Label') {
+    return { type: 'Label', text: el.label ?? '' };
   }
-  if (e.type === 'Control' && e.scope) {
-    return { type: 'Control', scope: e.scope, options: e.options };
+  if (el.type === 'Control' && el.scope) {
+    return { type: 'Control', scope: el.scope, options: el.options };
   }
   // Legacy HorizontalLayout (Fallback)
-  if (e.type === 'HorizontalLayout' && e.elements) {
-    return { type: 'HorizontalLayout', elements: (e.elements ?? []).map(toJsonForms).filter(Boolean) };
+  if (el.type === 'HorizontalLayout' && el.elements) {
+    return {
+      type: 'HorizontalLayout',
+      elements: (el.elements ?? []).map(toJsonForms).filter(Boolean),
+    };
   }
   return null;
 }

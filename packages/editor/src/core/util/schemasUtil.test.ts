@@ -30,7 +30,7 @@ describe('build and link ui schema', () => {
       buildEditorUiSchemaTree({
         type: 'Control',
         scope: '#/properties/name',
-      } as ControlElement)
+      } as ControlElement),
     );
     expect(schema).toBeDefined();
     const nameProperty = getChildren(schema as SchemaElement)[0];
@@ -40,7 +40,7 @@ describe('build and link ui schema', () => {
     expect(uiSchema?.linkedSchemaElement).toBe(nameProperty?.uuid);
     expect(nameProperty?.linkedUISchemaElements?.size).toBe(1);
     expect(nameProperty?.linkedUISchemaElements?.values().next().value).toBe(
-      uiSchema?.uuid
+      uiSchema?.uuid,
     );
   });
 });

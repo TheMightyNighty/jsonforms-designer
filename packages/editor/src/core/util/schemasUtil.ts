@@ -5,7 +5,12 @@
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  * ---------------------------------------------------------------------
  */
-import { isControl, isLayout, BaseUISchemaElement, Layout } from '@jsonforms/core';
+import {
+  BaseUISchemaElement,
+  isControl,
+  isLayout,
+  Layout,
+} from '@jsonforms/core';
 import { get } from 'lodash';
 
 import { EditorState, SchemaElement } from '../model';
@@ -17,22 +22,28 @@ import type {
 } from '../model/uischema';
 import { Parentable } from './tree';
 
+/**
+ * Lockerer Knotentyp für die generische Graph-Traversierung (Objekte, Maps,
+ * verschachtelte Schema-/UI-Schema-Bäume). Ersetzt die früheren `any`.
+ */
+type GraphNode = { uuid?: string; parent?: GraphNode; [key: string]: unknown };
+
 export interface CalculatePathError {
   id: 'calulatePathError';
-  root: any;
-  element: any;
+  root: unknown;
+  element: unknown;
 }
 export interface GetPathError {
   id: 'getPathError';
-  root: any;
+  root: unknown;
   path: Array<string>;
 }
 export const isCalculatePathError = <T>(
-  result: T | CalculatePathError
+  result: T | CalculatePathError,
 ): result is CalculatePathError =>
   (result as CalculatePathError)?.id === 'calulatePathError';
 export const isGetPathError = <T>(
-  result: T | GetPathError
+  result: T | GetPathError,
 ): result is GetPathError => (result as GetPathError)?.id === 'getPathError';
 
 export type PathError = CalculatePathError | GetPathError;
@@ -41,27 +52,27 @@ export const isPathError = <T>(result: T | PathError): result is PathError =>
 
 export interface NoUUIDError {
   id: 'noUUIDError';
-  element: any;
+  element?: unknown;
 }
 export interface GetByUUIDError {
   id: 'getByUUIDError';
-  root: any;
+  root: unknown;
   uuid: string;
 }
 export type UUIDError = GetByUUIDError | NoUUIDError;
 
 export const isNoUUIDError = <T>(
-  result: T | NoUUIDError
+  result: T | NoUUIDError,
 ): result is NoUUIDError => (result as NoUUIDError)?.id === 'noUUIDError';
 export const isGetByUUIDError = <T>(
-  result: T | GetByUUIDError
+  result: T | GetByUUIDError,
 ): result is GetByUUIDError =>
   (result as GetByUUIDError)?.id === 'getByUUIDError';
 export const isUUIDError = <T>(result: T | UUIDError): result is UUIDError =>
   isNoUUIDError(result) || isGetByUUIDError(result);
 
 export const getRoot = <T extends Parentable<T>>(
-  element: T | undefined
+  element: T | undefined,
 ): T | undefined => {
   if (element?.parent) {
     return getRoot(element.parent);
@@ -69,8 +80,11 @@ export const getRoot = <T extends Parentable<T>>(
   return element;
 };
 
-export const findByUUID = (element: any, uuid: string): any => {
-  const root = getRoot(element);
+export const findByUUID = <T = unknown>(
+  element: T,
+  uuid: string,
+): NonNullable<T> | UUIDError => {
+  const root = getRoot(element as GraphNode);
   const result = doFindByUUID(root, uuid);
   if (!result) {
     return {
@@ -79,31 +93,34 @@ export const findByUUID = (element: any, uuid: string): any => {
       uuid: uuid,
     };
   }
-  return result;
+  return result as NonNullable<T>;
 };
 
 export const tryFindByUUID = <T>(
   element: T,
-  uuid: string | undefined
+  uuid: string | undefined,
 ): T | undefined => {
   if (!uuid || !element) return undefined;
   const findResult = findByUUID(element, uuid);
   return isUUIDError(findResult) ? undefined : findResult;
 };
 
-const doFindByUUID = (root: any, uuid: string): any | UUIDError => {
+const doFindByUUID = (root: unknown, uuid: string): unknown => {
   if (!uuid) {
     return {
       id: 'noUUIDError',
     };
   }
-  if (root && root.uuid === uuid) {
+  if (root && (root as GraphNode).uuid === uuid) {
     return root;
   }
   if (!root) {
     return undefined;
   }
-  const entries = root instanceof Map ? root.entries() : Object.entries(root);
+  const entries =
+    root instanceof Map
+      ? root.entries()
+      : Object.entries(root as Record<string, unknown>);
   for (const [key, value] of Array.from(entries)) {
     if (value && value.uuid === uuid) {
       return value;
@@ -126,8 +143,8 @@ const doFindByUUID = (root: any, uuid: string): any | UUIDError => {
 };
 
 export const calculatePath = (
-  root: any,
-  object: any
+  root: unknown,
+  object: unknown,
 ): Array<string> | CalculatePathError => {
   const path = doCalculatePath(root, object);
   if (!path) {
@@ -140,8 +157,8 @@ export const calculatePath = (
   return path;
 };
 
-export const getPathString = (object: any): string | PathError => {
-  const root = getRoot(object);
+export const getPathString = (object: unknown): string | PathError => {
+  const root = getRoot(object as GraphNode);
   const path = calculatePath(root, object);
   if (isPathError(path)) {
     return path;
@@ -149,17 +166,24 @@ export const getPathString = (object: any): string | PathError => {
   return `${path.join('/')}`;
 };
 
-const doCalculatePath = (root: any, object: any): Array<string> | undefined => {
-  if (object.uuid && root.uuid === object.uuid) {
+const doCalculatePath = (
+  root: unknown,
+  object: unknown,
+): Array<string> | undefined => {
+  const obj = object as GraphNode;
+  if (obj.uuid && (root as GraphNode).uuid === obj.uuid) {
     return [];
   }
-  const entries = root instanceof Map ? root.entries() : Object.entries(root);
+  const entries =
+    root instanceof Map
+      ? root.entries()
+      : Object.entries(root as Record<string, unknown>);
   for (const [key, value] of Array.from(entries)) {
-    if (object.uuid && value?.uuid === object.uuid) {
+    if (obj.uuid && (value as GraphNode)?.uuid === obj.uuid) {
       return [key];
     }
     // some mappings are 'reversed'
-    if (object.uuid && key?.uuid === object.uuid) {
+    if (obj.uuid && (key as unknown as GraphNode)?.uuid === obj.uuid) {
       return [value];
     }
     if (typeof value === 'object' && key !== 'parent') {
@@ -180,9 +204,9 @@ const doCalculatePath = (root: any, object: any): Array<string> | undefined => {
 };
 
 export const getFromPath = (
-  root: any,
-  path: Array<string>
-): any | GetPathError => {
+  root: unknown,
+  path: Array<string>,
+): unknown | GetPathError => {
   const element = doGetFromPath(root, path);
   if (!element) {
     return {
@@ -194,7 +218,7 @@ export const getFromPath = (
   return element;
 };
 
-const doGetFromPath = (root: any, path: Array<string>): any => {
+const doGetFromPath = (root: unknown, path: Array<string>): unknown => {
   if (path.length === 0) {
     return root;
   }
@@ -217,7 +241,7 @@ const doGetFromPath = (root: any, path: Array<string>): any => {
 
 export const linkElements = (
   uiSchemaElement: EditorUISchemaElement,
-  schemaElement: SchemaElement
+  schemaElement: SchemaElement,
 ): boolean => {
   if (!uiSchemaElement.uuid) {
     console.error('Found element without UUID', uiSchemaElement);
@@ -226,7 +250,7 @@ export const linkElements = (
 
   (schemaElement.linkedUISchemaElements =
     schemaElement.linkedUISchemaElements || new Set()).add(
-    uiSchemaElement.uuid
+    uiSchemaElement.uuid,
   );
 
   uiSchemaElement.linkedSchemaElement = schemaElement.uuid;
@@ -235,7 +259,7 @@ export const linkElements = (
 
 export const linkSchemas = (
   schema: SchemaElement | undefined,
-  uiSchema: EditorUISchemaElement | undefined
+  uiSchema: EditorUISchemaElement | undefined,
 ): EditorState => {
   if (!schema || !uiSchema) {
     return { schema, uiSchema, fieldState: emptyFieldState };
@@ -254,19 +278,19 @@ export const linkSchemas = (
 export const traverse = <T extends BaseUISchemaElement, C>(
   uiSchema: T,
   pre: (uiSchema: T, parent: T | undefined, context: C) => void,
-  context?: C
+  context?: C,
 ): C => doTraverse(uiSchema, pre, undefined, context!);
 
 const doTraverse = <T extends BaseUISchemaElement, C>(
   uiSchema: T,
   pre: (uiSchema: T, parent: T | undefined, context: C) => void,
   parent: T | undefined,
-  context: C
+  context: C,
 ): C => {
   pre(uiSchema, parent, context);
   if (uiSchema && isLayout(uiSchema as BaseUISchemaElement)) {
-    (uiSchema as unknown as Layout).elements.forEach((el: BaseUISchemaElement) =>
-      doTraverse(el as T, pre, uiSchema, context)
+    (uiSchema as unknown as Layout).elements.forEach(
+      (el: BaseUISchemaElement) => doTraverse(el as T, pre, uiSchema, context),
     );
   }
   if (uiSchema?.options?.detail) {
@@ -278,31 +302,40 @@ const doTraverse = <T extends BaseUISchemaElement, C>(
 
 const getSchemaElementFromScope = (
   schema: SchemaElement,
-  scope: string
+  scope: string,
 ): SchemaElement | GetPathError | undefined => {
   const schemaRoot = getRoot(schema);
   const validSegment = (pathSegment: string) =>
     pathSegment !== '#' && pathSegment !== undefined && pathSegment !== '';
   const validPathSegments = scope.split('/').filter(validSegment);
-  return getFromPath(schemaRoot, validPathSegments);
+  return getFromPath(schemaRoot, validPathSegments) as
+    | SchemaElement
+    | GetPathError
+    | undefined;
 };
 
-export const jsonToText = (object: any) => JSON.stringify(object, null, 2);
+export const jsonToText = (object: unknown) => JSON.stringify(object, null, 2);
 
 const isEditorUISchemaElement = (
-  element: any
+  element: unknown,
 ): element is EditorUISchemaElement => {
-  return !!element?.type && !!element?.uuid;
+  const el = element as GraphNode | undefined;
+  return !!el?.type && !!el?.uuid;
 };
 
 export const isEditorControl = (
-  element: BaseUISchemaElement
+  element: BaseUISchemaElement,
 ): element is EditorControl => {
-  return isEditorUISchemaElement(element) && isControl(element as BaseUISchemaElement);
+  return (
+    isEditorUISchemaElement(element) &&
+    isControl(element as BaseUISchemaElement)
+  );
 };
 
 export const isEditorLayout = (
-  element: BaseUISchemaElement
+  element: BaseUISchemaElement,
 ): element is EditorLayout => {
-  return isEditorUISchemaElement(element) && isLayout(element as BaseUISchemaElement);
+  return (
+    isEditorUISchemaElement(element) && isLayout(element as BaseUISchemaElement)
+  );
 };

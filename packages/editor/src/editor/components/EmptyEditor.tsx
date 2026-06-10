@@ -7,9 +7,9 @@ import React from 'react';
 import { useDrop } from 'react-dnd';
 
 import { useDispatch } from '../../core/context';
-import { useI18n } from '../../i18n';
 import { NEW_UI_SCHEMA_ELEMENT, NewUISchemaElement } from '../../core/dnd';
 import { Actions } from '../../core/model';
+import { useI18n } from '../../i18n';
 import { useFieldDrop } from '../../palette-panel/useFieldDrop';
 
 export const EmptyEditor: React.FC = () => {
@@ -20,7 +20,10 @@ export const EmptyEditor: React.FC = () => {
   const [{ isOver: isOverSchema, uiSchemaElement }, schemaDrop] = useDrop<
     NewUISchemaElement,
     void,
-    { isOver: boolean; uiSchemaElement: NewUISchemaElement['uiSchemaElement'] | undefined }
+    {
+      isOver: boolean;
+      uiSchemaElement: NewUISchemaElement['uiSchemaElement'] | undefined;
+    }
   >(() => ({
     accept: NEW_UI_SCHEMA_ELEMENT,
     collect: (mon) => ({
@@ -57,8 +60,12 @@ export const EmptyEditor: React.FC = () => {
         transition: 'border-color 0.15s, background-color 0.15s',
       }}
     >
-      <Typography data-cy="nolayout-drop" color="text.secondary" aria-live="polite">
-{t.editor.dropHint}
+      <Typography
+        data-cy="nolayout-drop"
+        color="text.secondary"
+        aria-live="polite"
+      >
+        {t.editor.dropHint}
       </Typography>
     </Box>
   );

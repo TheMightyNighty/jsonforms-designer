@@ -17,7 +17,7 @@ export interface CategorizationService {
 
   setTabSelection: (
     categorization: CategorizationLayout,
-    selection: SelectedElement
+    selection: SelectedElement,
   ) => void;
 }
 
@@ -26,12 +26,12 @@ export class CategorizationServiceImpl implements CategorizationService {
   private selectedTabs = new Map<string, SelectedElement>();
 
   getTabSelection: (categorization: CategorizationLayout) => SelectedElement = (
-    categorization
+    categorization,
   ) => this.selectedTabs.get(categorization.uuid);
 
   setTabSelection: (
     categorization: CategorizationLayout,
-    selection: SelectedElement
+    selection: SelectedElement,
   ) => void = (categorization, selection) => {
     this.selectedTabs.set(categorization.uuid, selection);
 
@@ -39,7 +39,7 @@ export class CategorizationServiceImpl implements CategorizationService {
       // capture element parents that are Categorization or Category
       this.parentUuids.set(
         categorization.uuid,
-        this.getParentCategoryIds(categorization.parent)
+        this.getParentCategoryIds(categorization.parent),
       );
     }
   };
@@ -63,7 +63,7 @@ export class CategorizationServiceImpl implements CategorizationService {
   };
 
   private getParentCategoryIds = (
-    categorization: EditorUISchemaElement | undefined
+    categorization: EditorUISchemaElement | undefined,
   ): string[] => {
     if (categorization === undefined) {
       return [];

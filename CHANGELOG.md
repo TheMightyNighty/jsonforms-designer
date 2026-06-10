@@ -7,6 +7,12 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert (Qualität / Tooling)
+- **ESLint 9 Flat-Config** eingerichtet (`eslint.config.mjs`): `typescript-eslint`, `simple-import-sort` und `eslint-plugin-react-hooks` verdrahtet. Zuvor existierte keine Konfiguration — `npm run lint` lief ins Leere.
+- **Prettier** als eigenständige Skripte ergänzt (`npm run format` / `format:check`); gesamter `src`-Bestand einmalig formatiert. `eslint-plugin-prettier` entfernt, `eslint-config-prettier` bleibt für Regel-Deduplizierung.
+- **`no-explicit-any` vollständig beseitigt**: alle 180 `any`-Vorkommen durch konkrete Typen (`JsonSchema7`, `UISchemaElement`, `FlatElement`, `unknown` mit gezielten Casts) ersetzt. `npm run lint` ist jetzt fehlerfrei.
+- **Test-Suite repariert**: die Feldtypen-Katalog-Tests (`fieldTypes.test.ts`, `addFieldReducer.test.ts`) waren gegenüber dem auf 30+ Typen gewachsenen Katalog veraltet (strukturelle Einträge, `integer`, `file-upload`) — angeglichen, 312/312 grün.
+
 ---
 
 ## [0.2.1] — 2026-06-01

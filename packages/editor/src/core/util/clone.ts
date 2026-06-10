@@ -23,13 +23,13 @@ export const withCloneTree = <R, T>(
   rootTree: T,
   elementUUID: string | undefined,
   fallback: R,
-  process: (clonedElement: T) => R
+  process: (clonedElement: T) => R,
 ) => {
   const clonedElement = cloneTree(rootTree, elementUUID);
   if (isUUIDError(clonedElement)) {
     console.error(
       'An error occured when cloning element with UUID',
-      elementUUID
+      elementUUID,
     );
     // Do nothing
     return fallback;
@@ -46,10 +46,10 @@ export const withCloneTrees = <R, T1, T2>(
   rootTree2: T2,
   uuid2: string | undefined,
   fallback: R,
-  process: (clonedElement1: T1, clonedElement2: T2) => R
+  process: (clonedElement1: T1, clonedElement2: T2) => R,
 ) =>
   withCloneTree(rootTree1, uuid1, fallback, (clonedElement1) =>
     withCloneTree(rootTree2, uuid2, fallback, (clonedElement2) =>
-      process(clonedElement1, clonedElement2)
-    )
+      process(clonedElement1, clonedElement2),
+    ),
   );

@@ -18,9 +18,9 @@ export const FORM_TEMPLATES: FormTemplate[] = [
       schema: {
         type: 'object',
         properties: {
-          vorname:   { type: 'string', title: 'Vorname', minLength: 1 },
-          nachname:  { type: 'string', title: 'Nachname', minLength: 1 },
-          email:     { type: 'string', title: 'E-Mail-Adresse', format: 'email' },
+          vorname: { type: 'string', title: 'Vorname', minLength: 1 },
+          nachname: { type: 'string', title: 'Nachname', minLength: 1 },
+          email: { type: 'string', title: 'E-Mail-Adresse', format: 'email' },
           nachricht: { type: 'string', title: 'Ihre Nachricht' },
         },
         required: ['vorname', 'nachname', 'email'],
@@ -31,7 +31,11 @@ export const FORM_TEMPLATES: FormTemplate[] = [
           { type: 'Control', scope: '#/properties/vorname' },
           { type: 'Control', scope: '#/properties/nachname' },
           { type: 'Control', scope: '#/properties/email' },
-          { type: 'Control', scope: '#/properties/nachricht', options: { multi: true } },
+          {
+            type: 'Control',
+            scope: '#/properties/nachricht',
+            options: { multi: true },
+          },
         ],
       },
       tabs: [],
@@ -50,11 +54,20 @@ export const FORM_TEMPLATES: FormTemplate[] = [
       schema: {
         type: 'object',
         properties: {
-          strasse:    { type: 'string', title: 'Straße' },
+          strasse: { type: 'string', title: 'Straße' },
           hausnummer: { type: 'string', title: 'Hausnummer' },
-          plz:        { type: 'string', title: 'Postleitzahl', minLength: 5, maxLength: 5 },
-          ort:        { type: 'string', title: 'Ort' },
-          land:       { type: 'string', title: 'Land', enum: ['Deutschland', 'Österreich', 'Schweiz'] },
+          plz: {
+            type: 'string',
+            title: 'Postleitzahl',
+            minLength: 5,
+            maxLength: 5,
+          },
+          ort: { type: 'string', title: 'Ort' },
+          land: {
+            type: 'string',
+            title: 'Land',
+            enum: ['Deutschland', 'Österreich', 'Schweiz'],
+          },
         },
         required: ['strasse', 'hausnummer', 'plz', 'ort'],
       },
@@ -84,10 +97,17 @@ export const FORM_TEMPLATES: FormTemplate[] = [
       schema: {
         type: 'object',
         properties: {
-          betreff:      { type: 'string', title: 'Betreff' },
-          kategorie:    { type: 'string', title: 'Kategorie', enum: ['Allgemein', 'Beschwerde', 'Anfrage', 'Sonstiges'] },
+          betreff: { type: 'string', title: 'Betreff' },
+          kategorie: {
+            type: 'string',
+            title: 'Kategorie',
+            enum: ['Allgemein', 'Beschwerde', 'Anfrage', 'Sonstiges'],
+          },
           beschreibung: { type: 'string', title: 'Beschreibung' },
-          zustimmung:   { type: 'boolean', title: 'Ich stimme der Datenschutzerklärung zu' },
+          zustimmung: {
+            type: 'boolean',
+            title: 'Ich stimme der Datenschutzerklärung zu',
+          },
         },
         required: ['betreff', 'beschreibung', 'zustimmung'],
       },
@@ -96,7 +116,11 @@ export const FORM_TEMPLATES: FormTemplate[] = [
         elements: [
           { type: 'Control', scope: '#/properties/betreff' },
           { type: 'Control', scope: '#/properties/kategorie' },
-          { type: 'Control', scope: '#/properties/beschreibung', options: { multi: true } },
+          {
+            type: 'Control',
+            scope: '#/properties/beschreibung',
+            options: { multi: true },
+          },
           { type: 'Control', scope: '#/properties/zustimmung' },
         ],
       },

@@ -38,14 +38,14 @@ export const useExportUiSchema = () => {
  */
 export const useTransform = <T1, T2>(
   element: T1,
-  transform: (el: T1) => T2
+  transform: (el: T1) => T2,
 ) => {
   const [transformedElement, setTransformedElement] = useState(
-    transform(element)
+    transform(element),
   );
   useEffectAfterInit(
     () => setTransformedElement(transform(element)),
-    [element, transform]
+    [element, transform],
   );
   return transformedElement;
 };
@@ -54,7 +54,10 @@ export const useTransform = <T1, T2>(
  * Hook similar to `useEffect` with the difference that the effect
  * is only executed from the second call onwards.
  */
-const useEffectAfterInit = (effect: () => void, dependencies: Array<any>) => {
+const useEffectAfterInit = (
+  effect: () => void,
+  dependencies: Array<unknown>,
+) => {
   const firstExecution = useRef(true);
   useEffect(() => {
     if (firstExecution.current) {

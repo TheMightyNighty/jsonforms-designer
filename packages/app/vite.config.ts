@@ -40,7 +40,12 @@ const cspPlugin = (): Plugin => ({
 export default defineConfig(({ command }) => {
   const alias: Record<string, string> =
     command === 'serve'
-      ? { '@jsonforms-designer/editor': resolve(import.meta.dirname, '../editor/src/index.ts') }
+      ? {
+          '@jsonforms-designer/editor': resolve(
+            import.meta.dirname,
+            '../editor/src/index.ts',
+          ),
+        }
       : {};
 
   return {

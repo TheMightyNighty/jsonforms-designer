@@ -5,7 +5,7 @@
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  * ---------------------------------------------------------------------
  */
-import { JsonSchema, BaseUISchemaElement } from '@jsonforms/core';
+import { BaseUISchemaElement,JsonSchema } from '@jsonforms/core';
 import { maxBy } from 'lodash';
 
 import { SchemaElement } from '../model';
@@ -13,8 +13,8 @@ import { EditorUISchemaElement } from '../model/uischema';
 
 export interface PropertiesService {
   getProperties(
-    uiElement: any,
-    schemaElement: any
+    uiElement: EditorUISchemaElement,
+    schemaElement: SchemaElement | undefined,
   ): PropertySchemas | undefined;
 }
 
@@ -33,7 +33,7 @@ export interface PropertySchemasDecorator {
   (
     schemas: PropertySchemas,
     uiElement: EditorUISchemaElement,
-    schemaElement?: SchemaElement
+    schemaElement?: SchemaElement,
   ): PropertySchemas;
 }
 
@@ -50,17 +50,17 @@ export interface PropertySchemasProvider {
   tester: (uiElement: EditorUISchemaElement) => number;
   getPropertiesSchemas: (
     uiElement: EditorUISchemaElement,
-    schemaElement?: SchemaElement
+    schemaElement?: SchemaElement,
   ) => PropertySchemas;
 }
 export class PropertiesServiceImpl implements PropertiesService {
   constructor(
     private schemaProviders: PropertySchemasProvider[],
-    private schemaDecorators: PropertySchemasDecorator[]
+    private schemaDecorators: PropertySchemasDecorator[],
   ) {}
   getProperties = (
     uiElement: EditorUISchemaElement,
-    schemaElement: SchemaElement | undefined
+    schemaElement: SchemaElement | undefined,
   ): PropertySchemas | undefined => {
     const provider = maxBy(this.schemaProviders, (p) => p.tester(uiElement));
     if (!provider || provider.tester(uiElement) === NOT_APPLICABLE) {
@@ -68,14 +68,14 @@ export class PropertiesServiceImpl implements PropertiesService {
     }
     const elementSchemas = provider.getPropertiesSchemas(
       uiElement,
-      schemaElement
+      schemaElement,
     );
     if (!elementSchemas) {
       return undefined;
     }
     const decoratedSchemas = this.schemaDecorators.reduce(
       (schemas, decorator) => decorator(schemas, uiElement, schemaElement),
-      elementSchemas
+      elementSchemas,
     );
     return decoratedSchemas;
   };
