@@ -2,10 +2,25 @@
  * F-2: Tests für addFieldReducer und Hilfsfunktionen
  */
 
-import { describe, it, expect } from 'vitest';
-import { addFieldReducer, resolveKey, insertControl, tabReducer, removeFieldReducer, FieldAwareState } from './addFieldReducer';
-import { createAddFieldAction, createAddTabAction, createRemoveTabAction, createRenameTabAction, createSetActiveTabAction, createRemoveFieldAction } from './addFieldActions';
+import { describe, expect,it } from 'vitest';
+
 import { getFieldType } from '../../field-types/fieldTypes';
+import {
+  createAddFieldAction,
+  createAddTabAction,
+  createRemoveFieldAction,
+  createRemoveTabAction,
+  createRenameTabAction,
+  createSetActiveTabAction,
+} from './addFieldActions';
+import {
+  addFieldReducer,
+  FieldAwareState,
+  insertControl,
+  removeFieldReducer,
+  resolveKey,
+  tabReducer,
+} from './addFieldReducer';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -112,7 +127,10 @@ describe('addFieldReducer()', () => {
 
   it('überträgt uiSchema.options (z.B. multi: true bei text-long)', () => {
     const state = emptyState();
-    const action = createAddFieldAction(getFieldType('text-long'), 'beschreibung');
+    const action = createAddFieldAction(
+      getFieldType('text-long'),
+      'beschreibung',
+    );
     const next = addFieldReducer(state, action);
 
     expect(next.uiSchema.elements[0].options).toMatchObject({ multi: true });
@@ -123,7 +141,9 @@ describe('addFieldReducer()', () => {
     const action = createAddFieldAction(getFieldType('radio'), 'geschlecht');
     const next = addFieldReducer(state, action);
 
-    expect(next.uiSchema.elements[0].options).toMatchObject({ format: 'radio' });
+    expect(next.uiSchema.elements[0].options).toMatchObject({
+      format: 'radio',
+    });
   });
 
   it('ist immutabel — der Original-State bleibt unverändert', () => {
@@ -161,7 +181,11 @@ describe('addFieldReducer() — Kollisionserkennung', () => {
       state = addFieldReducer(state, action);
     }
 
-    expect(Object.keys(state.schema.properties!)).toEqual(['feld', 'feld_1', 'feld_2']);
+    expect(Object.keys(state.schema.properties!)).toEqual([
+      'feld',
+      'feld_1',
+      'feld_2',
+    ]);
   });
 });
 
@@ -172,13 +196,19 @@ describe('addFieldReducer() — Kollisionserkennung', () => {
 describe('addFieldReducer() — Einfügeposition', () => {
   it('fügt nach einem vorhandenen Control ein', () => {
     let state = emptyState();
-    state = addFieldReducer(state, createAddFieldAction(getFieldType('text-short'), 'a'));
-    state = addFieldReducer(state, createAddFieldAction(getFieldType('text-short'), 'b'));
+    state = addFieldReducer(
+      state,
+      createAddFieldAction(getFieldType('text-short'), 'a'),
+    );
+    state = addFieldReducer(
+      state,
+      createAddFieldAction(getFieldType('text-short'), 'b'),
+    );
 
     const action = createAddFieldAction(
       getFieldType('text-short'),
       'zwischen',
-      '#/properties/a' // insertAfterScope
+      '#/properties/a', // insertAfterScope
     );
     state = addFieldReducer(state, action);
 
@@ -197,17 +227,29 @@ describe('addFieldReducer() — Einfügeposition', () => {
 
 describe('addFieldReducer() — alle Katalog-Feldtypen', () => {
   const fieldTypeIds = [
-    'text-short', 'text-long', 'number', 'date',
-    'checkbox', 'dropdown', 'radio', 'group',
+    'text-short',
+    'text-long',
+    'number',
+    'date',
+    'checkbox',
+    'dropdown',
+    'radio',
+    'group',
   ];
 
   fieldTypeIds.forEach((id) => {
     it(`verarbeitet Feldtyp "${id}" ohne Fehler`, () => {
+      const fieldType = getFieldType(id);
       const state = emptyState();
-      const action = createAddFieldAction(getFieldType(id), id.replace('-', '_'));
+      const action = createAddFieldAction(fieldType, id.replace('-', '_'));
       const next = addFieldReducer(state, action);
 
-      expect(Object.keys(next.schema.properties!).length).toBe(1);
+      // Strukturelle Elemente (z. B. "group") erzeugen keine schema.property,
+      // nur ein uiSchema-Element.
+      const expectedProperties = fieldType.isStructural ? 0 : 1;
+      expect(Object.keys(next.schema.properties!).length).toBe(
+        expectedProperties,
+      );
       expect(next.uiSchema.elements.length).toBe(1);
     });
   });
@@ -216,7 +258,6 @@ describe('addFieldReducer() — alle Katalog-Feldtypen', () => {
 // ---------------------------------------------------------------------------
 // tabReducer Tests
 // ---------------------------------------------------------------------------
-
 
 describe('tabReducer()', () => {
   it('fügt einen Tab hinzu und setzt activeTabIndex', () => {
@@ -261,9 +302,15 @@ describe('removeFieldReducer()', () => {
     const withField: typeof base = {
       ...base,
       schema: { type: 'object', properties: { name: { type: 'string' } } },
-      uiSchema: { type: 'VerticalLayout', elements: [{ type: 'Control', scope: '#/properties/name' }] },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [{ type: 'Control', scope: '#/properties/name' }],
+      },
     };
-    const next = removeFieldReducer(withField, createRemoveFieldAction('#/properties/name'));
+    const next = removeFieldReducer(
+      withField,
+      createRemoveFieldAction('#/properties/name'),
+    );
     expect(next.schema.properties?.['name']).toBeUndefined();
     expect(next.uiSchema.elements).toHaveLength(0);
   });
@@ -272,10 +319,20 @@ describe('removeFieldReducer()', () => {
     const base = emptyState();
     const withField: typeof base = {
       ...base,
-      schema: { type: 'object', properties: { email: { type: 'string' } }, required: ['email'] },
-      uiSchema: { type: 'VerticalLayout', elements: [{ type: 'Control', scope: '#/properties/email' }] },
+      schema: {
+        type: 'object',
+        properties: { email: { type: 'string' } },
+        required: ['email'],
+      },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [{ type: 'Control', scope: '#/properties/email' }],
+      },
     };
-    const next = removeFieldReducer(withField, createRemoveFieldAction('#/properties/email'));
+    const next = removeFieldReducer(
+      withField,
+      createRemoveFieldAction('#/properties/email'),
+    );
     expect(next.schema.required).not.toContain('email');
   });
 });
