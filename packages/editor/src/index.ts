@@ -24,7 +24,6 @@ export const EDITOR_VERSION = '0.1.0';
 // einen ungepinnten Build vom CDN (siehe README, Abschnitt „Einbettung").
 
 export * from './config';
-export * from './core/jsonschema';
 export * from './field-types';
 export * from './fim';
 export * from './i18n';
@@ -32,4 +31,3 @@ export * from './JsonFormsEditor';
 export * from './JsonFormsEditorUi';
 export * from './opencode';
 export * from './properties';
-export * from './text-editor';

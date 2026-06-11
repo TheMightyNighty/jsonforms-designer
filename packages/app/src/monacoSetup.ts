@@ -1,21 +1,19 @@
 /**
- * Self-hosted Monaco-Runtime.
+ * Monaco-Worker-Umgebung (Vite-spezifischer Teil des Self-Hostings).
  *
- * `@monaco-editor/react` lädt Monaco standardmäßig zur Laufzeit über
- * `@monaco-editor/loader` von cdn.jsdelivr.net — in abgeschotteten Netzen
- * (Behörden-Intranet) fällt der Code-Modus damit aus. Die hier übergebene,
- * lokal gebündelte Instanz unterbindet jeden CDN-Zugriff; die Worker werden
- * über das Vite-`?worker`-Rezept als eigene Dateien emittiert
- * (CSP: `worker-src 'self'`).
+ * Die Worker werden über das Vite-`?worker`-Rezept als eigene Dateien
+ * gebündelt (CSP: `worker-src 'self'`) und vom Browser erst beim ersten
+ * `new Worker()` geladen — dieser Eager-Import kostet nur winzige Wrapper.
  *
- * Sicherheit: monaco-editor ≥ 0.54 deklariert `dompurify` als Dependency und
- * pinnt eine verwundbare Version (u. a. GHSA-v2wj-7wpq-c8vv). Der Root-Override
- * in package.json erzwingt dompurify ≥ 3.4.9 — `npm audit` bleibt sauber.
+ * Die Monaco-*Instanz* selbst (~1 MB gzip) konfiguriert der Editor
+ * bundler-agnostisch im Lazy-Chunk des Code-Modus
+ * (packages/editor/src/editor/components/monacoSetup.ts) — sie wird erst
+ * beim Öffnen des Code-Modus geladen, niemals von einem CDN.
  *
- * Muss vor dem ersten Mount eines `<Editor>` importiert werden (main.tsx).
+ * Sicherheit: monaco-editor ≥ 0.54 pinnt eine verwundbare
+ * dompurify-Version; der Root-Override erzwingt dompurify ≥ 3.4.9
+ * (siehe package.json "overrides"). `npm audit` bleibt sauber.
  */
-import { loader } from '@monaco-editor/react';
-import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 
@@ -24,5 +22,3 @@ self.MonacoEnvironment = {
     return label === 'json' ? new jsonWorker() : new editorWorker();
   },
 };
-
-loader.config({ monaco });

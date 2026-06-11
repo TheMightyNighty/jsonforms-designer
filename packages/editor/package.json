@@ -45,7 +45,8 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-resizable-panels": "^4.0.0",
-    "uuid": "^11.0.0"
+    "uuid": "^11.0.0",
+    "monaco-editor": "~0.55.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.5.0",

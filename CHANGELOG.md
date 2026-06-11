@@ -7,6 +7,9 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert (Performance)
+- **Code-Modus lädt lazy:** Monaco (≈ 1 MB gzip) liegt jetzt in einem eigenen Chunk, der erst beim Öffnen des Code-Modus geladen wird (racefrei: `loader.config` lebt im selben Chunk). Initial-Bundle: **≈ 0,48 MB gzip** (zwischenzeitlich 1,5 MB, vor der Monaco-Umstellung 0,55 MB). Die toten Baum-Module (Stufe 2) zahlen mit ein. `CodeModePanel` ist kein Public-Export mehr (nötig für den Split).
+
 ### Sicherheit
 - **Monaco wird lokal gebündelt statt vom CDN geladen** (`packages/app/src/monacoSetup.ts`): `@monaco-editor/loader` erhält eine self-hosted Instanz, die Worker werden über das Vite-`?worker`-Rezept als eigene Dateien emittiert. Damit ist der Code-Modus **intranet-fähig** (kein Laufzeit-Zugriff auf `cdn.jsdelivr.net` mehr); die CSP wurde entsprechend von jsdelivr-Ausnahmen befreit und blockiert CDN-Regressionen aktiv. Trade-off: das Initial-Bundle wächst (gzip ≈ 0,55 MB → ≈ 1,5 MB).
 - **Monaco von 0.52.2 auf 0.55.1 angehoben.** Der alte Pin umging die DOMPurify-Advisories der Monaco-Builds ≥ 0.54; stattdessen erzwingt jetzt ein scoped npm-Override `dompurify ≥ 3.4.9` (fixt u. a. GHSA-v2wj-7wpq-c8vv, GHSA-h8r8-wccr-v5f2 — 8 Advisories). `npm audit`: 0 Findings.

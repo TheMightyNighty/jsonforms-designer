@@ -5,7 +5,6 @@
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  * ---------------------------------------------------------------------
  */
-export * from './components/CodeModePanel';
 export * from './components/ColumnContainerRow';
 export * from './components/Editor';
 export * from './components/EditorPanel';

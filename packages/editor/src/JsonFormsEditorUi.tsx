@@ -1,5 +1,12 @@
-import { Box, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
-import { useState } from 'react';
+import {
+  Box,
+  CircularProgress,
+  Tab,
+  Tabs,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import { lazy, Suspense, useState } from 'react';
 import {
   Group,
   Panel,
@@ -13,12 +20,32 @@ import { useDispatch, useFieldState, useSelectedScope } from './core/context';
 import { createSetFieldStateAction } from './core/model/addFieldActions';
 import { FieldAwareState } from './core/model/addFieldReducer';
 import { EditorPanel } from './editor';
-import { CodeModePanel } from './editor/components/CodeModePanel';
 import { PreviewPanel } from './editor/components/PreviewPanel';
 import { EditorMode } from './editor/editorMode';
 import { useI18n } from './i18n';
 import { FieldPalettePanel } from './palette-panel/FieldPalettePanel';
 import { FieldPropertiesPanel } from './properties/FieldPropertiesPanel';
+
+// Code-Modus lazy: Monaco (~1 MB gzip) wird erst beim ersten Öffnen geladen.
+// Die Monaco-Konfiguration (loader.config) lebt im selben Chunk — racefrei.
+const CodeModePanel = lazy(() =>
+  import('./editor/components/CodeModePanel').then((m) => ({
+    default: m.CodeModePanel,
+  })),
+);
+
+const codeModeFallback = (
+  <Box
+    sx={{
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+  >
+    <CircularProgress aria-label="Code-Editor wird geladen" />
+  </Box>
+);
 
 const handleSx = {
   width: '4px',
@@ -108,12 +135,14 @@ function MobileLayout({ mode }: { mode: EditorMode }) {
         {mobileTab === 0 && <FieldPalettePanel />}
         {mobileTab === 1 &&
           (mode === 'code' ? (
-            <CodeModePanel
-              fieldState={fieldState}
-              previewData={{}}
-              onFieldStateChange={handleFieldStateChange}
-              onPreviewDataChange={() => {}}
-            />
+            <Suspense fallback={codeModeFallback}>
+              <CodeModePanel
+                fieldState={fieldState}
+                previewData={{}}
+                onFieldStateChange={handleFieldStateChange}
+                onPreviewDataChange={() => {}}
+              />
+            </Suspense>
           ) : mode === 'preview' ? (
             <PreviewPanel fieldState={fieldState} />
           ) : (
@@ -180,12 +209,14 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
           <Panel minSize="20%">
             <Box sx={centerPanelSx}>
               {mode === 'code' ? (
-                <CodeModePanel
-                  fieldState={fieldState}
-                  previewData={previewData}
-                  onFieldStateChange={handleFieldStateChange}
-                  onPreviewDataChange={setPreviewData}
-                />
+                <Suspense fallback={codeModeFallback}>
+                  <CodeModePanel
+                    fieldState={fieldState}
+                    previewData={previewData}
+                    onFieldStateChange={handleFieldStateChange}
+                    onPreviewDataChange={setPreviewData}
+                  />
+                </Suspense>
               ) : (
                 <EditorPanel />
               )}

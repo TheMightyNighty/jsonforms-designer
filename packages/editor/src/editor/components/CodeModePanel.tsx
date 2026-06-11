@@ -1,4 +1,7 @@
 /** UI-Schema tab changes are converted back via fromLegacy into the internal ColumnContainer tree. */
+// Side effect: lokale Monaco-Instanz konfigurieren (lebt im Lazy-Chunk)
+import './monacoSetup';
+
 import Editor from '@monaco-editor/react';
 import { Alert, Box, Tab, Tabs, useTheme } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
