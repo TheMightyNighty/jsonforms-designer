@@ -24,7 +24,6 @@ import {
 } from './core/api/paletteService';
 import { EmptySchemaService, SchemaService } from './core/api/schemaService';
 import { EditorContextInstance } from './core/context';
-import { Actions } from './core/model';
 import { EditorAction } from './core/model/actions';
 import { createSetFieldStateAction } from './core/model/addFieldActions';
 import {
@@ -37,6 +36,7 @@ import {
 import { createInitialEditorState } from './core/model/reducer';
 import { FlatElement } from './core/model/uiElements';
 import { SelectedElement } from './core/selection';
+import { fieldStateFromSchemas } from './core/util/fieldStateFromSchemas';
 import { tryFindByUUID } from './core/util/schemasUtil';
 import { defaultEditorRenderers } from './editor';
 import { I18nProvider } from './i18n';
@@ -177,13 +177,28 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     }
   }, [fieldState, fieldStateStorage]);
 
+  // Extern bereitgestellte Schemas (SchemaService) werden in den
+  // Form-First-Zustand konvertiert — fieldState ist die einzige
+  // Laufzeit-Quelle (ADR 0001). Liefert der Service nichts (Default),
+  // bleibt der per fieldStateStorage geladene Zustand bestehen.
   useEffect(() => {
-    schemaService.getSchema().then((s) => {
-      if (s) dispatch(Actions.setSchema(s));
-    });
-    schemaService.getUiSchema().then((u) => {
-      if (u) dispatch(Actions.setUiSchema(u));
-    });
+    let cancelled = false;
+    Promise.all([schemaService.getSchema(), schemaService.getUiSchema()])
+      .then(([s, u]) => {
+        if (cancelled) return;
+        const converted = fieldStateFromSchemas(s, u);
+        if (converted) {
+          dispatch(
+            createSetFieldStateAction(converted) as unknown as EditorAction,
+          );
+        }
+      })
+      .catch((err) =>
+        console.error('SchemaService konnte nicht geladen werden', err),
+      );
+    return () => {
+      cancelled = true;
+    };
   }, [schemaService, dispatch]);
 
   useEffect(() => {

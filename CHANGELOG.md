@@ -19,6 +19,9 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - **E2E-Smoke-Tests** (Playwright, `packages/app/e2e/`): sichern die Kernpfade gegen den **Produktions-Build** ab — App-Start, Drag & Drop (inkl. Auto-Save über Reload), Eigenschaften-Bearbeitung, JSONForms-Vorschau, Code-Modus (verifiziert: Monaco lädt lokal, **null CDN-Requests**) und Export-Dialog. Lokal: `npm run test:e2e`; in der CI nach dem Build.
 - **Persistenz-Adapter** (`FieldStateStorageService`): Der Formular-Zustand wird nicht mehr fest in `localStorage` gespeichert, sondern über eine austauschbare Schnittstelle (Prop `fieldStateStorage` am `<JsonFormsEditor>`). Default bleibt localStorage (`LocalStorageFieldStateService`); asynchrone Adapter (REST-Backend) werden nach dem Mount hydriert. README enthält ein HTTP-Adapter-Beispiel.
 
+### Geändert (Architektur)
+- **State-Konsolidierung, Stufe 1 (ADR 0001):** `FieldAwareState` ist die einzige Laufzeit-Quelle. Extern geladene Schemas (`schemaService`) werden über `fieldStateFromSchemas()` in den Form-First-Zustand konvertiert statt den geerbten Baum-State aufzubauen; der Baum-Render-Zweig (`Editor.tsx`) und der tote `NEW_UI_SCHEMA_ELEMENT`-Drop (`EmptyEditor`) sind entfernt. Die Prop `editorRenderers` ist deprecated (wirkungslos). Verlustfrei konvertiert: Control, Label, HorizontalLayout/Spalten, Group; Best-Effort für exotische Knoten (z. B. Categorization → Label). Stufe 2 (Entfernung der toten Baum-Module) siehe ADR.
+
 ### Geändert (Qualität / Tooling)
 - **ESLint 9 Flat-Config** eingerichtet (`eslint.config.mjs`): `typescript-eslint`, `simple-import-sort` und `eslint-plugin-react-hooks` verdrahtet. Zuvor existierte keine Konfiguration — `npm run lint` lief ins Leere.
 - **Prettier** als eigenständige Skripte ergänzt (`npm run format` / `format:check`); gesamter `src`-Bestand einmalig formatiert. `eslint-plugin-prettier` entfernt, `eslint-config-prettier` bleibt für Regel-Deduplizierung.

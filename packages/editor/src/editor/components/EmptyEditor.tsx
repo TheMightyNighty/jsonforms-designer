@@ -4,11 +4,8 @@
  */
 import { Box, Typography } from '@mui/material';
 import React from 'react';
-import { useDrop } from 'react-dnd';
 
 import { useDispatch } from '../../core/context';
-import { NEW_UI_SCHEMA_ELEMENT, NewUISchemaElement } from '../../core/dnd';
-import { Actions } from '../../core/model';
 import { useI18n } from '../../i18n';
 import { useFieldDrop } from '../../palette-panel/useFieldDrop';
 
@@ -16,31 +13,13 @@ export const EmptyEditor: React.FC = () => {
   const dispatch = useDispatch();
   const { t } = useI18n();
 
-  // Bestehender Drop für UI-Schema-Elemente (altes DnD)
-  const [{ isOver: isOverSchema, uiSchemaElement }, schemaDrop] = useDrop<
-    NewUISchemaElement,
-    void,
-    {
-      isOver: boolean;
-      uiSchemaElement: NewUISchemaElement['uiSchemaElement'] | undefined;
-    }
-  >(() => ({
-    accept: NEW_UI_SCHEMA_ELEMENT,
-    collect: (mon) => ({
-      isOver: !!mon.isOver(),
-      uiSchemaElement: mon.getItem()?.uiSchemaElement,
-    }),
-    drop: () => {
-      dispatch(Actions.setUiSchema(uiSchemaElement));
-    },
-  }));
-
-  const [{ isOver: isOverField }, fieldDrop] = useFieldDrop(dispatch);
-
-  const isOver = isOverSchema || isOverField;
+  // Hinweis: Der frühere zweite Drop-Pfad für NEW_UI_SCHEMA_ELEMENT (alte
+  // Baum-Palette) wurde mit der State-Konsolidierung entfernt — die alte
+  // Palette wird nicht mehr gerendert, der Drag-Typ kann nicht entstehen
+  // (ADR 0001).
+  const [{ isOver }, fieldDrop] = useFieldDrop(dispatch);
 
   const setRef = (el: HTMLDivElement | null) => {
-    (schemaDrop as unknown as (el: HTMLDivElement | null) => void)(el);
     (fieldDrop as unknown as (el: HTMLDivElement | null) => void)(el);
   };
 
