@@ -427,6 +427,7 @@ interface OpenCodeService {
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md) — Setup, Konventionen, Qualitäts-Gates
 - [ROADMAP.md](./ROADMAP.md) — geplante Weiterentwicklung
+- [docs/BETRIEB.md](./docs/BETRIEB.md) — Deployment, Docker, FIM-Proxy, Diagnose
 - [docs/adr/](./docs/adr/) — Architektur-Entscheidungen (ADRs)
 
 ---

@@ -1,0 +1,9 @@
+node_modules
+packages/*/node_modules
+packages/*/dist
+packages/app/build
+playwright-report
+test-results
+.git
+docs
+*.md
