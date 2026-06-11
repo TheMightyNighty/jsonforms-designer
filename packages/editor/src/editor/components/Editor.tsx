@@ -5,7 +5,7 @@
 import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 import { materialCells } from '@jsonforms/material-renderers';
 import { JsonForms } from '@jsonforms/react';
-import { createTheme,Grid, ThemeProvider } from '@mui/material';
+import { createTheme, Grid, ThemeProvider } from '@mui/material';
 import React from 'react';
 
 import {

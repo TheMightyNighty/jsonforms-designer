@@ -56,14 +56,17 @@ export function fieldPropertiesReducer<S extends FieldAwareState>(
 ): S {
   if (action.type === SET_FIELD_RULE) {
     const { scope, rule } = action.payload;
-    const elements = mapElementsDeep(state.uiSchema.elements as UiSchemaElement[], (el) => {
-      if (el.scope !== scope) return el;
-      if (rule === null) {
-        const { rule: _r, ...rest } = el;
-        return rest;
-      }
-      return { ...el, rule };
-    });
+    const elements = mapElementsDeep(
+      state.uiSchema.elements as UiSchemaElement[],
+      (el) => {
+        if (el.scope !== scope) return el;
+        if (rule === null) {
+          const { rule: _r, ...rest } = el;
+          return rest;
+        }
+        return { ...el, rule };
+      },
+    );
     return { ...state, uiSchema: { ...state.uiSchema, elements } };
   }
 
@@ -121,10 +124,13 @@ function updateControlOptions<S extends FieldAwareState>(
   scope: string,
   optionsPatch: Record<string, unknown>,
 ): S {
-  const elements = mapElementsDeep(state.uiSchema.elements as UiSchemaElement[], (el) => {
-    if (el.scope !== scope) return el;
-    return { ...el, options: { ...(el.options ?? {}), ...optionsPatch } };
-  });
+  const elements = mapElementsDeep(
+    state.uiSchema.elements as UiSchemaElement[],
+    (el) => {
+      if (el.scope !== scope) return el;
+      return { ...el, options: { ...(el.options ?? {}), ...optionsPatch } };
+    },
+  );
   return { ...state, uiSchema: { ...state.uiSchema, elements } };
 }
 

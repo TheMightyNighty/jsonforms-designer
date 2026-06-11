@@ -1,6 +1,6 @@
 import type { EditorConfig } from '@jsonforms-designer/editor';
-import { fimPortalService,JsonFormsEditor } from '@jsonforms-designer/editor';
-import { createTheme,CssBaseline, ThemeProvider } from '@mui/material';
+import { fimPortalService, JsonFormsEditor } from '@jsonforms-designer/editor';
+import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 
 // ---------------------------------------------------------------------------
 // Farben — Bundesverwaltung trifft Material Design 3

@@ -295,7 +295,10 @@ function DraggableStructural({
   );
 
   return (
-    <Box ref={dragPreviewRef as unknown as React.Ref<HTMLDivElement>} sx={{ opacity: isDragging ? 0.3 : 1 }}>
+    <Box
+      ref={dragPreviewRef as unknown as React.Ref<HTMLDivElement>}
+      sx={{ opacity: isDragging ? 0.3 : 1 }}
+    >
       <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
         <Box
           ref={dragRef as unknown as React.Ref<HTMLDivElement>}

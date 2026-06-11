@@ -2,7 +2,7 @@
  * F-4: Tests für fieldPropertiesReducer und fieldPropertiesActions
  */
 
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import {

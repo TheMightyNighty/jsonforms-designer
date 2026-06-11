@@ -5,7 +5,7 @@
  * Test-Runner: Vitest (wie im migrierten Stack).
  */
 
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   FIELD_GROUPS,

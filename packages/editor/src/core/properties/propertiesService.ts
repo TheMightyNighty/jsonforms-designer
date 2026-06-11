@@ -5,7 +5,7 @@
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  * ---------------------------------------------------------------------
  */
-import { BaseUISchemaElement,JsonSchema } from '@jsonforms/core';
+import { BaseUISchemaElement, JsonSchema } from '@jsonforms/core';
 import { maxBy } from 'lodash';
 
 import { SchemaElement } from '../model';

@@ -50,7 +50,8 @@ type Translations = Record<
 
 function getTranslations(schema: FieldAwareState['schema']): Translations {
   return (
-    ((schema as Record<string, unknown>)['x-translations'] as Translations) ?? {}
+    ((schema as Record<string, unknown>)['x-translations'] as Translations) ??
+    {}
   );
 }
 

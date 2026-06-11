@@ -9,7 +9,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect,useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { FormMetadata } from '../model/addFieldActions';
 import { FieldAwareState } from '../model/addFieldReducer';

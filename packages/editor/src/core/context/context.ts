@@ -1,4 +1,4 @@
-import React, { Dispatch,useContext } from 'react';
+import React, { Dispatch, useContext } from 'react';
 
 import { UpdateFieldPropertyAction } from '../../properties/fieldPropertiesActions';
 import { CategorizationService } from '../api/categorizationService';

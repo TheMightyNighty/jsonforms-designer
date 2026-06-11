@@ -13,7 +13,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Dispatch, useEffect,useState } from 'react';
+import { Dispatch, useEffect, useState } from 'react';
 
 import { EditorAction } from '../core/model/actions';
 import { FieldAwareState } from '../core/model/addFieldReducer';

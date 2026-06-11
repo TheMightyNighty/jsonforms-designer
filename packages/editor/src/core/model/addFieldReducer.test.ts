@@ -2,7 +2,7 @@
  * F-2: Tests für addFieldReducer und Hilfsfunktionen
  */
 
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { getFieldType } from '../../field-types/fieldTypes';
 import {

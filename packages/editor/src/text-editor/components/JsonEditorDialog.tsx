@@ -47,7 +47,6 @@ export const JsonEditorDialog: React.FC<JsonEditorDialogProps> = ({
   onApply,
   onCancel,
 }) => {
-   
   const modelUri = useMemo(() => {
     // Uri is accessed via the monaco instance at beforeMount time
     return 'json://core/specification/schema.json';

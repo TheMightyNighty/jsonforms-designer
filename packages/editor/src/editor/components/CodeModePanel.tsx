@@ -4,7 +4,7 @@ import { Alert, Box, Tab, Tabs, useTheme } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FieldAwareState } from '../../core/model/addFieldReducer';
-import { FlatElement,fromLegacy, toLegacy } from '../../core/model/uiElements';
+import { FlatElement, fromLegacy, toLegacy } from '../../core/model/uiElements';
 
 /** Baut JSONForms-kompatibles uiSchema für Monaco-Anzeige */
 function buildDisplayUiSchema(fieldState: FieldAwareState): object {

@@ -2,7 +2,7 @@
  * Tests: columnDropReducer, reorderInColumnReducer, moveElementReducer
  */
 
-import { describe, expect,it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   createColumnDropAction,

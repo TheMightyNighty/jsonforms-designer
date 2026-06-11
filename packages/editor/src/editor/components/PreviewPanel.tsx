@@ -16,7 +16,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { FieldAwareState, FormTab } from '../../core/model/addFieldReducer';
 import { FlatElement, toJsonForms } from '../../core/model/uiElements';
