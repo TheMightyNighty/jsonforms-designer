@@ -57,7 +57,7 @@ export interface HistoryState {
 export function createInitialHistoryState(): HistoryState {
   return {
     past: [],
-    present: createInitialEditorState({}),
+    present: createInitialEditorState(),
     future: [],
   };
 }

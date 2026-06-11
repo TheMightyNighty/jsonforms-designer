@@ -1,6 +1,6 @@
 # ADR 0001: FieldAwareState als einzige Laufzeit-Quelle
 
-**Status:** Akzeptiert (Stufe 1 umgesetzt, 2026-06)
+**Status:** Akzeptiert (Stufe 1 + Stufe 2 umgesetzt, 2026-06)
 **Kontext:** packages/editor
 
 ## Kontext
@@ -42,21 +42,32 @@ entstehen. Einziger realer Zufluss in den Baum-State war der
   deprecated API-Hülle erhalten.
 - Der tote `NEW_UI_SCHEMA_ELEMENT`-Drop im `EmptyEditor` ist entfernt.
 
-**Stufe 2 (offen, separater Major-Cleanup):** Entfernen der dann toten
-Module — Kandidatenliste:
+**Stufe 2 (umgesetzt, 2026-06):** Die toten Module wurden nach
+Verwendungsanalyse vollständig entfernt (≈ 5.000 LOC):
 
-- `core/renderers/` (DroppableLayout, DroppableArrayControl,
-  DroppableCategorizationLayout, EditorElement …)
-- alte Palette: `palette-panel/components/{PalettePanel,SchemaTree,
-  UIElementsTree,JsonSchemaPanel,UISchemaPanel}`
-- Baum-Zweige in `core/model/reducer.ts` (`combinedReducer`,
-  `uischemaReducer`), `core/model/schema.ts` (Tree-Builder),
-  `core/util/{clone,tree}.ts`-Anteile, `categorizationService`,
-  `selection`, `propertiesService` (alte Properties-Decorators)
-- zugehörige Exporte in `index.ts` (Breaking Change → Major-Version)
+- `core/renderers/` (alle Droppable-Renderer), `EditorElement`
+- alte Palette: `palette-panel/components/` komplett (PalettePanel,
+  SchemaTree, Tree, UIElementsTree, JsonSchemaPanel, UISchemaPanel,
+  SchemaJson)
+- altes Properties-System: `core/properties/propertiesService`,
+  `properties/{components,renderers,schemaDecorators,schemaProviders}`
+- Baum-Modell: `core/model/{schema,uischema}.ts`,
+  `core/util/{schemasUtil,tree,clone,hooks,generators}`, `core/dnd`,
+  `core/selection`, `core/icons`, `categorizationService`,
+  `paletteService`
+- tote Dialog-Komponenten: ErrorDialog, ExportDialog, Footer,
+  OkCancelDialog, ShowMoreLess
+- `reducer.ts` auf reine FieldAwareState-Verarbeitung eingedampft
+  (`combinedReducer`/`uiSchemaReducer`/`syncFieldState` entfernt);
+  `actions.ts` enthält nur noch die Form-First-Union
+- `EditorContext` verschlankt auf dispatch/fieldState/selectedScope/
+  undo/redo
 
-Vor Stufe 2: Verwendungsanalyse je Modul, da einige Utilities
-(z. B. `schemasUtil.traverse`) auch vom Form-First-Code genutzt werden.
+**Breaking (0.x):** Entfernte `JsonFormsEditor`-Props: `schemaProviders`,
+`schemaDecorators`, `paletteService`, `categorizationService`,
+`propertiesServiceProvider`, `editorRenderers`, `propertyRenderers`.
+Entfernte Public-Exports siehe oben. Verbleibende Props: `schemaService`,
+`fieldStateStorage`, `config`, `header`, `footer`.
 
 ## Konsequenzen
 

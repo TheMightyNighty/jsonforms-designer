@@ -2,7 +2,6 @@
  * Copyright (c) 2021 EclipseSource Munich
  * Licensed under MIT
  */
-import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 import React from 'react';
 
 import {
@@ -13,16 +12,7 @@ import {
 import { EmptyEditor } from './EmptyEditor';
 import { FieldFormPreview } from './FieldFormPreview';
 
-export interface EditorProps {
-  /**
-   * @deprecated Seit der State-Konsolidierung (ADR 0001) rendert der Editor
-   * ausschließlich Form-First; der frühere JSONForms-Baum-Canvas und seine
-   * Renderer werden nicht mehr verwendet. Prop bleibt für API-Kompatibilität.
-   */
-  editorRenderers?: JsonFormsRendererRegistryEntry[];
-}
-
-export const Editor: React.FC<EditorProps> = () => {
+export const Editor: React.FC = () => {
   const fieldState = useFieldState();
   const dispatch = useDispatch();
   const [selectedScope, setSelectedScope] = useSelectedScope();

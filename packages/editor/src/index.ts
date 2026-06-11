@@ -2,19 +2,17 @@
  * Public API of @jsonforms-designer/editor.
  *
  * Based on eclipsesource/jsonforms-editor (MIT, 2020 EclipseSource Munich).
+ *
+ * Hinweis: Mit ADR 0001 Stufe 2 wurde die geerbte Baum-Welt entfernt
+ * (alte Palette, Droppable-Renderer, SchemaElement-/EditorUISchemaElement-
+ * Modell, paletteService/propertiesService/categorizationService).
+ * FieldAwareState ist die einzige Laufzeit-Quelle.
  */
 export * from './core/api';
 export * from './core/components';
 export * from './core/context';
-export * from './core/dnd';
-export * from './core/icons';
 export * from './core/model';
-export * from './core/properties/propertiesService';
-export * from './core/selection';
-export * from './core/util/generators/uiSchema';
-export * from './core/util/hooks';
-export * as schemasUtil from './core/util/schemasUtil';
-export * as treeUtil from './core/util/tree';
+export * from './core/util';
 export * from './editor';
 export * from './palette-panel';
 

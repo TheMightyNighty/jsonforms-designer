@@ -293,10 +293,9 @@ function MyApp() {
 ```tsx
 <JsonFormsEditor
   config={config}
-  schemaService={mySchemaService}      // Vorhandenes Schema laden
-  editorRenderers={customRenderers}    // Eigene JSONForms-Renderer
-  propertyRenderers={propRenderers}    // Eigene Properties-Renderer
-  header={null}                        // Header ausblenden
+  schemaService={mySchemaService}        // Vorhandenes Schema laden (wird konvertiert)
+  fieldStateStorage={myStorageAdapter}   // Persistenz (Default: localStorage)
+  header={null}                          // Header ausblenden
 />
 ```
 

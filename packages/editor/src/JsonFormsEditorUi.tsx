@@ -1,4 +1,3 @@
-import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 import { Box, Tab, Tabs, useMediaQuery, useTheme } from '@mui/material';
 import { useState } from 'react';
 import {
@@ -55,20 +54,12 @@ const centerPanelSx = {
 } as const;
 
 interface JsonFormsEditorUiProps {
-  editorRenderers: JsonFormsRendererRegistryEntry[];
-  propertyRenderers?: JsonFormsRendererRegistryEntry[];
   header?: React.ComponentType;
   footer?: React.ComponentType;
 }
 
 /** Mobile/Tablet-Layout mit Tabs */
-function MobileLayout({
-  editorRenderers,
-  mode,
-}: {
-  editorRenderers: JsonFormsRendererRegistryEntry[];
-  mode: EditorMode;
-}) {
+function MobileLayout({ mode }: { mode: EditorMode }) {
   const [mobileTab, setMobileTab] = useState(1);
   const { t } = useI18n(); // 0=Palette 1=Editor 2=Properties
   const dispatch = useDispatch();
@@ -126,7 +117,7 @@ function MobileLayout({
           ) : mode === 'preview' ? (
             <PreviewPanel fieldState={fieldState} />
           ) : (
-            <EditorPanel editorRenderers={editorRenderers} />
+            <EditorPanel />
           ))}
         {mobileTab === 2 && (
           <FieldPropertiesPanel
@@ -141,10 +132,7 @@ function MobileLayout({
   );
 }
 
-export const JsonFormsEditorUi = ({
-  editorRenderers,
-  footer,
-}: JsonFormsEditorUiProps) => {
+export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -174,7 +162,7 @@ export const JsonFormsEditorUi = ({
           <PreviewPanel fieldState={fieldState} initialData={previewData} />
         </Box>
       ) : isMobile ? (
-        <MobileLayout editorRenderers={editorRenderers} mode={mode} />
+        <MobileLayout mode={mode} />
       ) : (
         <Group
           defaultLayout={defaultLayout}
@@ -199,7 +187,7 @@ export const JsonFormsEditorUi = ({
                   onPreviewDataChange={setPreviewData}
                 />
               ) : (
-                <EditorPanel editorRenderers={editorRenderers} />
+                <EditorPanel />
               )}
             </Box>
           </Panel>
