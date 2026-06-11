@@ -31,6 +31,8 @@ import { I18nProvider } from './i18n';
 import { JsonFormsEditorUi } from './JsonFormsEditorUi';
 
 const defaultSchemaService = new EmptySchemaService();
+const defaultOnError = (error: unknown, context: string) =>
+  console.error(`[JSONForms Designer] ${context}`, error);
 const defaultFieldStateStorage = new LocalStorageFieldStateService();
 
 export interface JsonFormsEditorProps {
@@ -44,6 +46,12 @@ export interface JsonFormsEditorProps {
   /** Konfiguration für Module und Palette-Verhalten */
   config?: EditorConfig;
   /**
+   * Zentraler Fehlerkanal (Auto-Save-Fehler, Lade-Fehler, Render-Fehler der
+   * ErrorBoundary). Default: console.error. Betriebs-Hosts können hier ihr
+   * Fehler-Reporting anschließen.
+   */
+  onError?: (error: unknown, context: string) => void;
+  /**
    * Persistenz-Adapter für den Formular-Zustand (Auto-Save / Laden beim
    * Start). Default: localStorage. Für Server-Speicherung eine eigene
    * FieldStateStorageService-Implementierung übergeben (siehe README).
@@ -56,8 +64,14 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   header,
   footer,
   config,
+  onError,
   fieldStateStorage = defaultFieldStateStorage,
 }) => {
+  const reportError = useCallback(
+    (error: unknown, context: string) =>
+      (onError ?? defaultOnError)(error, context),
+    [onError],
+  );
   // Gespeicherten Zustand genau einmal laden. Synchrone Adapter (localStorage)
   // fließen ohne Zwischenrender in den Initial-State; asynchrone Adapter
   // (Server) werden nach dem Mount per SET_FIELD_STATE hydriert.
@@ -65,7 +79,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     try {
       return fieldStateStorage.load();
     } catch (err) {
-      console.error('Formular-Zustand konnte nicht geladen werden', err);
+      reportError(err, 'Formular-Zustand konnte nicht geladen werden');
       return undefined;
     }
   });
@@ -112,7 +126,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
         }
       })
       .catch((err) =>
-        console.error('Formular-Zustand konnte nicht geladen werden', err),
+        reportError(err, 'Formular-Zustand konnte nicht geladen werden'),
       );
     return () => {
       cancelled = true;
@@ -123,10 +137,10 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   useEffect(() => {
     try {
       void Promise.resolve(fieldStateStorage.save(fieldState)).catch((err) =>
-        console.error('Auto-Save fehlgeschlagen', err),
+        reportError(err, 'Auto-Save fehlgeschlagen'),
       );
     } catch (err) {
-      console.error('Auto-Save fehlgeschlagen', err);
+      reportError(err, 'Auto-Save fehlgeschlagen');
     }
   }, [fieldState, fieldStateStorage]);
 
@@ -145,7 +159,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
         }
       })
       .catch((err) =>
-        console.error('SchemaService konnte nicht geladen werden', err),
+        reportError(err, 'SchemaService konnte nicht geladen werden'),
       );
     return () => {
       cancelled = true;
@@ -185,6 +199,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
           <EditorContextInstance.Provider
             value={{
               dispatch,
+              reportError,
               fieldState,
               selectedScope,
               setSelectedScope,

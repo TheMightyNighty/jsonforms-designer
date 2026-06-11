@@ -9,6 +9,8 @@ export type FieldAction = AddFieldAction | UpdateFieldPropertyAction;
 
 export interface EditorContext {
   dispatch: Dispatch<EditorAction>;
+  /** Zentraler Fehlerkanal — Host-konfigurierbar über die onError-Prop. */
+  reportError: (error: unknown, context: string) => void;
   fieldState: FieldAwareState;
   selectedScope: string | null;
   setSelectedScope: (scope: string | null) => void;
@@ -48,4 +50,9 @@ export const useSelectedScope = (): [
 export const useUndoRedo = () => {
   const { undo, redo, canUndo, canRedo } = useEditorContext();
   return { undo, redo, canUndo, canRedo };
+};
+
+export const useReportError = (): EditorContext['reportError'] => {
+  const { reportError } = useEditorContext();
+  return reportError;
 };

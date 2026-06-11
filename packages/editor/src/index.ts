@@ -15,8 +15,7 @@ export * from './core/model';
 export * from './core/util';
 export * from './editor';
 export * from './palette-panel';
-
-export const EDITOR_VERSION = '0.1.0';
+export * from './version';
 
 // Hinweis: Die Monaco-Runtime wird NICHT mehr hier konfiguriert. Der Host
 // (siehe packages/app/src/monacoSetup.ts) übergibt @monaco-editor/loader eine

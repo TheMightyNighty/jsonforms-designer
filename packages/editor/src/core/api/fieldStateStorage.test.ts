@@ -2,11 +2,12 @@
  * Tests für den Persistenz-Adapter (FieldStateStorageService) und die
  * Default-Implementierung LocalStorageFieldStateService.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { FieldAwareState } from '../model/addFieldReducer';
 import {
   FIELD_STATE_STORAGE_KEY,
+  HttpFieldStateService,
   LocalStorageFieldStateService,
   normalizeFieldState,
 } from './fieldStateStorage';
@@ -150,5 +151,95 @@ describe('LocalStorageFieldStateService', () => {
     service.save(sampleState());
     expect(Object.keys(storage.dump())).toEqual(['mein_key']);
     expect(service.load()).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// HttpFieldStateService
+// ---------------------------------------------------------------------------
+
+describe('HttpFieldStateService', () => {
+  function fetchStub(
+    status: number,
+    payload?: unknown,
+  ): { fn: typeof fetch; calls: Array<{ url: string; init?: RequestInit }> } {
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    const fn = (async (url: string, init?: RequestInit) => {
+      calls.push({ url, init });
+      return {
+        ok: status >= 200 && status < 300,
+        status,
+        json: async () => payload,
+      };
+    }) as unknown as typeof fetch;
+    return { fn, calls };
+  }
+
+  it('load(): liefert normalisierten Zustand', async () => {
+    const { fn } = fetchStub(200, {
+      schema: { type: 'object', properties: {} },
+      uiSchema: { type: 'VerticalLayout', elements: [] },
+    });
+    const service = new HttpFieldStateService('/api/form/1', { fetchFn: fn });
+    const state = await service.load();
+    expect(state).toMatchObject({ tabs: [], activeTabIndex: 0 });
+  });
+
+  it('load(): 404 → undefined (noch kein Formular)', async () => {
+    const { fn } = fetchStub(404);
+    const service = new HttpFieldStateService('/api/form/1', { fetchFn: fn });
+    expect(await service.load()).toBeUndefined();
+  });
+
+  it('load(): Serverfehler wirft', async () => {
+    const { fn } = fetchStub(503);
+    const service = new HttpFieldStateService('/api/form/1', { fetchFn: fn });
+    await expect(service.load()).rejects.toThrow(/HTTP 503/);
+  });
+
+  it('save(): debounct — viele Aufrufe, ein PUT mit letztem Stand', async () => {
+    vi.useFakeTimers();
+    try {
+      const { fn, calls } = fetchStub(200);
+      const service = new HttpFieldStateService('/api/form/1', {
+        fetchFn: fn,
+        debounceMs: 500,
+        headers: { Authorization: 'Bearer x' },
+      });
+      const a = sampleState();
+      const b = { ...sampleState(), activeTabIndex: 1 };
+      service.save(a);
+      service.save(b);
+      service.save(b);
+      expect(calls).toHaveLength(0);
+      await vi.advanceTimersByTimeAsync(600);
+      expect(calls).toHaveLength(1);
+      expect(calls[0].init?.method).toBe('PUT');
+      expect(calls[0].init?.headers).toMatchObject({
+        Authorization: 'Bearer x',
+      });
+      expect(JSON.parse(String(calls[0].init?.body)).activeTabIndex).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('save(): Fehler landen im onSaveError-Kanal', async () => {
+    vi.useFakeTimers();
+    try {
+      const { fn } = fetchStub(500);
+      const errors: unknown[] = [];
+      const service = new HttpFieldStateService('/api/form/1', {
+        fetchFn: fn,
+        debounceMs: 10,
+        onSaveError: (e) => errors.push(e),
+      });
+      service.save(sampleState());
+      await vi.advanceTimersByTimeAsync(50);
+      expect(errors).toHaveLength(1);
+      expect(String(errors[0])).toMatch(/HTTP 500/);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

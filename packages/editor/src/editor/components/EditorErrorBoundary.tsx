@@ -3,7 +3,9 @@
  * und zeigt statt White Screen eine Fehlermeldung.
  */
 import { Box, Button, Typography } from '@mui/material';
-import { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+
+import { EditorContextInstance } from '../../core/context';
 
 interface Props {
   children: ReactNode;
@@ -15,6 +17,9 @@ interface State {
 }
 
 export class EditorErrorBoundary extends Component<Props, State> {
+  static contextType = EditorContextInstance;
+  declare context: React.ContextType<typeof EditorContextInstance>;
+
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: '' };
@@ -25,7 +30,14 @@ export class EditorErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[JSONForms Designer]', error, info);
+    // Über den zentralen Fehlerkanal melden (onError-Prop des Editors);
+    // Fallback auf console, falls außerhalb des Editor-Contexts gerendert.
+    const report = this.context?.reportError;
+    if (report) {
+      report(error, `Render-Fehler${info.componentStack ?? ''}`);
+    } else {
+      console.error('[JSONForms Designer]', error, info);
+    }
   }
 
   render() {

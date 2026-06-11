@@ -328,45 +328,34 @@ loader.config({ monaco });
 
 Standardmäßig speichert der Editor den Formular-Zustand automatisch im
 `localStorage` (`jfd_fieldState_v1`). Über die Prop `fieldStateStorage` lässt
-sich ein eigener Adapter einhängen — z. B. für ein REST-Backend:
+sich ein Adapter einhängen — für REST-Backends bringt das Paket einen
+Referenz-Adapter mit (GET beim Laden, debounctes PUT beim Speichern,
+404 = „noch kein Formular"):
 
-```ts
-import type {
-  FieldStateStorageService,
-  FieldAwareState,
-} from '@jsonforms-designer/editor';
+```tsx
+import { HttpFieldStateService } from '@jsonforms-designer/editor';
 
-class HttpFieldStateService implements FieldStateStorageService {
-  private timer: ReturnType<typeof setTimeout> | undefined;
-
-  constructor(private readonly url: string) {}
-
-  // Darf asynchron sein — der Editor hydriert nach dem Mount.
-  async load(): Promise<FieldAwareState | undefined> {
-    const res = await fetch(this.url, { credentials: 'include' });
-    return res.ok ? await res.json() : undefined;
+<JsonFormsEditor
+  fieldStateStorage={
+    new HttpFieldStateService('/api/form/42', {
+      headers: { Authorization: 'Bearer …' },
+      debounceMs: 750,
+      onSaveError: (err) => meinMonitoring.report(err),
+    })
   }
-
-  // Wird bei jeder Änderung aufgerufen → serverseitige Adapter debouncen.
-  save(state: FieldAwareState): void {
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => {
-      void fetch(this.url, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state),
-      });
-    }, 750);
-  }
-}
-
-<JsonFormsEditor fieldStateStorage={new HttpFieldStateService('/api/form/42')} />;
+  onError={(err, kontext) => meinMonitoring.report(err, kontext)}
+/>;
 ```
 
 > Eingehende Daten werden vom Editor normalisiert und gegen
 > Prototype-Pollution bereinigt (`normalizeFieldState`). Die CSP der
 > Host-Anwendung muss den Backend-Origin in `connect-src` erlauben.
+> Eigene Adapter implementieren das Interface `FieldStateStorageService`.
+
+**Fehlerkanal & Version:** Über die Prop `onError(error, kontext)` erhalten
+Betriebs-Hosts alle Editor-Fehler (Laden, Auto-Save, Render-Fehler der
+ErrorBoundary) statt nur `console.error`. Die laufende Version wird im
+Header angezeigt (`EDITOR_VERSION` aus dem Paket).
 
 ---
 

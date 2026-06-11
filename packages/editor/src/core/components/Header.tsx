@@ -23,6 +23,7 @@ import { EditorMode } from '../../editor/editorMode';
 import { FormTemplate } from '../../field-types/formTemplates';
 import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
 import { useI18n } from '../../i18n';
+import { EDITOR_VERSION } from '../../version';
 import { useEditorContext, useUndoRedo } from '../context';
 import {
   createLoadTemplateAction,
@@ -97,6 +98,13 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
               — {(fieldState.schema as JsonSchema7).title}
             </Typography>
           )}
+          <Typography
+            variant="caption"
+            aria-label="Editor-Version"
+            sx={{ color: 'text.disabled', fontSize: '0.65rem', flexShrink: 0 }}
+          >
+            v{EDITOR_VERSION}
+          </Typography>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>

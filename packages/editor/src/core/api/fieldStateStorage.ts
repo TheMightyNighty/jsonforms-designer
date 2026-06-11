@@ -45,6 +45,75 @@ export const normalizeFieldState = (
   };
 };
 
+export interface HttpFieldStateServiceOptions {
+  /** Debounce für save() in Millisekunden. Default: 750 */
+  debounceMs?: number;
+  /** Zusätzliche Header (z. B. Authorization). */
+  headers?: Record<string, string>;
+  /** Default: 'same-origin' */
+  credentials?: RequestCredentials;
+  /**
+   * Fehlerkanal für (debouncte) Speicherfehler — die laufen asynchron
+   * außerhalb des save()-Aufrufs. Default: console.error.
+   */
+  onSaveError?: (error: unknown) => void;
+  /** Eigene fetch-Implementierung (Tests). Default: globalThis.fetch */
+  fetchFn?: typeof fetch;
+}
+
+/**
+ * Referenz-Adapter für Server-Persistenz: GET beim Laden, debounctes PUT
+ * beim Speichern (JSON). 404 beim Laden = „noch kein Formular" → leerer
+ * Editor; eingehende Daten werden über `normalizeFieldState` bereinigt.
+ *
+ * SECURITY: `url` und `headers` müssen aus vertrauenswürdiger Konfiguration
+ * stammen — Header (z. B. Authorization) gehen mit jedem Request an `url`.
+ * Die CSP der Host-Anwendung muss den Backend-Origin in `connect-src`
+ * erlauben.
+ */
+export class HttpFieldStateService implements FieldStateStorageService {
+  private timer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor(
+    private readonly url: string,
+    private readonly options: HttpFieldStateServiceOptions = {},
+  ) {}
+
+  async load(): Promise<FieldAwareState | undefined> {
+    const fetchFn = this.options.fetchFn ?? fetch;
+    const res = await fetchFn(this.url, {
+      headers: { Accept: 'application/json', ...this.options.headers },
+      credentials: this.options.credentials ?? 'same-origin',
+    });
+    if (res.status === 404) return undefined;
+    if (!res.ok) {
+      throw new Error(`Formular laden fehlgeschlagen: HTTP ${res.status}`);
+    }
+    return normalizeFieldState(await res.json());
+  }
+
+  save(state: FieldAwareState): void {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      const fetchFn = this.options.fetchFn ?? fetch;
+      fetchFn(this.url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.options.headers,
+        },
+        credentials: this.options.credentials ?? 'same-origin',
+        body: JSON.stringify(state),
+      })
+        .then((res) => {
+          if (!res.ok)
+            throw new Error(`Auto-Save fehlgeschlagen: HTTP ${res.status}`);
+        })
+        .catch((err) => (this.options.onSaveError ?? console.error)(err));
+    }, this.options.debounceMs ?? 750);
+  }
+}
+
 /**
  * Default-Adapter: Auto-Save im Browser-localStorage.
  *
