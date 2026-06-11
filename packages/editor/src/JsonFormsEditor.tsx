@@ -15,6 +15,10 @@ import {
   CategorizationServiceImpl,
 } from './core/api/categorizationService';
 import {
+  FieldStateStorageService,
+  LocalStorageFieldStateService,
+} from './core/api/fieldStateStorage';
+import {
   DefaultPaletteService,
   PaletteService,
 } from './core/api/paletteService';
@@ -22,6 +26,7 @@ import { EmptySchemaService, SchemaService } from './core/api/schemaService';
 import { EditorContextInstance } from './core/context';
 import { Actions } from './core/model';
 import { EditorAction } from './core/model/actions';
+import { createSetFieldStateAction } from './core/model/addFieldActions';
 import {
   HISTORY_WRAP,
   HistoryAction,
@@ -32,7 +37,6 @@ import {
 import { createInitialEditorState } from './core/model/reducer';
 import { FlatElement } from './core/model/uiElements';
 import { SelectedElement } from './core/selection';
-import { sanitizeParsedJson } from './core/util/sanitizeJson';
 import { tryFindByUUID } from './core/util/schemasUtil';
 import { defaultEditorRenderers } from './editor';
 import { I18nProvider } from './i18n';
@@ -49,6 +53,7 @@ import {
 const defaultSchemaService = new EmptySchemaService();
 const defaultPaletteService = new DefaultPaletteService();
 const defaultCategorizationService = new CategorizationServiceImpl();
+const defaultFieldStateStorage = new LocalStorageFieldStateService();
 const defaultPropertiesServiceFactory = (
   providers: PropertySchemasProvider[],
   decorators: PropertySchemasDecorator[],
@@ -70,6 +75,12 @@ export interface JsonFormsEditorProps {
   footer?: ComponentType | null;
   /** Konfiguration für Module und Palette-Verhalten */
   config?: EditorConfig;
+  /**
+   * Persistenz-Adapter für den Formular-Zustand (Auto-Save / Laden beim
+   * Start). Default: localStorage. Für Server-Speicherung eine eigene
+   * FieldStateStorageService-Implementierung übergeben (siehe README).
+   */
+  fieldStateStorage?: FieldStateStorageService;
 }
 
 export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
@@ -84,6 +95,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   header,
   footer,
   config,
+  fieldStateStorage = defaultFieldStateStorage,
 }) => {
   const propertiesService = React.useMemo(
     () => propertiesServiceProvider(schemaProviders, schemaDecorators),
@@ -91,30 +103,26 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     [],
   );
 
+  // Gespeicherten Zustand genau einmal laden. Synchrone Adapter (localStorage)
+  // fließen ohne Zwischenrender in den Initial-State; asynchrone Adapter
+  // (Server) werden nach dem Mount per SET_FIELD_STATE hydriert.
+  const [initialLoad] = useState(() => {
+    try {
+      return fieldStateStorage.load();
+    } catch (err) {
+      console.error('Formular-Zustand konnte nicht geladen werden', err);
+      return undefined;
+    }
+  });
+
   // History-Reducer statt direktem editorReducer
   const [historyState, historyDispatch] = useReducer(
     historyReducer,
     undefined,
     () => {
       const base = createInitialEditorState({ categorizationService });
-      try {
-        const saved = localStorage.getItem('jfd_fieldState_v1');
-        if (saved) {
-          const parsed = sanitizeParsedJson(JSON.parse(saved));
-          if (parsed?.schema && parsed?.uiSchema) {
-            base.fieldState = {
-              schema: parsed.schema,
-              uiSchema: parsed.uiSchema,
-              tabs: parsed.tabs ?? [],
-              activeTabIndex: parsed.activeTabIndex ?? 0,
-              tabAssignments: parsed.tabAssignments ?? {},
-              lineNumbersEnabled: parsed.lineNumbersEnabled ?? false,
-              sectionColors: parsed.sectionColors ?? {},
-            };
-          }
-        }
-      } catch {
-        /* corrupted or missing — start fresh */
+      if (initialLoad && !(initialLoad instanceof Promise)) {
+        base.fieldState = initialLoad;
       }
       return { past: [], present: base, future: [] };
     },
@@ -138,14 +146,36 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   const [selection, setSelection] = useState<SelectedElement>(undefined);
   const [selectedScope, setSelectedScope] = useState<string | null>(null);
 
-  const STORAGE_KEY = 'jfd_fieldState_v1';
+  // Asynchrone Hydration (Server-Adapter). Hinweis: läuft als regulärer
+  // History-Schritt — direkt nach der Hydration ist ein Undo zum leeren
+  // Formular möglich.
+  useEffect(() => {
+    if (!(initialLoad instanceof Promise)) return;
+    let cancelled = false;
+    initialLoad
+      .then((state) => {
+        if (state && !cancelled) {
+          dispatch(createSetFieldStateAction(state) as unknown as EditorAction);
+        }
+      })
+      .catch((err) =>
+        console.error('Formular-Zustand konnte nicht geladen werden', err),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [initialLoad, dispatch]);
+
+  // Auto-Save bei jeder Zustandsänderung über den Persistenz-Adapter.
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(fieldState));
-    } catch {
-      /* storage quota or private mode — ignore */
+      void Promise.resolve(fieldStateStorage.save(fieldState)).catch((err) =>
+        console.error('Auto-Save fehlgeschlagen', err),
+      );
+    } catch (err) {
+      console.error('Auto-Save fehlgeschlagen', err);
     }
-  }, [fieldState]);
+  }, [fieldState, fieldStateStorage]);
 
   useEffect(() => {
     schemaService.getSchema().then((s) => {

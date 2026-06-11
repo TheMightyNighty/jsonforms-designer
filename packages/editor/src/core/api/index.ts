@@ -6,5 +6,6 @@
  * ---------------------------------------------------------------------
  */
 export * from './categorizationService';
+export * from './fieldStateStorage';
 export * from './paletteService';
 export * from './schemaService';

@@ -325,6 +325,50 @@ loader.config({ monaco });
 > `dompurify`-Version. Im Monorepo erzwingt ein npm-Override `dompurify ≥ 3.4.9`
 > (siehe `package.json` → `overrides`); eigene Hosts sollten das übernehmen.
 
+**Persistenz (Server-Speicherung):**
+
+Standardmäßig speichert der Editor den Formular-Zustand automatisch im
+`localStorage` (`jfd_fieldState_v1`). Über die Prop `fieldStateStorage` lässt
+sich ein eigener Adapter einhängen — z. B. für ein REST-Backend:
+
+```ts
+import type {
+  FieldStateStorageService,
+  FieldAwareState,
+} from '@jsonforms-designer/editor';
+
+class HttpFieldStateService implements FieldStateStorageService {
+  private timer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor(private readonly url: string) {}
+
+  // Darf asynchron sein — der Editor hydriert nach dem Mount.
+  async load(): Promise<FieldAwareState | undefined> {
+    const res = await fetch(this.url, { credentials: 'include' });
+    return res.ok ? await res.json() : undefined;
+  }
+
+  // Wird bei jeder Änderung aufgerufen → serverseitige Adapter debouncen.
+  save(state: FieldAwareState): void {
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      void fetch(this.url, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+      });
+    }, 750);
+  }
+}
+
+<JsonFormsEditor fieldStateStorage={new HttpFieldStateService('/api/form/42')} />;
+```
+
+> Eingehende Daten werden vom Editor normalisiert und gegen
+> Prototype-Pollution bereinigt (`normalizeFieldState`). Die CSP der
+> Host-Anwendung muss den Backend-Origin in `connect-src` erlauben.
+
 ---
 
 ## Architektur
