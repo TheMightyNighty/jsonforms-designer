@@ -22,6 +22,9 @@ Stand: Juni 2026. Reihenfolge = grobe Priorität; keine Terminzusagen.
       `HttpFieldStateService` als Paket-Export statt nur README-Snippet
 - [ ] **FIM-Proxy-Beispiel** (CORS/Firewall): dokumentierte Reverse-Proxy-
       Konfiguration für abgeschottete Netze
+- [ ] **Komponenten-Sandbox** (Storybook o. ä.) evaluieren — bewusst noch
+      nicht eingeführt (E2E + Screenshot-Generator decken die visuelle
+      Verifikation derzeit ab)
 
 ## Langfristig / zu bewerten
 

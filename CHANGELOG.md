@@ -13,6 +13,7 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - **vitest auf ≥ 3.2.6** (GHSA-5xrq-8626-4rwp, critical: Datei-Lesezugriff über den Vitest-UI-Server).
 
 ### Hinzugefügt
+- **Pre-Commit-Hooks** (husky + lint-staged): Prettier und ESLint-Autofix laufen auf den gestagten Dateien vor jedem Commit — Format-Drift kann nicht mehr einsickern.
 - **Projekt-Doku:** `CONTRIBUTING.md` (Setup, Konventionen, Qualitäts-Gates), `ROADMAP.md` und ADR-Verzeichnis (`docs/adr/`). README-Screenshots auf das aktuelle helle Theme aktualisiert — reproduzierbar über einen Playwright-Generator (`GEN_SCREENSHOTS=1`, FIM gemockt).
 - **Tastatur-Alternativpfad zum Drag & Drop (BITV):** Palette-Einträge sind fokussierbar (`role="button"`); Enter/Leertaste fügt den Feldtyp ans Formularende an (im aktiven Tab). Tastatur-Umsortieren bleibt offen (siehe README, Bekannte Einschränkungen).
 - **Unit-Tests für `xdfExport`** (XML-Escaping/Injection-Schutz, Typ-Mapping, Codelisten, Einschränkungen) **und `fimApiService`** (URL-Bau, Header, Normalisierung, Fehlerfälle) — 28 neue Tests.
