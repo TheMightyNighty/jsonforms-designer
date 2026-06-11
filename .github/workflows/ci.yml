@@ -1,0 +1,45 @@
+# Kontinuierliche Qualitätssicherung: Lint, Format, Typecheck, Tests, Build
+# und Dependency-Audit laufen bei jedem Push auf main und bei jedem PR.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Formatierung prüfen
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Build (editor + app)
+        run: npm run build
+
+      - name: Dependency-Audit (production)
+        run: npm audit --omit=dev --audit-level=high
