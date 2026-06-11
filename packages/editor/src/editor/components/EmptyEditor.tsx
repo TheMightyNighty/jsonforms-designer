@@ -47,6 +47,7 @@ export const EmptyEditor: React.FC = () => {
   return (
     <Box
       ref={setRef}
+      data-testid="empty-editor-drop"
       role="region"
       aria-label="Formular-Editor-Fläche"
       aria-dropeffect="copy"

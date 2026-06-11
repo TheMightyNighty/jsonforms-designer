@@ -101,6 +101,7 @@ function DropZone({ dispatch, insertAfterScope, tabIndex }: DropZoneProps) {
   return (
     <Box
       ref={setRef}
+      data-testid="dropzone"
       sx={{
         height: isOver ? 32 : 8,
         minHeight: 8,
@@ -166,6 +167,7 @@ function FieldRow({
   return (
     <Box
       ref={dragPreviewRef as unknown as React.Ref<HTMLDivElement>}
+      data-testid="field-row"
       role="button"
       tabIndex={0}
       onClick={() => onSelect(scope)}

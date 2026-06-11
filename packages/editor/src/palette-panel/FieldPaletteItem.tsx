@@ -46,6 +46,7 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
     <Tooltip title={fieldType.displayName} placement="right" enterDelay={600}>
       <Box
         ref={dragRef as unknown as React.Ref<HTMLDivElement>}
+        data-testid={`palette-item-${fieldType.id}`}
         sx={{
           display: 'flex',
           alignItems: 'center',
