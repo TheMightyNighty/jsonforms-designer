@@ -300,6 +300,31 @@ function MyApp() {
 />
 ```
 
+**Monaco self-hosten (Pflicht für Intranet-Betrieb):**
+
+Der Code-Modus nutzt `@monaco-editor/react`. Ohne Konfiguration lädt dessen
+Loader die Monaco-Runtime zur Laufzeit von einem öffentlichen CDN — in
+abgeschotteten Netzen fällt der Code-Modus damit aus. Die Host-Anwendung
+sollte dem Loader daher eine lokal gebündelte Instanz übergeben, **bevor**
+der erste Editor mountet (Vite-Rezept, vgl. `packages/app/src/monacoSetup.ts`):
+
+```ts
+import { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+
+self.MonacoEnvironment = {
+  getWorker: (_id, label) =>
+    label === 'json' ? new jsonWorker() : new editorWorker(),
+};
+loader.config({ monaco });
+```
+
+> Sicherheitshinweis: `monaco-editor ≥ 0.54` pinnt eine verwundbare
+> `dompurify`-Version. Im Monorepo erzwingt ein npm-Override `dompurify ≥ 3.4.9`
+> (siehe `package.json` → `overrides`); eigene Hosts sollten das übernehmen.
+
 ---
 
 ## Architektur

@@ -20,8 +20,10 @@ export * from './palette-panel';
 
 export const EDITOR_VERSION = '0.1.0';
 
-// Side effect: pin the Monaco runtime version before any editor mounts.
-import './text-editor/monacoLoader';
+// Hinweis: Die Monaco-Runtime wird NICHT mehr hier konfiguriert. Der Host
+// (siehe packages/app/src/monacoSetup.ts) übergibt @monaco-editor/loader eine
+// lokal gebündelte Monaco-Instanz — ohne diese Konfiguration lädt der Loader
+// einen ungepinnten Build vom CDN (siehe README, Abschnitt „Einbettung").
 
 export * from './config';
 export * from './core/jsonschema';

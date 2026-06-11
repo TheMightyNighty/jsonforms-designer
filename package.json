@@ -32,6 +32,8 @@
     "node": ">=20.19"
   },
   "overrides": {
-    "monaco-editor": "0.52.2"
+    "monaco-editor": {
+      "dompurify": "^3.4.9"
+    }
   }
 }

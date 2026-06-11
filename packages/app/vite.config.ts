@@ -6,10 +6,14 @@ import { defineConfig, Plugin } from 'vite';
 // Content-Security-Policy for the production build. Injected only at build time
 // so Vite's dev server / HMR (which relies on inline module preambles) keeps
 // working. Directives explained:
-//   script-src 'unsafe-eval' + worker blob: + cdn.jsdelivr.net — required by
-//     the Monaco editor runtime (loaded/pinned via @monaco-editor/loader).
+//   script-src 'unsafe-eval' — Monaco-Runtime (seit v0.3 lokal gebündelt,
+//     siehe src/monacoSetup.ts). TODO: Nach manuellem Test des Code-Modus im
+//     Prod-Build prüfen, ob 'unsafe-eval' entfernt werden kann — die frühere
+//     CDN/AMD-Variante brauchte es, die ESM-Variante möglicherweise nicht.
 //   style-src 'unsafe-inline'  — required by Emotion/MUI runtime styles.
-//   connect-src fimportal.de    — FIM-Portal API; cdn.jsdelivr.net — Monaco.
+//   worker-src 'self' blob:    — Monaco-Worker werden als eigene Dateien
+//     gebündelt (?worker-Rezept); blob: als Fallback für Vite-Worker-Helper.
+//   connect-src fimportal.de   — FIM-Portal API.
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -19,9 +23,9 @@ const CSP = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-eval'",
   "worker-src 'self' blob:",
-  "connect-src 'self' https://fimportal.de https://cdn.jsdelivr.net",
+  "connect-src 'self' https://fimportal.de",
 ].join('; ');
 
 const cspPlugin = (): Plugin => ({
