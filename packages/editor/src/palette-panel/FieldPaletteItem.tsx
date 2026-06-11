@@ -2,7 +2,6 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { useDrag } from 'react-dnd';
 
 import { useDispatch, useFieldState } from '../core/context';
-import { EditorAction } from '../core/model/actions';
 import { FieldTypeDefinition } from '../field-types/fieldTypes';
 import { createPaletteFieldAction } from './useFieldDrop';
 
@@ -53,13 +52,7 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
   const addViaKeyboard = () => {
     const tabIndex =
       fieldState.tabs.length > 0 ? fieldState.activeTabIndex : undefined;
-    dispatch(
-      createPaletteFieldAction(
-        fieldType.id,
-        undefined,
-        tabIndex,
-      ) as unknown as EditorAction,
-    );
+    dispatch(createPaletteFieldAction(fieldType.id, undefined, tabIndex));
   };
 
   return (

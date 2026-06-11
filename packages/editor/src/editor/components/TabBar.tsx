@@ -34,12 +34,7 @@ export function TabBar({ tabs, activeTabIndex, dispatch }: TabBarProps) {
 
   const commitEdit = () => {
     if (editingIndex !== null && editValue.trim()) {
-      dispatch(
-        createRenameTabAction(
-          editingIndex,
-          editValue.trim(),
-        ) as unknown as EditorAction,
-      );
+      dispatch(createRenameTabAction(editingIndex, editValue.trim()));
     }
     setEditingIndex(null);
   };
@@ -47,9 +42,7 @@ export function TabBar({ tabs, activeTabIndex, dispatch }: TabBarProps) {
   const handleDragStart = (idx: number) => setDragFrom(idx);
   const handleDrop = (toIdx: number) => {
     if (dragFrom !== null && dragFrom !== toIdx) {
-      dispatch(
-        createReorderTabsAction(dragFrom, toIdx) as unknown as EditorAction,
-      );
+      dispatch(createReorderTabsAction(dragFrom, toIdx));
     }
     setDragFrom(null);
   };
@@ -65,9 +58,7 @@ export function TabBar({ tabs, activeTabIndex, dispatch }: TabBarProps) {
     >
       <Tabs
         value={activeTabIndex}
-        onChange={(_, v) =>
-          dispatch(createSetActiveTabAction(v) as unknown as EditorAction)
-        }
+        onChange={(_, v) => dispatch(createSetActiveTabAction(v))}
         variant="scrollable"
         scrollButtons="auto"
         sx={{ flex: 1, minHeight: 36 }}
@@ -115,11 +106,7 @@ export function TabBar({ tabs, activeTabIndex, dispatch }: TabBarProps) {
                         sx={{ p: 0.1, opacity: 0.5, '&:hover': { opacity: 1 } }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          dispatch(
-                            createRemoveTabAction(
-                              idx,
-                            ) as unknown as EditorAction,
-                          );
+                          dispatch(createRemoveTabAction(idx));
                         }}
                         aria-label={`Tab ${tab.label} löschen`}
                       >
@@ -139,13 +126,7 @@ export function TabBar({ tabs, activeTabIndex, dispatch }: TabBarProps) {
         <IconButton
           size="small"
           sx={{ mx: 0.5, flexShrink: 0 }}
-          onClick={() =>
-            dispatch(
-              createAddTabAction(
-                `Tab ${tabs.length + 1}`,
-              ) as unknown as EditorAction,
-            )
-          }
+          onClick={() => dispatch(createAddTabAction(`Tab ${tabs.length + 1}`))}
           aria-label="Neuen Tab hinzufügen"
         >
           <AddIcon fontSize="small" />

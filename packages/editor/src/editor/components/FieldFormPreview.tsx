@@ -79,12 +79,7 @@ function DropZone({ dispatch, insertAfterScope, tabIndex }: DropZoneProps) {
     () => ({
       accept: EDITOR_ITEM,
       drop: (item) => {
-        dispatch(
-          createReorderElementAction(
-            item.key,
-            insertAfterScope,
-          ) as unknown as EditorAction,
-        );
+        dispatch(createReorderElementAction(item.key, insertAfterScope));
       },
       collect: (m) => ({ isOver: m.isOver() }),
     }),
@@ -354,7 +349,7 @@ export function FieldFormPreview({
   const { t } = useI18n();
 
   const handleDelete = (scope: string) => {
-    dispatch(createRemoveFieldAction(scope) as unknown as EditorAction);
+    dispatch(createRemoveFieldAction(scope));
     if (selectedScope === scope) onSelectScope(null);
   };
 
@@ -388,7 +383,7 @@ export function FieldFormPreview({
         key + '_kopie',
         scope,
         tabIdx,
-      ) as unknown as EditorAction,
+      ),
     );
   };
 
@@ -478,9 +473,7 @@ export function FieldFormPreview({
             size="small"
             startIcon={<LayersIcon />}
             variant="text"
-            onClick={() =>
-              dispatch(createAddTabAction('Seite 1') as unknown as EditorAction)
-            }
+            onClick={() => dispatch(createAddTabAction('Seite 1'))}
             sx={{ fontSize: '0.75rem', color: 'text.secondary' }}
           >
             {t.editor.mehrstufig}

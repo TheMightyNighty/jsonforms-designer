@@ -155,7 +155,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     initialLoad
       .then((state) => {
         if (state && !cancelled) {
-          dispatch(createSetFieldStateAction(state) as unknown as EditorAction);
+          dispatch(createSetFieldStateAction(state));
         }
       })
       .catch((err) =>
@@ -188,9 +188,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
         if (cancelled) return;
         const converted = fieldStateFromSchemas(s, u);
         if (converted) {
-          dispatch(
-            createSetFieldStateAction(converted) as unknown as EditorAction,
-          );
+          dispatch(createSetFieldStateAction(converted));
         }
       })
       .catch((err) =>

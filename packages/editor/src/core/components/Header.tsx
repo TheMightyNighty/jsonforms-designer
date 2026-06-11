@@ -24,7 +24,6 @@ import { FormTemplate } from '../../field-types/formTemplates';
 import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
 import { useI18n } from '../../i18n';
 import { useEditorContext, useUndoRedo } from '../context';
-import { EditorAction } from '../model/actions';
 import {
   createLoadTemplateAction,
   createSetFieldStateAction,
@@ -49,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
   const [metaOpen, setMetaOpen] = useState(false);
 
   const handleTemplateSelect = (tpl: FormTemplate) => {
-    dispatch(createLoadTemplateAction(tpl.state) as unknown as EditorAction);
+    dispatch(createLoadTemplateAction(tpl.state));
   };
 
   const handleCopySchema = () => {
@@ -197,11 +196,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
           >
             <IconButton
               color="inherit"
-              onClick={() =>
-                dispatch(
-                  createToggleLineNumbersAction() as unknown as EditorAction,
-                )
-              }
+              onClick={() => dispatch(createToggleLineNumbersAction())}
               aria-label="Zeilennummern umschalten"
               sx={{ color: lineNumbers ? 'primary.main' : 'text.secondary' }}
             >
@@ -234,7 +229,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
         onClose={() => setExportOpen(false)}
         fieldState={fieldState}
         onImport={(state) => {
-          dispatch(createSetFieldStateAction(state) as unknown as EditorAction);
+          dispatch(createSetFieldStateAction(state));
           setExportOpen(false);
         }}
       />
@@ -249,9 +244,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
         open={metaOpen}
         onClose={() => setMetaOpen(false)}
         schema={fieldState.schema}
-        onSave={(meta) =>
-          dispatch(createSetFormMetadataAction(meta) as unknown as EditorAction)
-        }
+        onSave={(meta) => dispatch(createSetFormMetadataAction(meta))}
       />
     </AppBar>
   );

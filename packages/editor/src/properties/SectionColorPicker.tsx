@@ -31,9 +31,7 @@ export function SectionColorPicker({
   const current = fieldState.sectionColors[elementId] ?? null;
 
   const set = (color: string | null) => {
-    dispatch(
-      createSetSectionColorAction(elementId, color) as unknown as EditorAction,
-    );
+    dispatch(createSetSectionColorAction(elementId, color));
   };
 
   return (

@@ -76,7 +76,7 @@ export function ValidatorSection({
         tabAssignments: fieldState.tabAssignments,
         lineNumbersEnabled: fieldState.lineNumbersEnabled,
         sectionColors: fieldState.sectionColors,
-      }) as unknown as EditorAction,
+      }),
     );
   };
 

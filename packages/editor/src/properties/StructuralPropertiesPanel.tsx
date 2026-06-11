@@ -83,7 +83,7 @@ export function StructuralPropertiesPanel({
           ...uiSchema,
           elements: patchDeep(uiSchema.elements as FlatElement[]),
         },
-      }) as unknown as EditorAction,
+      }),
     );
   };
 

@@ -11,7 +11,6 @@ import {
 import { Header } from './core/components/Header';
 import { Layout } from './core/components/Layout';
 import { useDispatch, useFieldState, useSelectedScope } from './core/context';
-import { EditorAction } from './core/model/actions';
 import { createSetFieldStateAction } from './core/model/addFieldActions';
 import { FieldAwareState } from './core/model/addFieldReducer';
 import { EditorPanel } from './editor';
@@ -77,7 +76,7 @@ function MobileLayout({
   const [selectedScope] = useSelectedScope();
 
   const handleFieldStateChange = (next: FieldAwareState) => {
-    dispatch(createSetFieldStateAction(next) as unknown as EditorAction);
+    dispatch(createSetFieldStateAction(next));
   };
 
   return (
@@ -161,9 +160,7 @@ export const JsonFormsEditorUi = ({
   const [previewData, setPreviewData] = useState<Record<string, unknown>>({});
 
   const handleFieldStateChange = (next: FieldAwareState) => {
-    (dispatch as React.Dispatch<EditorAction>)(
-      createSetFieldStateAction(next) as unknown as EditorAction,
-    );
+    dispatch(createSetFieldStateAction(next));
   };
 
   const HeaderWithMode = () => <Header mode={mode} onModeChange={setMode} />;

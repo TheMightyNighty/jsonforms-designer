@@ -114,15 +114,11 @@ export function ConditionEditor({
       effect,
       condition: { scope: sourceScope, schema: { const: condValue } },
     };
-    dispatch(
-      createSetFieldRuleAction(selectedScope, rule) as unknown as EditorAction,
-    );
+    dispatch(createSetFieldRuleAction(selectedScope, rule));
   }
 
   function removeRule() {
-    dispatch(
-      createSetFieldRuleAction(selectedScope, null) as unknown as EditorAction,
-    );
+    dispatch(createSetFieldRuleAction(selectedScope, null));
     setEnabled(false);
     setSourceScope('');
     setCondValue('');

@@ -72,7 +72,7 @@ function ColDropZone({
               columnIndex,
               item.elementId,
               insertAfterId,
-            ) as unknown as EditorAction,
+            ),
           );
         }
       },
@@ -250,7 +250,7 @@ function ColumnItem({
               createMoveElementAction({
                 elementId: el.id,
                 targetContainerId: 'root',
-              }) as unknown as EditorAction,
+              }),
             );
           }}
           sx={{ p: 0.1, opacity: 0.4, '&:hover': { opacity: 1 } }}
@@ -263,7 +263,7 @@ function ColumnItem({
           size="small"
           onClick={(e) => {
             e.stopPropagation();
-            dispatch(createRemoveFieldAction(el.id) as unknown as EditorAction);
+            dispatch(createRemoveFieldAction(el.id));
           }}
           sx={{ p: 0.1, opacity: 0.5, '&:hover': { opacity: 1 } }}
         >
@@ -373,13 +373,7 @@ export function ColumnContainerRow({
         <Tooltip title="Container entfernen">
           <IconButton
             size="small"
-            onClick={() =>
-              dispatch(
-                createRemoveFieldAction(
-                  container.id,
-                ) as unknown as EditorAction,
-              )
-            }
+            onClick={() => dispatch(createRemoveFieldAction(container.id))}
             sx={{ p: 0.1, opacity: 0.5, '&:hover': { opacity: 1 } }}
           >
             <DeleteIcon sx={{ fontSize: 12 }} />

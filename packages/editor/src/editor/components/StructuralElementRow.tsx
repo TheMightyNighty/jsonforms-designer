@@ -36,7 +36,7 @@ export function StructuralElementRow({
 }: StructuralElementRowProps) {
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(createRemoveFieldAction(el.scope) as unknown as EditorAction);
+    dispatch(createRemoveFieldAction(el.scope));
   };
 
   const { fieldState } = useEditorContext();
