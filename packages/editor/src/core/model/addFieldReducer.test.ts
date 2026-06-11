@@ -11,6 +11,7 @@ import {
   createRemoveFieldAction,
   createRemoveTabAction,
   createRenameTabAction,
+  createReorderElementAction,
   createSetActiveTabAction,
 } from './addFieldActions';
 import {
@@ -18,6 +19,7 @@ import {
   FieldAwareState,
   insertControl,
   removeFieldReducer,
+  reorderElementReducer,
   resolveKey,
   tabReducer,
 } from './addFieldReducer';
@@ -334,5 +336,72 @@ describe('removeFieldReducer()', () => {
       createRemoveFieldAction('#/properties/email'),
     );
     expect(next.schema.required).not.toContain('email');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// reorderElementReducer
+// ---------------------------------------------------------------------------
+
+describe('reorderElementReducer()', () => {
+  function threeFields(): FieldAwareState {
+    let state = emptyState();
+    for (const key of ['a', 'b', 'c']) {
+      state = addFieldReducer(
+        state,
+        createAddFieldAction(getFieldType('text-short'), key),
+      );
+    }
+    return state;
+  }
+  const scopes = (s: FieldAwareState) =>
+    s.uiSchema.elements.map((e) => e.scope);
+
+  it('ohne insertAfterKey → an den ANFANG (Bugfix: vorher Ende)', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/c', undefined),
+    );
+    expect(scopes(next)).toEqual([
+      '#/properties/c',
+      '#/properties/a',
+      '#/properties/b',
+    ]);
+  });
+
+  it('mit insertAfterKey → direkt dahinter', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/a', '#/properties/b'),
+    );
+    expect(scopes(next)).toEqual([
+      '#/properties/b',
+      '#/properties/a',
+      '#/properties/c',
+    ]);
+  });
+
+  it('unbekannter insertAfterKey → ans Ende (Fallback)', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/a', '#/properties/nix'),
+    );
+    expect(scopes(next)).toEqual([
+      '#/properties/b',
+      '#/properties/c',
+      '#/properties/a',
+    ]);
+  });
+
+  it('unbekanntes Element → State unverändert', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/nix', undefined),
+    );
+    expect(next).toBe(state);
   });
 });

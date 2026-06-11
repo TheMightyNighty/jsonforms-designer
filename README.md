@@ -418,7 +418,7 @@ interface OpenCodeService {
 |---|---|
 | **CORS (FIM-Portal)** | Die FitKo-API muss CORS-Header für die Ziel-Domain setzen oder ein serverseitiger Proxy muss verwendet werden |
 | **Versionierung / Audit-Trail** | Formular-Versionen werden als `x-version`-Metadatum gespeichert; ein automatischer Changelog ist nicht implementiert |
-| **WCAG-Vollprüfung** | Grundlegende Anforderungen (Skip-Link, Focus-Styles, ARIA) sind umgesetzt; Felder lassen sich auch per Tastatur hinzufügen (Enter/Leertaste auf Palette-Einträgen). Das *Umsortieren* per Tastatur fehlt noch; eine vollständige BITV-2.0-Prüfung wird projektspezifisch empfohlen |
+| **WCAG-Vollprüfung** | Grundlegende Anforderungen (Skip-Link, Focus-Styles, ARIA) sind umgesetzt; Felder lassen sich per Tastatur hinzufügen (Enter/Leertaste auf Palette-Einträgen) und umsortieren (Alt+Pfeiltasten auf der Feld-Zeile). Eine vollständige BITV-2.0-Prüfung wird projektspezifisch empfohlen |
 | **Codelisten aus FIM** | Codelisten-Werte werden im Basic-List-Endpunkt der FIM-API nicht zurückgegeben; nur `code_list_id` ist verfügbar |
 
 ---

@@ -498,8 +498,38 @@ export function FieldFormPreview({
 
         {visibleElements.map((el, idx) => (
           <React.Fragment key={el.scope}>
-            {/* Zeilennummer + Element nebeneinander */}
-            <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+            {/* Zeilennummer + Element nebeneinander.
+                Alt+Pfeil hoch/runter sortiert das fokussierte Element um
+                (Tastatur-Alternative zum Drag & Drop, BITV). */}
+            <Box
+              sx={{ display: 'flex', alignItems: 'flex-start' }}
+              aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
+              onKeyDown={(e) => {
+                if (!e.altKey) return;
+                if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.key === 'ArrowUp' && idx > 0) {
+                  // Vor den Vorgänger = hinter dessen Vorgänger (oder Anfang)
+                  dispatch(
+                    createReorderElementAction(
+                      el.scope,
+                      idx >= 2 ? visibleElements[idx - 2].scope : undefined,
+                    ),
+                  );
+                } else if (
+                  e.key === 'ArrowDown' &&
+                  idx < visibleElements.length - 1
+                ) {
+                  dispatch(
+                    createReorderElementAction(
+                      el.scope,
+                      visibleElements[idx + 1].scope,
+                    ),
+                  );
+                }
+              }}
+            >
               {lineNumbersEnabled && (
                 <Box
                   sx={{

@@ -16,8 +16,7 @@ Stand: Juni 2026. Reihenfolge = grobe Priorität; keine Terminzusagen.
 - [ ] **State-Konsolidierung Stufe 2** (ADR 0001): tote Baum-Module entfernen
       (alte Palette, `core/renderers/`, Baum-Reducer-Zweige) — Breaking,
       daher gebündelt als Major-Cleanup
-- [ ] **Tastatur-Umsortieren** von Feldern (BITV-Lücke; Hinzufügen geht
-      bereits per Enter/Leertaste)
+- [x] ~~**Tastatur-Umsortieren** von Feldern~~ (umgesetzt: Alt+Pfeiltasten)
 - [ ] **Referenz-Backend-Adapter:** kleines Beispiel-Backend +
       `HttpFieldStateService` als Paket-Export statt nur README-Snippet
 - [ ] **FIM-Proxy-Beispiel** (CORS/Firewall): dokumentierte Reverse-Proxy-

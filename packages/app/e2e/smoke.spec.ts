@@ -114,6 +114,34 @@ test('Feld per Tastatur hinzufügen (Enter auf Palette-Eintrag)', async ({
 });
 
 // ---------------------------------------------------------------------------
+// Tastatur-Umsortieren (BITV): Alt+Pfeiltasten verschieben das Element
+// ---------------------------------------------------------------------------
+
+test('Felder per Alt+Pfeiltasten umsortieren', async ({ page }) => {
+  await page.goto('/');
+
+  // Zwei Felder per Tastatur anlegen: Textfeld, dann Checkbox (Reihenfolge!)
+  await page.getByTestId('palette-item-text-short').focus();
+  await page.keyboard.press('Enter');
+  await page.getByTestId('palette-item-checkbox').focus();
+  await page.keyboard.press('Enter');
+
+  const rows = page.getByTestId('field-row');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('Textfeld');
+
+  // Checkbox (Position 2) fokussieren und nach oben sortieren
+  await rows.nth(1).focus();
+  await page.keyboard.press('Alt+ArrowUp');
+  await expect(page.getByTestId('field-row').first()).toContainText('Checkbox');
+
+  // Und wieder nach unten
+  await page.getByTestId('field-row').first().focus();
+  await page.keyboard.press('Alt+ArrowDown');
+  await expect(page.getByTestId('field-row').first()).toContainText('Textfeld');
+});
+
+// ---------------------------------------------------------------------------
 // Eigenschaften bearbeiten
 // ---------------------------------------------------------------------------
 

@@ -418,10 +418,13 @@ export function reorderElementReducer<S extends FieldAwareState>(
 
   const without = elements.filter((el) => (el.id ?? el.scope) !== elementKey);
 
-  // Einfüge-Position bestimmen
+  // Einfüge-Position bestimmen.
+  // Ohne insertAfterKey → an den ANFANG: die oberste Drop-Zone und das
+  // Tastatur-Hochsortieren übergeben undefined und meinen Position 0.
+  // (Bugfix: früher landete das Element fälschlich am Ende.)
   let nextElements: FlatElement[];
   if (!insertAfterKey) {
-    nextElements = [...without, moving];
+    nextElements = [moving, ...without];
   } else {
     const idx = without.findIndex(
       (el) => (el.id ?? el.scope) === insertAfterKey,
