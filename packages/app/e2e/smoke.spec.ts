@@ -90,6 +90,30 @@ test('Feld per Drag & Drop hinzufügen — überlebt Reload (Auto-Save)', async 
 });
 
 // ---------------------------------------------------------------------------
+// Tastatur-Alternativpfad (BITV): Enter auf Palette-Eintrag fügt Feld hinzu
+// ---------------------------------------------------------------------------
+
+test('Feld per Tastatur hinzufügen (Enter auf Palette-Eintrag)', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  const item = page.getByTestId('palette-item-text-short');
+  await expect(item).toHaveRole('button');
+  await item.focus();
+  await page.keyboard.press('Enter');
+
+  const row = page.getByTestId('field-row');
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText('Textfeld');
+
+  // Leertaste funktioniert ebenfalls
+  await page.getByTestId('palette-item-checkbox').focus();
+  await page.keyboard.press(' ');
+  await expect(page.getByTestId('field-row')).toHaveCount(2);
+});
+
+// ---------------------------------------------------------------------------
 // Eigenschaften bearbeiten
 // ---------------------------------------------------------------------------
 

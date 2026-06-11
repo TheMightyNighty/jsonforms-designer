@@ -92,6 +92,26 @@ function handleFimDrop(
   });
 }
 
+/**
+ * Erzeugt die ADD_FIELD-Action für einen Katalog-Feldtyp — gemeinsame Logik
+ * für den Drop-Pfad (Maus) und den Tastatur-Pfad (Enter/Leertaste auf einem
+ * Palette-Eintrag, siehe FieldPaletteItem).
+ */
+export function createPaletteFieldAction(
+  fieldTypeId: string,
+  insertAfterScope?: string,
+  tabIndex?: number,
+): AddFieldAction {
+  const fieldType = getFieldType(fieldTypeId);
+  const propertyKey = derivePropertyKey(fieldTypeId);
+  return createAddFieldAction(
+    fieldType,
+    propertyKey,
+    insertAfterScope,
+    tabIndex,
+  );
+}
+
 export function useFieldDrop(
   dispatch: Dispatch<FimOrFieldAction>,
   insertAfterScope?: string,
@@ -109,15 +129,13 @@ export function useFieldDrop(
           dispatch(handleFimDrop(item, insertAfterScope, tabIndex));
           return;
         }
-        const fieldType = getFieldType(item.fieldTypeId);
-        const propertyKey = derivePropertyKey(item.fieldTypeId);
-        const action = createAddFieldAction(
-          fieldType,
-          propertyKey,
-          insertAfterScope,
-          tabIndex,
+        dispatch(
+          createPaletteFieldAction(
+            item.fieldTypeId,
+            insertAfterScope,
+            tabIndex,
+          ),
         );
-        dispatch(action);
       },
       collect: (monitor) => ({
         isOver: monitor.isOver(),

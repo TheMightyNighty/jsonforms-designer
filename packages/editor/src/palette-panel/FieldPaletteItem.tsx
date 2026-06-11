@@ -1,7 +1,10 @@
 import { Box, Tooltip, Typography } from '@mui/material';
 import { useDrag } from 'react-dnd';
 
+import { useDispatch, useFieldState } from '../core/context';
+import { EditorAction } from '../core/model/actions';
 import { FieldTypeDefinition } from '../field-types/fieldTypes';
+import { createPaletteFieldAction } from './useFieldDrop';
 
 // ---------------------------------------------------------------------------
 // DnD-Konstante — exportiert damit der Drop-Handler (Editor) sie importieren kann
@@ -27,6 +30,9 @@ interface FieldPaletteItemProps {
 // ---------------------------------------------------------------------------
 
 export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
+  const dispatch = useDispatch();
+  const fieldState = useFieldState();
+
   const [{ isDragging }, dragRef] = useDrag<
     FieldTypeDragItem,
     unknown,
@@ -42,11 +48,38 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
     }),
   }));
 
+  // Tastatur-Alternativpfad zum Drag & Drop (BITV): Enter/Leertaste fügt den
+  // Feldtyp ans Formularende an — im aktiven Tab, falls Tabs existieren.
+  const addViaKeyboard = () => {
+    const tabIndex =
+      fieldState.tabs.length > 0 ? fieldState.activeTabIndex : undefined;
+    dispatch(
+      createPaletteFieldAction(
+        fieldType.id,
+        undefined,
+        tabIndex,
+      ) as unknown as EditorAction,
+    );
+  };
+
   return (
-    <Tooltip title={fieldType.displayName} placement="right" enterDelay={600}>
+    <Tooltip
+      title={`${fieldType.displayName} — Enter fügt das Feld am Ende ein`}
+      placement="right"
+      enterDelay={600}
+    >
       <Box
         ref={dragRef as unknown as React.Ref<HTMLDivElement>}
         data-testid={`palette-item-${fieldType.id}`}
+        role="button"
+        tabIndex={0}
+        aria-label={`${fieldType.displayName} hinzufügen`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            addViaKeyboard();
+          }
+        }}
         sx={{
           display: 'flex',
           alignItems: 'center',
