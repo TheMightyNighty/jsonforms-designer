@@ -435,6 +435,14 @@ interface OpenCodeService {
 
 ---
 
+## Mitwirken & Roadmap
+
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — Setup, Konventionen, Qualitäts-Gates
+- [ROADMAP.md](./ROADMAP.md) — geplante Weiterentwicklung
+- [docs/adr/](./docs/adr/) — Architektur-Entscheidungen (ADRs)
+
+---
+
 ## Lizenz
 
 MIT — siehe [LICENSE](./LICENSE).
