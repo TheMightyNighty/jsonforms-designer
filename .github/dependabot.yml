@@ -1,0 +1,19 @@
+# Abhängigkeits-Updates als PRs mit Review statt blinder Caret-Ranges
+# (Audit-Befund 2026-06: lodash-Reaktivierung kam unbemerkt herein).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      minor-und-patch:
+        update-types: ['minor', 'patch']
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
