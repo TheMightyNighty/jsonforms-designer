@@ -1,4 +1,7 @@
-import { FieldSchemaFragment, FieldUiSchemaFragment } from '../field-types/fieldTypes';
+import {
+  FieldSchemaFragment,
+  FieldUiSchemaFragment,
+} from '../field-types/fieldTypes';
 import { FimDatenfeld, FimDatenfeldgruppe, FimDatentyp } from './fimService';
 
 export interface FimFeldMapping {
@@ -14,13 +17,20 @@ export interface FimGruppeMapping {
 
 function datentyp2JsonType(datentyp: FimDatentyp): string {
   switch (datentyp) {
-    case 'text':        return 'string';
-    case 'ganzzahl':    return 'integer';
-    case 'dezimalzahl': return 'number';
-    case 'datum':       return 'string';
-    case 'datumZeit':   return 'string';
-    case 'boolean':     return 'boolean';
-    case 'codeliste':   return 'string';
+    case 'text':
+      return 'string';
+    case 'ganzzahl':
+      return 'integer';
+    case 'dezimalzahl':
+      return 'number';
+    case 'datum':
+      return 'string';
+    case 'datumZeit':
+      return 'string';
+    case 'boolean':
+      return 'boolean';
+    case 'codeliste':
+      return 'string';
   }
 }
 
@@ -34,23 +44,35 @@ export function mapDatenfeld(feld: FimDatenfeld): FimFeldMapping {
     type: jsonType,
     title: feld.name,
     description: feld.beschreibung || undefined,
-    ...(feld.datentyp === 'datum'     && { format: 'date' }),
+    ...(feld.datentyp === 'datum' && { format: 'date' }),
     ...(feld.datentyp === 'datumZeit' && { format: 'date-time' }),
     ...(feld.datentyp === 'codeliste' && feld.codelisteWerte?.length
       ? { enum: feld.codelisteWerte.map((w) => w.code) }
       : {}),
-    ...(feld.einschraenkungen?.minLength != null && { minLength: feld.einschraenkungen.minLength }),
-    ...(feld.einschraenkungen?.maxLength != null && { maxLength: feld.einschraenkungen.maxLength }),
-    ...(feld.einschraenkungen?.minimum  != null && { minimum:   feld.einschraenkungen.minimum }),
-    ...(feld.einschraenkungen?.maximum  != null && { maximum:   feld.einschraenkungen.maximum }),
-    ...(feld.einschraenkungen?.pattern            && { pattern:   feld.einschraenkungen.pattern }),
+    ...(feld.einschraenkungen?.minLength != null && {
+      minLength: feld.einschraenkungen.minLength,
+    }),
+    ...(feld.einschraenkungen?.maxLength != null && {
+      maxLength: feld.einschraenkungen.maxLength,
+    }),
+    ...(feld.einschraenkungen?.minimum != null && {
+      minimum: feld.einschraenkungen.minimum,
+    }),
+    ...(feld.einschraenkungen?.maximum != null && {
+      maximum: feld.einschraenkungen.maximum,
+    }),
+    ...(feld.einschraenkungen?.pattern && {
+      pattern: feld.einschraenkungen.pattern,
+    }),
     'x-fim-id': feld.identifier,
   } as FieldSchemaFragment;
 
   const isLongText =
     feld.datentyp === 'text' && (feld.einschraenkungen?.maxLength ?? 0) > 500;
 
-  const uiSchemaOptions: Record<string, unknown> = isLongText ? { multi: true } : {};
+  const uiSchemaOptions: Record<string, unknown> = isLongText
+    ? { multi: true }
+    : {};
 
   return {
     propertyKey: identifierToKey(feld.identifier),
@@ -59,7 +81,9 @@ export function mapDatenfeld(feld: FimDatenfeld): FimFeldMapping {
   };
 }
 
-export function mapDatenfeldgruppe(gruppe: FimDatenfeldgruppe): FimGruppeMapping {
+export function mapDatenfeldgruppe(
+  gruppe: FimDatenfeldgruppe,
+): FimGruppeMapping {
   return {
     propertyKey: identifierToKey(gruppe.identifier),
     felder: gruppe.felder.map(mapDatenfeld),
@@ -69,7 +93,7 @@ export function mapDatenfeldgruppe(gruppe: FimDatenfeldgruppe): FimGruppeMapping
 /** Erzeugt ein vollständiges JSONSchema-object-Fragment für eine Datenfeldgruppe. */
 export function gruppeToObjectSchema(
   gruppe: FimDatenfeldgruppe,
-  mapping: FimGruppeMapping
+  mapping: FimGruppeMapping,
 ): FieldSchemaFragment {
   const properties: Record<string, FieldSchemaFragment> = {};
   for (const fm of mapping.felder) {
@@ -87,7 +111,7 @@ export function gruppeToObjectSchema(
 /** Erzeugt ein UISchema-VerticalLayout für alle Felder einer Gruppe. */
 export function gruppeToUiSchema(
   mapping: FimGruppeMapping,
-  baseScopePath: string
+  baseScopePath: string,
 ): Omit<FieldUiSchemaFragment, 'scope'> {
   return {
     type: 'VerticalLayout',

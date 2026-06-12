@@ -16,6 +16,7 @@
  *                    gereicht und vom Haupt-Reducer verarbeitet
  */
 
+import { JsonSchema7 } from '@jsonforms/core';
 import {
   Box,
   Checkbox,
@@ -25,21 +26,22 @@ import {
   Typography,
 } from '@mui/material';
 import { Dispatch } from 'react';
-import { JsonSchema7 } from '@jsonforms/core';
+
+import { useEditorContext } from '../core/context';
+import { EditorAction } from '../core/model/actions';
+import { FieldAwareState } from '../core/model/addFieldReducer';
+import { UiElement } from '../core/model/uiElements';
+import { useI18n } from '../i18n';
+import { ConditionEditor } from './ConditionEditor';
+import { EnumEditor } from './EnumEditor';
 import {
   createUpdateFieldPropertyAction,
-  UpdateFieldPropertyAction,
   propertyKeyFromScope,
+  UpdateFieldPropertyAction,
 } from './fieldPropertiesActions';
-import { FieldAwareState } from '../core/model/addFieldReducer';
-import { useEditorContext } from '../core/context';
-import { useI18n } from '../i18n';
-import { EditorAction } from '../core/model/actions';
-import { ValidatorSection } from './ValidatorSection';
-import { EnumEditor } from './EnumEditor';
 import { StructuralPropertiesPanel } from './StructuralPropertiesPanel';
-import { ConditionEditor } from './ConditionEditor';
 import { TranslationEditor } from './TranslationEditor';
+import { ValidatorSection } from './ValidatorSection';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -68,14 +70,16 @@ interface FieldValues {
 function readFieldValues(
   scope: string,
   schema: FieldAwareState['schema'],
-  uiSchema: FieldAwareState['uiSchema']
+  uiSchema: FieldAwareState['uiSchema'],
 ): FieldValues {
   const key = propertyKeyFromScope(scope);
   const fieldSchema = (schema.properties?.[key] ?? {}) as JsonSchema7 & {
     title?: string;
     description?: string;
   };
-  const control = uiSchema.elements.find((el) => el.scope === scope);
+  const control = uiSchema.elements.find(
+    (el) => el.type === 'Control' && el.scope === scope,
+  );
 
   return {
     label: fieldSchema.title ?? '',
@@ -83,7 +87,7 @@ function readFieldValues(
     placeholder: (control?.options?.['placeholder'] as string) ?? '',
     required: schema.required?.includes(key) ?? false,
     isStringType: fieldSchema.type === 'string',
-    hasEnum: Array.isArray((fieldSchema as any).enum),
+    hasEnum: Array.isArray(fieldSchema.enum),
   };
 }
 
@@ -103,8 +107,13 @@ function EmptyState() {
         p: 3,
       }}
     >
-      <Typography variant='body2' color='text.disabled' textAlign='center'>
-{t.properties.emptyHint.split('\n').map((line, i) => <span key={i}>{line}{i === 0 && <br />}</span>)}
+      <Typography variant="body2" color="text.disabled" textAlign="center">
+        {t.properties.emptyHint.split('\n').map((line, i) => (
+          <span key={i}>
+            {line}
+            {i === 0 && <br />}
+          </span>
+        ))}
       </Typography>
     </Box>
   );
@@ -125,14 +134,21 @@ export function FieldPropertiesPanel({
   if (!selectedScope) return <EmptyState />;
 
   // Strukturelle Elemente → eigenes Panel. Suche rekursiv auch in Spalten.
-  function findEl(elements: any[], key: string): any {
+  function findEl(elements: UiElement[], key: string): UiElement | undefined {
     for (const el of elements) {
-      if (el.scope === key || el.id === key) return el;
-      if (el.columns) for (const col of el.columns) { const f = findEl(col, key); if (f) return f; }
-      if (el.children) { const f = findEl(el.children, key); if (f) return f; }
+      if (el.id === key || ('scope' in el && el.scope === key)) return el;
+      if (el.type === 'ColumnContainer')
+        for (const col of el.columns) {
+          const f = findEl(col, key);
+          if (f) return f;
+        }
+      if (el.type === 'GroupContainer') {
+        const f = findEl(el.children, key);
+        if (f) return f;
+      }
     }
   }
-  const selectedEl = findEl(uiSchema.elements as any[], selectedScope);
+  const selectedEl = findEl(uiSchema.elements, selectedScope);
   // Element nicht mehr gefunden (z.B. nach dem Löschen) → leeres Panel
   if (!selectedEl) return <EmptyState />;
   const isStructural = selectedEl.type !== 'Control';
@@ -150,7 +166,7 @@ export function FieldPropertiesPanel({
 
   const update = (
     property: Parameters<typeof createUpdateFieldPropertyAction>[1],
-    value: string | boolean
+    value: string | boolean,
   ) => {
     dispatch(createUpdateFieldPropertyAction(selectedScope, property, value));
   };
@@ -158,11 +174,11 @@ export function FieldPropertiesPanel({
   return (
     <Box
       sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}
-      role='form'
-      aria-label='Feldeigenschaften'
+      role="form"
+      aria-label="Feldeigenschaften"
     >
       <Typography
-        variant='subtitle2'
+        variant="subtitle2"
         sx={{ color: 'text.secondary', fontWeight: 500 }}
       >
         Feldeigenschaften
@@ -172,10 +188,10 @@ export function FieldPropertiesPanel({
 
       {/* Label */}
       <TextField
-        label='Label'
+        label="Label"
         value={values.label}
         onChange={(e) => update('label', e.target.value)}
-        size='small'
+        size="small"
         fullWidth
         inputProps={{ 'aria-label': 'Label des Feldes' }}
       />
@@ -185,12 +201,12 @@ export function FieldPropertiesPanel({
         label={t.properties.description}
         value={values.description}
         onChange={(e) => update('description', e.target.value)}
-        size='small'
+        size="small"
         fullWidth
         multiline
         minRows={2}
         inputProps={{ 'aria-label': 'Hinweistext des Feldes' }}
-        helperText='Wird unter dem Feld angezeigt'
+        helperText="Wird unter dem Feld angezeigt"
       />
 
       {/* Platzhalter — nur bei String-Feldern sinnvoll */}
@@ -199,10 +215,10 @@ export function FieldPropertiesPanel({
           label={t.properties.placeholder}
           value={values.placeholder}
           onChange={(e) => update('placeholder', e.target.value)}
-          size='small'
+          size="small"
           fullWidth
           inputProps={{ 'aria-label': 'Platzhalter-Text des Feldes' }}
-          helperText='Beispieltext im leeren Feld'
+          helperText="Beispieltext im leeren Feld"
         />
       )}
 
@@ -227,12 +243,10 @@ export function FieldPropertiesPanel({
           <Checkbox
             checked={values.required}
             onChange={(e) => update('required', e.target.checked)}
-            size='small'
+            size="small"
           />
         }
-        label={
-          <Typography variant='body2'>Pflichtfeld</Typography>
-        }
+        label={<Typography variant="body2">Pflichtfeld</Typography>}
       />
       <ValidatorSection
         selectedScope={selectedScope}
@@ -245,13 +259,13 @@ export function FieldPropertiesPanel({
         selectedScope={selectedScope}
         schema={schema}
         uiSchema={uiSchema}
-        dispatch={dispatch as any}
+        dispatch={dispatch}
       />
 
       <TranslationEditor
         selectedScope={selectedScope}
         schema={schema}
-        dispatch={dispatch as any}
+        dispatch={dispatch}
       />
     </Box>
   );

@@ -1,7 +1,7 @@
-
 import { JsonSchema7 } from '@jsonforms/core';
+
 import { FieldTypeDefinition } from '../../field-types/fieldTypes';
-import { FieldAwareState } from './addFieldReducer';
+import { FieldStateInput } from './addFieldReducer';
 
 // ---------------------------------------------------------------------------
 // ADD_FIELD
@@ -21,7 +21,11 @@ export interface AddFieldPayload {
   /** uiSchema-Typ für strukturelle Elemente (z.B. 'Label', 'HorizontalLayout') */
   uiSchemaType?: string;
   /** Kinder-Elemente für Layout-Container */
-  uiSchemaElements?: Array<{ type: string; scope?: string; options?: Record<string, unknown> }>;
+  uiSchemaElements?: Array<{
+    type: string;
+    scope?: string;
+    options?: Record<string, unknown>;
+  }>;
 }
 export interface AddFieldAction {
   type: typeof ADD_FIELD;
@@ -31,7 +35,7 @@ export function createAddFieldAction(
   fieldType: FieldTypeDefinition,
   propertyKey: string,
   insertAfterScope?: string,
-  tabIndex?: number
+  tabIndex?: number,
 ): AddFieldAction {
   return {
     type: ADD_FIELD,
@@ -46,7 +50,7 @@ export function createAddFieldAction(
       tabIndex,
       isStructural: fieldType.isStructural,
       uiSchemaType: fieldType.uiSchema.type,
-      uiSchemaElements: (fieldType.uiSchema as any).elements,
+      uiSchemaElements: fieldType.uiSchema.elements,
     },
   };
 }
@@ -72,9 +76,11 @@ export function createRemoveFieldAction(scope: string): RemoveFieldAction {
 export const LOAD_TEMPLATE = 'LOAD_TEMPLATE' as const;
 export interface LoadTemplateAction {
   type: typeof LOAD_TEMPLATE;
-  payload: FieldAwareState;
+  payload: FieldStateInput;
 }
-export function createLoadTemplateAction(state: FieldAwareState): LoadTemplateAction {
+export function createLoadTemplateAction(
+  state: FieldStateInput,
+): LoadTemplateAction {
   return { type: LOAD_TEMPLATE, payload: state };
 }
 
@@ -84,9 +90,11 @@ export function createLoadTemplateAction(state: FieldAwareState): LoadTemplateAc
 export const SET_FIELD_STATE = 'SET_FIELD_STATE' as const;
 export interface SetFieldStateAction {
   type: typeof SET_FIELD_STATE;
-  payload: FieldAwareState;
+  payload: FieldStateInput;
 }
-export function createSetFieldStateAction(state: FieldAwareState): SetFieldStateAction {
+export function createSetFieldStateAction(
+  state: FieldStateInput,
+): SetFieldStateAction {
   return { type: SET_FIELD_STATE, payload: state };
 }
 
@@ -126,10 +134,16 @@ export function createAddTabAction(label: string): AddTabAction {
 export function createRemoveTabAction(tabIndex: number): RemoveTabAction {
   return { type: REMOVE_TAB, payload: { tabIndex } };
 }
-export function createRenameTabAction(tabIndex: number, label: string): RenameTabAction {
+export function createRenameTabAction(
+  tabIndex: number,
+  label: string,
+): RenameTabAction {
   return { type: RENAME_TAB, payload: { tabIndex, label } };
 }
-export function createReorderTabsAction(fromIndex: number, toIndex: number): ReorderTabsAction {
+export function createReorderTabsAction(
+  fromIndex: number,
+  toIndex: number,
+): ReorderTabsAction {
   return { type: REORDER_TABS, payload: { fromIndex, toIndex } };
 }
 export function createSetActiveTabAction(tabIndex: number): SetActiveTabAction {
@@ -171,7 +185,9 @@ export interface ColumnDropAction {
   payload: ColumnDropPayload;
 }
 
-export function createColumnDropAction(payload: ColumnDropPayload): ColumnDropAction {
+export function createColumnDropAction(
+  payload: ColumnDropPayload,
+): ColumnDropAction {
   return { type: COLUMN_DROP, payload };
 }
 
@@ -195,7 +211,9 @@ export interface MoveElementAction {
   payload: MoveElementPayload;
 }
 
-export function createMoveElementAction(payload: MoveElementPayload): MoveElementAction {
+export function createMoveElementAction(
+  payload: MoveElementPayload,
+): MoveElementAction {
   return { type: MOVE_ELEMENT, payload };
 }
 
@@ -217,7 +235,7 @@ export interface ReorderElementAction {
 
 export function createReorderElementAction(
   elementKey: string,
-  insertAfterKey?: string
+  insertAfterKey?: string,
 ): ReorderElementAction {
   return { type: REORDER_ELEMENT, payload: { elementKey, insertAfterKey } };
 }
@@ -242,9 +260,12 @@ export function createReorderInColumnAction(
   containerId: string,
   columnIndex: number,
   elementId: string,
-  insertAfterId?: string
+  insertAfterId?: string,
 ): ReorderInColumnAction {
-  return { type: REORDER_IN_COLUMN, payload: { containerId, columnIndex, elementId, insertAfterId } };
+  return {
+    type: REORDER_IN_COLUMN,
+    payload: { containerId, columnIndex, elementId, insertAfterId },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -260,10 +281,12 @@ export const SET_FORM_METADATA = 'SET_FORM_METADATA' as const;
 export interface FormMetadata {
   title?: string;
   description?: string;
-  publisher?: string;   // x-publisher
-  legalBasis?: string;  // x-legal-basis
-  version?: string;     // x-version
-  validFrom?: string;   // x-valid-from (ISO date)
+  publisher?: string; // x-publisher
+  legalBasis?: string; // x-legal-basis
+  version?: string; // x-version
+  validFrom?: string; // x-valid-from (ISO date)
+  /** Beliebige weitere x-*-Felder (z. B. x-translations) werden durchgereicht. */
+  [key: string]: unknown;
 }
 
 export interface SetFormMetadataAction {
@@ -271,7 +294,9 @@ export interface SetFormMetadataAction {
   payload: FormMetadata;
 }
 
-export function createSetFormMetadataAction(meta: FormMetadata): SetFormMetadataAction {
+export function createSetFormMetadataAction(
+  meta: FormMetadata,
+): SetFormMetadataAction {
   return { type: SET_FORM_METADATA, payload: meta };
 }
 
@@ -298,13 +323,17 @@ export interface AddFimGruppeAction {
   payload: AddFimGruppePayload;
 }
 
-export function createAddFimGruppeAction(payload: AddFimGruppePayload): AddFimGruppeAction {
+export function createAddFimGruppeAction(
+  payload: AddFimGruppePayload,
+): AddFimGruppeAction {
   return { type: ADD_FIM_GRUPPE, payload };
 }
 
 // ---------------------------------------------------------------------------
 export const TOGGLE_LINE_NUMBERS = 'TOGGLE_LINE_NUMBERS' as const;
-export interface ToggleLineNumbersAction { type: typeof TOGGLE_LINE_NUMBERS }
+export interface ToggleLineNumbersAction {
+  type: typeof TOGGLE_LINE_NUMBERS;
+}
 export function createToggleLineNumbersAction(): ToggleLineNumbersAction {
   return { type: TOGGLE_LINE_NUMBERS };
 }
@@ -314,6 +343,9 @@ export interface SetSectionColorAction {
   type: typeof SET_SECTION_COLOR;
   payload: { elementId: string; color: string | null };
 }
-export function createSetSectionColorAction(elementId: string, color: string | null): SetSectionColorAction {
+export function createSetSectionColorAction(
+  elementId: string,
+  color: string | null,
+): SetSectionColorAction {
   return { type: SET_SECTION_COLOR, payload: { elementId, color } };
 }

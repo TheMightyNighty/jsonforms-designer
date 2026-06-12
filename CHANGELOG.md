@@ -9,6 +9,48 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ---
 
+## [0.3.0] — 2026-06-12
+
+### Geändert (Performance)
+- **Code-Modus lädt lazy:** Monaco (≈ 1 MB gzip) liegt jetzt in einem eigenen Chunk, der erst beim Öffnen des Code-Modus geladen wird (racefrei: `loader.config` lebt im selben Chunk). Initial-Bundle: **≈ 0,48 MB gzip** (zwischenzeitlich 1,5 MB, vor der Monaco-Umstellung 0,55 MB). Die toten Baum-Module (Stufe 2) zahlen mit ein. `CodeModePanel` ist kein Public-Export mehr (nötig für den Split).
+
+### Sicherheit
+- **Monaco wird lokal gebündelt statt vom CDN geladen** (`packages/app/src/monacoSetup.ts`): `@monaco-editor/loader` erhält eine self-hosted Instanz, die Worker werden über das Vite-`?worker`-Rezept als eigene Dateien emittiert. Damit ist der Code-Modus **intranet-fähig** (kein Laufzeit-Zugriff auf `cdn.jsdelivr.net` mehr); die CSP wurde entsprechend von jsdelivr-Ausnahmen befreit und blockiert CDN-Regressionen aktiv. Trade-off: das Initial-Bundle wächst (gzip ≈ 0,55 MB → ≈ 1,5 MB).
+- **Monaco von 0.52.2 auf 0.55.1 angehoben.** Der alte Pin umging die DOMPurify-Advisories der Monaco-Builds ≥ 0.54; stattdessen erzwingt jetzt ein scoped npm-Override `dompurify ≥ 3.4.9` (fixt u. a. GHSA-v2wj-7wpq-c8vv, GHSA-h8r8-wccr-v5f2 — 8 Advisories). `npm audit`: 0 Findings.
+- **vitest auf ≥ 3.2.6** (GHSA-5xrq-8626-4rwp, critical: Datei-Lesezugriff über den Vitest-UI-Server).
+
+### Hinzugefügt
+- **Unit-Tests für `xdfExport`** (XML-Escaping/Injection-Schutz, Typ-Mapping, Codelisten, Einschränkungen) **und `fimApiService`** (URL-Bau, Header, Normalisierung, Fehlerfälle) — 28 neue Tests.
+- **CI-Workflow** (GitHub Actions): Lint, Typecheck, Tests und Build laufen bei jedem Push/PR.
+- **E2E-Smoke-Tests** (Playwright, `packages/app/e2e/`): sichern die Kernpfade gegen den **Produktions-Build** ab — App-Start, Drag & Drop (inkl. Auto-Save über Reload), Eigenschaften-Bearbeitung, JSONForms-Vorschau, Code-Modus (verifiziert: Monaco lädt lokal, **null CDN-Requests**) und Export-Dialog. Lokal: `npm run test:e2e`; in der CI nach dem Build.
+- **Persistenz-Adapter** (`FieldStateStorageService`): Der Formular-Zustand wird nicht mehr fest in `localStorage` gespeichert, sondern über eine austauschbare Schnittstelle (Prop `fieldStateStorage` am `<JsonFormsEditor>`). Default bleibt localStorage (`LocalStorageFieldStateService`); asynchrone Adapter (REST-Backend) werden nach dem Mount hydriert. README enthält ein HTTP-Adapter-Beispiel.
+- **Qualitäts-Gates verschärft:** Coverage-Schwellwerte als Regressions-Gate (`@vitest/coverage-v8`, Werte knapp unter Ist-Stand, werden nur angehoben); erste **Komponenten-Tests** mit Testing Library (Palette-Tastaturpfad, ErrorBoundary→onError, MetadataDialog); E2E-Suite läuft zusätzlich in **Firefox** (16 Läufe gesamt).
+- **Betriebsartefakte:** Multi-Stage-`Dockerfile` (node → nginx, Healthcheck, Port 8080), Referenz-`nginx.conf` (SPA-Fallback, Cache-Strategie, Security-Header, auskommentierter FIM-Reverse-Proxy für abgeschottete Netze) und `docs/BETRIEB.md` (Deploy, CSP-Erklärung, Persistenz, Diagnose, Update-Prozess).
+- **Betriebs-Diagnostik:** Neue Prop `onError(error, kontext)` als zentraler Fehlerkanal (Laden, Auto-Save, Render-Fehler der ErrorBoundary) — Default bleibt `console.error`. Die Editor-Version (aus `package.json`) wird im Header angezeigt.
+- **`HttpFieldStateService`** als Paket-Export: Referenz-Adapter für Server-Persistenz (GET/PUT, debounced, 404-Behandlung, `onSaveError`-Kanal, injizierbares `fetch`) — 5 Unit-Tests.
+- **Pre-Commit-Hooks** (husky + lint-staged): Prettier und ESLint-Autofix laufen auf den gestagten Dateien vor jedem Commit — Format-Drift kann nicht mehr einsickern.
+- **Projekt-Doku:** `CONTRIBUTING.md` (Setup, Konventionen, Qualitäts-Gates), `ROADMAP.md` und ADR-Verzeichnis (`docs/adr/`). README-Screenshots auf das aktuelle helle Theme aktualisiert — reproduzierbar über einen Playwright-Generator (`GEN_SCREENSHOTS=1`, FIM gemockt).
+- **Tastatur-Alternativpfad zum Drag & Drop (BITV):** Palette-Einträge sind fokussierbar (`role="button"`); Enter/Leertaste fügt den Feldtyp ans Formularende an (im aktiven Tab). **Umsortieren per Alt+Pfeiltasten** auf der fokussierten Feld-Zeile (`aria-keyshortcuts`).
+
+### Behoben
+- **Bedingte Anzeige wirkte nie in der Vorschau:** `toJsonForms` verwarf die `rule` — JSONForms bekam die Bedingungen nicht zu sehen. `rule` wird jetzt auf allen Konverter-Pfaden (fromLegacy/toLegacy/toJsonForms) erhalten und ist getestet.
+- **Einfügen hinter Spalten-/Gruppen-Containern** landete am Listenende statt direkt dahinter (`insertControl` matchte nur `scope`, Container haben aber nur eine `id`).
+- **Strukturelle Elemente (Überschriften, Hinweise) in mehrstufigen Formularen** wurden immer Tab 1 zugeordnet (Identitäts-Mismatch zwischen Element-id und Pseudo-Scope der Tab-Zuweisung).
+- **Reorder auf die oberste Drop-Zone** sortierte das Element fälschlich ans Ende statt an den Anfang (`reorderElementReducer` ohne `insertAfterKey`) — beim Bau des Tastatur-Umsortierens gefunden, durch 4 neue Reducer-Tests abgesichert.
+
+### Geändert (Architektur)
+- **State-Konsolidierung, Stufe 3 (ADR 0001):** `uiSchema.elements` ist jetzt die strikte `UiElement`-Union (ids verpflichtend, Narrowing statt Casts in allen Reducern/Komponenten). Lose Eingangsformen (`FlatElement`/`FieldStateInput`: Templates, Import, Code-Modus, Storage, SchemaService) werden ausschließlich an den Grenzen über `fromLegacy()` normalisiert — alte gespeicherte Stände werden beim Laden automatisch migriert.
+- **State-Konsolidierung, Stufe 2 (ADR 0001) — Breaking:** Die komplette geerbte Baum-Welt wurde entfernt (≈ 5.000 LOC): alte Palette, Droppable-Renderer, `SchemaElement`-/`EditorUISchemaElement`-Modell, `schemasUtil`/`tree`/`clone`, `paletteService`/`propertiesService`/`categorizationService` sowie die zugehörigen `JsonFormsEditor`-Props (`schemaProviders`, `schemaDecorators`, `editorRenderers`, `propertyRenderers`, `paletteService`, `categorizationService`, `propertiesServiceProvider`) und Public-Exporte. Alle 30 Action-Cast-Nähte (`as unknown as EditorAction`) sind beseitigt — sie waren nach der Union-Bereinigung überflüssig. Details und vollständige Liste: `docs/adr/0001`.
+- **State-Konsolidierung, Stufe 1 (ADR 0001):** `FieldAwareState` ist die einzige Laufzeit-Quelle. Extern geladene Schemas (`schemaService`) werden über `fieldStateFromSchemas()` in den Form-First-Zustand konvertiert statt den geerbten Baum-State aufzubauen; der Baum-Render-Zweig (`Editor.tsx`) und der tote `NEW_UI_SCHEMA_ELEMENT`-Drop (`EmptyEditor`) sind entfernt. Die Prop `editorRenderers` ist deprecated (wirkungslos). Verlustfrei konvertiert: Control, Label, HorizontalLayout/Spalten, Group; Best-Effort für exotische Knoten (z. B. Categorization → Label). Stufe 2 (Entfernung der toten Baum-Module) siehe ADR.
+
+### Geändert (Qualität / Tooling)
+- **ESLint 9 Flat-Config** eingerichtet (`eslint.config.mjs`): `typescript-eslint`, `simple-import-sort` und `eslint-plugin-react-hooks` verdrahtet. Zuvor existierte keine Konfiguration — `npm run lint` lief ins Leere.
+- **Prettier** als eigenständige Skripte ergänzt (`npm run format` / `format:check`); gesamter `src`-Bestand einmalig formatiert. `eslint-plugin-prettier` entfernt, `eslint-config-prettier` bleibt für Regel-Deduplizierung.
+- **`no-explicit-any` vollständig beseitigt**: alle 180 `any`-Vorkommen durch konkrete Typen (`JsonSchema7`, `UISchemaElement`, `FlatElement`, `unknown` mit gezielten Casts) ersetzt. `npm run lint` ist jetzt fehlerfrei.
+- **Test-Suite repariert**: die Feldtypen-Katalog-Tests (`fieldTypes.test.ts`, `addFieldReducer.test.ts`) waren gegenüber dem auf 30+ Typen gewachsenen Katalog veraltet (strukturelle Einträge, `integer`, `file-upload`) — angeglichen, 312/312 grün.
+
+---
+
 ## [0.2.1] — 2026-06-01
 
 ### Sicherheit
@@ -66,7 +108,8 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - OpenCode-Integration (Validatoren, UI-Bausteine)
 - DE/EN-Lokalisierung
 
-[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/releases/tag/v0.1.0

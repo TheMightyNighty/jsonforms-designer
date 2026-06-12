@@ -41,7 +41,6 @@ export interface FieldTypeDefinition {
 // ---------------------------------------------------------------------------
 
 export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
-
   // ── Eingabe ──────────────────────────────────────────────────────────────
 
   {
@@ -59,7 +58,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     group: 'eingabe',
     icon: 'align-left',
     schema: { type: 'string', title: 'Freitext' },
-    uiSchema: { type: 'Control', scope: '', options: { multi: true, placeholder: '' } },
+    uiSchema: {
+      type: 'Control',
+      scope: '',
+      options: { multi: true, placeholder: '' },
+    },
     defaults: { label: 'Freitext', description: '', required: false },
   },
   {
@@ -128,7 +131,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     group: 'eingabe',
     icon: 'mail',
     schema: { type: 'string', format: 'email', title: 'E-Mail-Adresse' },
-    uiSchema: { type: 'Control', scope: '', options: { placeholder: 'name@behoerde.de' } },
+    uiSchema: {
+      type: 'Control',
+      scope: '',
+      options: { placeholder: 'name@behoerde.de' },
+    },
     defaults: { label: 'E-Mail-Adresse', description: '', required: false },
   },
   {
@@ -141,7 +148,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       title: 'Telefonnummer',
       pattern: '^[+0-9 ()\\-\\/]+$',
     } as FieldSchemaFragment,
-    uiSchema: { type: 'Control', scope: '', options: { placeholder: '+49 30 ...' } },
+    uiSchema: {
+      type: 'Control',
+      scope: '',
+      options: { placeholder: '+49 30 ...' },
+    },
     defaults: { label: 'Telefonnummer', description: '', required: false },
   },
   {
@@ -150,7 +161,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     group: 'eingabe',
     icon: 'world',
     schema: { type: 'string', format: 'uri', title: 'Website' },
-    uiSchema: { type: 'Control', scope: '', options: { placeholder: 'https://' } },
+    uiSchema: {
+      type: 'Control',
+      scope: '',
+      options: { placeholder: 'https://' },
+    },
     defaults: { label: 'Website', description: '', required: false },
   },
   {
@@ -160,7 +175,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     icon: 'lock',
     schema: { type: 'string', title: 'Passwort', minLength: 8 },
     uiSchema: { type: 'Control', scope: '', options: { format: 'password' } },
-    defaults: { label: 'Passwort', description: 'Mindestens 8 Zeichen', required: false },
+    defaults: {
+      label: 'Passwort',
+      description: 'Mindestens 8 Zeichen',
+      required: false,
+    },
   },
   {
     id: 'iban',
@@ -172,8 +191,16 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       title: 'IBAN',
       pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$',
     } as FieldSchemaFragment,
-    uiSchema: { type: 'Control', scope: '', options: { placeholder: 'DE89 3704 0044 0532 0130 00' } },
-    defaults: { label: 'IBAN', description: 'Internationale Bankkontonummer', required: false },
+    uiSchema: {
+      type: 'Control',
+      scope: '',
+      options: { placeholder: 'DE89 3704 0044 0532 0130 00' },
+    },
+    defaults: {
+      label: 'IBAN',
+      description: 'Internationale Bankkontonummer',
+      required: false,
+    },
   },
 
   // ── Auswahl ───────────────────────────────────────────────────────────────
@@ -206,7 +233,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     displayName: 'Dropdown',
     group: 'auswahl',
     icon: 'selector',
-    schema: { type: 'string', title: 'Auswahl', enum: ['Option 1', 'Option 2', 'Option 3'] },
+    schema: {
+      type: 'string',
+      title: 'Auswahl',
+      enum: ['Option 1', 'Option 2', 'Option 3'],
+    },
     uiSchema: { type: 'Control', scope: '' },
     defaults: { label: 'Auswahl', description: '', required: false },
   },
@@ -215,7 +246,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     displayName: 'Radio-Gruppe',
     group: 'auswahl',
     icon: 'circle-dot',
-    schema: { type: 'string', title: 'Optionen', enum: ['Option 1', 'Option 2', 'Option 3'] },
+    schema: {
+      type: 'string',
+      title: 'Optionen',
+      enum: ['Option 1', 'Option 2', 'Option 3'],
+    },
     uiSchema: { type: 'Control', scope: '', options: { format: 'radio' } },
     defaults: { label: 'Optionen', description: '', required: false },
   },
@@ -234,8 +269,16 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     group: 'auswahl',
     icon: 'upload',
     schema: { type: 'string', title: 'Datei', format: 'uri' },
-    uiSchema: { type: 'Control', scope: '', options: { accept: '.pdf,.jpg,.png' } },
-    defaults: { label: 'Datei', description: 'Erlaubte Formate: PDF, JPG, PNG', required: false },
+    uiSchema: {
+      type: 'Control',
+      scope: '',
+      options: { accept: '.pdf,.jpg,.png' },
+    },
+    defaults: {
+      label: 'Datei',
+      description: 'Erlaubte Formate: PDF, JPG, PNG',
+      required: false,
+    },
   },
 
   // ── Wiederholung ─────────────────────────────────────────────────────────
@@ -277,7 +320,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     icon: 'text-size',
     isStructural: true,
     schema: { type: 'null', title: '' },
-    uiSchema: { type: 'Label', scope: '', label: 'Hier steht ein Hinweistext.' },
+    uiSchema: {
+      type: 'Label',
+      scope: '',
+      label: 'Hier steht ein Hinweistext.',
+    },
     defaults: { label: 'Hinweistext', description: '', required: false },
   },
   {
@@ -308,7 +355,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       label: '⚠ Wichtiger Hinweis',
       options: { variant: 'warning' },
     },
-    defaults: { label: '⚠ Wichtiger Hinweis', description: '', required: false },
+    defaults: {
+      label: '⚠ Wichtiger Hinweis',
+      description: '',
+      required: false,
+    },
   },
 
   // ── Layout ────────────────────────────────────────────────────────────────
@@ -326,7 +377,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       options: { widths: [1, 1] },
       elements: [],
     },
-    defaults: { label: '2 Spalten', description: 'Zwei gleichbreite Spalten', required: false },
+    defaults: {
+      label: '2 Spalten',
+      description: 'Zwei gleichbreite Spalten',
+      required: false,
+    },
   },
   {
     id: 'col-3',
@@ -341,7 +396,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       options: { widths: [1, 1, 1] },
       elements: [],
     },
-    defaults: { label: '3 Spalten', description: 'Drei gleichbreite Spalten', required: false },
+    defaults: {
+      label: '3 Spalten',
+      description: 'Drei gleichbreite Spalten',
+      required: false,
+    },
   },
   {
     id: 'col-1-2',
@@ -356,7 +415,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       options: { widths: [1, 2] },
       elements: [],
     },
-    defaults: { label: 'Schmal + Breit (1:2)', description: 'Z.B. PLZ + Ort', required: false },
+    defaults: {
+      label: 'Schmal + Breit (1:2)',
+      description: 'Z.B. PLZ + Ort',
+      required: false,
+    },
   },
   {
     id: 'col-2-1',
@@ -371,7 +434,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       options: { widths: [2, 1] },
       elements: [],
     },
-    defaults: { label: 'Breit + Schmal (2:1)', description: 'Z.B. Straße + Hausnummer', required: false },
+    defaults: {
+      label: 'Breit + Schmal (2:1)',
+      description: 'Z.B. Straße + Hausnummer',
+      required: false,
+    },
   },
   {
     id: 'col-4',
@@ -380,8 +447,17 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     icon: 'layout-columns',
     isStructural: true,
     schema: { type: 'null', title: '' },
-    uiSchema: { type: 'HorizontalLayout', scope: '', options: { widths: [1, 1, 1, 1] }, elements: [] },
-    defaults: { label: '4 Spalten', description: 'Vier gleichbreite Spalten', required: false },
+    uiSchema: {
+      type: 'HorizontalLayout',
+      scope: '',
+      options: { widths: [1, 1, 1, 1] },
+      elements: [],
+    },
+    defaults: {
+      label: '4 Spalten',
+      description: 'Vier gleichbreite Spalten',
+      required: false,
+    },
   },
   {
     id: 'col-custom',
@@ -390,8 +466,17 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     icon: 'columns-3',
     isStructural: true,
     schema: { type: 'null', title: '' },
-    uiSchema: { type: 'HorizontalLayout', scope: '', options: { widths: [1, 2, 1] }, elements: [] },
-    defaults: { label: 'Spalten (frei konfigurierbar)', description: 'Breiten z.B. 1:2:1', required: false },
+    uiSchema: {
+      type: 'HorizontalLayout',
+      scope: '',
+      options: { widths: [1, 2, 1] },
+      elements: [],
+    },
+    defaults: {
+      label: 'Spalten (frei konfigurierbar)',
+      description: 'Breiten z.B. 1:2:1',
+      required: false,
+    },
   },
   {
     id: 'section-header',
@@ -404,9 +489,17 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       type: 'Label',
       scope: '',
       label: 'Abschnittstitel',
-      options: { variant: 'section-header', bgColor: '#004A99', textColor: '#ffffff' },
+      options: {
+        variant: 'section-header',
+        bgColor: '#004A99',
+        textColor: '#ffffff',
+      },
     },
-    defaults: { label: 'Abschnittstitel', description: 'Dunkler Abschnittskopf wie im Steuerformular', required: false },
+    defaults: {
+      label: 'Abschnittstitel',
+      description: 'Dunkler Abschnittskopf wie im Steuerformular',
+      required: false,
+    },
   },
   {
     id: 'annotation',
@@ -421,7 +514,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       label: 'Hinweis: ...',
       options: { variant: 'annotation' },
     },
-    defaults: { label: 'Hinweistext (rechts)', description: 'Kleiner Erläuterungstext neben Feldern', required: false },
+    defaults: {
+      label: 'Hinweistext (rechts)',
+      description: 'Kleiner Erläuterungstext neben Feldern',
+      required: false,
+    },
   },
   {
     id: 'group',
@@ -436,7 +533,11 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       label: 'Gruppe',
       elements: [],
     },
-    defaults: { label: 'Gruppe', description: 'Benannter Abschnitt mit Rahmen', required: false },
+    defaults: {
+      label: 'Gruppe',
+      description: 'Benannter Abschnitt mit Rahmen',
+      required: false,
+    },
   },
 ];
 
@@ -455,8 +556,8 @@ export function getFieldTypesByGroup(group: FieldGroup): FieldTypeDefinition[] {
 }
 
 export const FIELD_GROUPS: Array<{ id: FieldGroup; label: string }> = [
-  { id: 'eingabe',  label: 'Eingabe' },
-  { id: 'auswahl',  label: 'Auswahl' },
+  { id: 'eingabe', label: 'Eingabe' },
+  { id: 'auswahl', label: 'Auswahl' },
   { id: 'struktur', label: 'Text & Struktur' },
-  { id: 'layout',   label: 'Layout & Spalten' },
+  { id: 'layout', label: 'Layout & Spalten' },
 ];

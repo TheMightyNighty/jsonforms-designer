@@ -5,13 +5,14 @@
  * Test-Runner: Vitest (wie im migrierten Stack).
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
 import {
-  FIELD_TYPE_CATALOG,
   FIELD_GROUPS,
+  FIELD_TYPE_CATALOG,
+  type FieldTypeDefinition,
   getFieldType,
   getFieldTypesByGroup,
-  type FieldTypeDefinition,
 } from './fieldTypes';
 
 // ---------------------------------------------------------------------------
@@ -43,9 +44,9 @@ describe('FIELD_TYPE_CATALOG — Vollständigkeit', () => {
     }
   });
 
-  it('enthält keinen Datei-Upload-Eintrag (bewusst ausgelassen bis F-3)', () => {
+  it('enthält den Datei-Upload-Eintrag (seit F-3)', () => {
     const ids = FIELD_TYPE_CATALOG.map((f) => f.id);
-    expect(ids).not.toContain('file-upload');
+    expect(ids).toContain('file-upload');
   });
 });
 
@@ -61,13 +62,33 @@ describe('FIELD_TYPE_CATALOG — Struktur jedes Eintrags', () => {
       });
 
       it('hat ein gültiges schema.type', () => {
-        expect(['string', 'number', 'boolean', 'object', 'array']).toContain(
-          fieldType.schema.type
-        );
+        if (fieldType.isStructural) {
+          // Strukturelle Einträge (Label, Alert, Spalten, Gruppe) erzeugen
+          // keine schema.property und tragen daher type 'null'.
+          expect(fieldType.schema.type).toBe('null');
+        } else {
+          expect([
+            'string',
+            'number',
+            'integer',
+            'boolean',
+            'object',
+            'array',
+          ]).toContain(fieldType.schema.type);
+        }
       });
 
-      it('hat ein uiSchema vom type "Control"', () => {
-        expect(fieldType.uiSchema.type).toBe('Control');
+      it('hat einen passenden uiSchema.type', () => {
+        if (fieldType.isStructural) {
+          expect([
+            'Label',
+            'HorizontalLayout',
+            'VerticalLayout',
+            'Group',
+          ]).toContain(fieldType.uiSchema.type);
+        } else {
+          expect(fieldType.uiSchema.type).toBe('Control');
+        }
       });
 
       it('hat einen leeren uiSchema.scope als Platzhalter', () => {
@@ -117,7 +138,7 @@ describe('getFieldType()', () => {
 
   it('wirft bei unbekannter ID', () => {
     expect(() => getFieldType('does-not-exist')).toThrow(
-      'Unbekannter Feldtyp: "does-not-exist"'
+      'Unbekannter Feldtyp: "does-not-exist"',
     );
   });
 });

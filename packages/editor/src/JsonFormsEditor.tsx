@@ -1,118 +1,110 @@
-import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
-import React, { ComponentType, useCallback, useEffect, useReducer, useState } from 'react';
+import React, {
+  ComponentType,
+  useCallback,
+  useEffect,
+  useReducer,
+  useState,
+} from 'react';
 import { DndProvider } from 'react-dnd';
-import { I18nProvider } from './i18n';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-import { CategorizationService, CategorizationServiceImpl } from './core/api/categorizationService';
-import { DefaultPaletteService, PaletteService } from './core/api/paletteService';
 import { EditorConfig, EditorConfigProvider } from './config';
+import {
+  FieldStateStorageService,
+  LocalStorageFieldStateService,
+} from './core/api/fieldStateStorage';
 import { EmptySchemaService, SchemaService } from './core/api/schemaService';
 import { EditorContextInstance } from './core/context';
-import { Actions } from './core/model';
-import { createInitialEditorState } from './core/model/reducer';
-import {
-  historyReducer,
-  HISTORY_WRAP,
-  UNDO,
-  REDO,
-  HistoryAction,
-} from './core/model/historyReducer';
 import { EditorAction } from './core/model/actions';
-import { SelectedElement } from './core/selection';
-import { sanitizeParsedJson } from './core/util/sanitizeJson';
-import { tryFindByUUID } from './core/util/schemasUtil';
-import { defaultEditorRenderers } from './editor';
-import { JsonFormsEditorUi } from './JsonFormsEditorUi';
+import { createSetFieldStateAction } from './core/model/addFieldActions';
+import { matchesElementKey } from './core/model/addFieldReducer';
 import {
-  defaultPropertyRenderers,
-  defaultSchemaProviders,
-  PropertiesService,
-  PropertiesServiceImpl,
-  PropertySchemasDecorator,
-  PropertySchemasProvider,
-} from './properties';
+  HISTORY_WRAP,
+  HistoryAction,
+  historyReducer,
+  REDO,
+  UNDO,
+} from './core/model/historyReducer';
+import { createInitialEditorState } from './core/model/reducer';
+import { UiElement } from './core/model/uiElements';
+import { fieldStateFromSchemas } from './core/util/fieldStateFromSchemas';
+import { I18nProvider } from './i18n';
+import { JsonFormsEditorUi } from './JsonFormsEditorUi';
 
 const defaultSchemaService = new EmptySchemaService();
-const defaultPaletteService = new DefaultPaletteService();
-const defaultCategorizationService = new CategorizationServiceImpl();
-const defaultPropertiesServiceFactory = (
-  providers: PropertySchemasProvider[],
-  decorators: PropertySchemasDecorator[]
-): PropertiesService => new PropertiesServiceImpl(providers, decorators);
+const defaultOnError = (error: unknown, context: string) =>
+  console.error(`[JSONForms Designer] ${context}`, error);
+const defaultFieldStateStorage = new LocalStorageFieldStateService();
 
 export interface JsonFormsEditorProps {
-  schemaProviders?: PropertySchemasProvider[];
-  schemaDecorators?: PropertySchemasDecorator[];
+  /**
+   * Liefert beim Start ein extern verwaltetes Schema/UI-Schema; wird über
+   * `fieldStateFromSchemas()` in den Form-First-Zustand konvertiert.
+   */
   schemaService?: SchemaService;
-  paletteService?: PaletteService;
-  categorizationService?: CategorizationService;
-  propertiesServiceProvider?: (
-    providers: PropertySchemasProvider[],
-    decorators: PropertySchemasDecorator[]
-  ) => PropertiesService;
-  editorRenderers?: JsonFormsRendererRegistryEntry[];
-  propertyRenderers?: JsonFormsRendererRegistryEntry[];
   header?: ComponentType | null;
   footer?: ComponentType | null;
   /** Konfiguration für Module und Palette-Verhalten */
   config?: EditorConfig;
+  /**
+   * Zentraler Fehlerkanal (Auto-Save-Fehler, Lade-Fehler, Render-Fehler der
+   * ErrorBoundary). Default: console.error. Betriebs-Hosts können hier ihr
+   * Fehler-Reporting anschließen.
+   */
+  onError?: (error: unknown, context: string) => void;
+  /**
+   * Persistenz-Adapter für den Formular-Zustand (Auto-Save / Laden beim
+   * Start). Default: localStorage. Für Server-Speicherung eine eigene
+   * FieldStateStorageService-Implementierung übergeben (siehe README).
+   */
+  fieldStateStorage?: FieldStateStorageService;
 }
 
 export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
-  schemaProviders = defaultSchemaProviders,
-  schemaDecorators = [],
   schemaService = defaultSchemaService,
-  paletteService = defaultPaletteService,
-  categorizationService = defaultCategorizationService,
-  propertiesServiceProvider = defaultPropertiesServiceFactory,
-  editorRenderers = defaultEditorRenderers,
-  propertyRenderers = defaultPropertyRenderers,
   header,
   footer,
   config,
+  onError,
+  fieldStateStorage = defaultFieldStateStorage,
 }) => {
-  const propertiesService = React.useMemo(
-    () => propertiesServiceProvider(schemaProviders, schemaDecorators),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+  const reportError = useCallback(
+    (error: unknown, context: string) =>
+      (onError ?? defaultOnError)(error, context),
+    [onError],
   );
+  // Gespeicherten Zustand genau einmal laden. Synchrone Adapter (localStorage)
+  // fließen ohne Zwischenrender in den Initial-State; asynchrone Adapter
+  // (Server) werden nach dem Mount per SET_FIELD_STATE hydriert.
+  const [initialLoad] = useState(() => {
+    try {
+      return fieldStateStorage.load();
+    } catch (err) {
+      reportError(err, 'Formular-Zustand konnte nicht geladen werden');
+      return undefined;
+    }
+  });
 
   // History-Reducer statt direktem editorReducer
   const [historyState, historyDispatch] = useReducer(
     historyReducer,
     undefined,
     () => {
-      const base = createInitialEditorState({ categorizationService });
-          try {
-        const saved = localStorage.getItem('jfd_fieldState_v1');
-        if (saved) {
-          const parsed = sanitizeParsedJson(JSON.parse(saved));
-          if (parsed?.schema && parsed?.uiSchema) {
-            base.fieldState = {
-              schema: parsed.schema,
-              uiSchema: parsed.uiSchema,
-              tabs: parsed.tabs ?? [],
-              activeTabIndex: parsed.activeTabIndex ?? 0,
-              tabAssignments: parsed.tabAssignments ?? {},
-              lineNumbersEnabled: parsed.lineNumbersEnabled ?? false,
-              sectionColors: parsed.sectionColors ?? {},
-            };
-          }
-        }
-      } catch { /* corrupted or missing — start fresh */ }
+      const base = createInitialEditorState();
+      if (initialLoad && !(initialLoad instanceof Promise)) {
+        base.fieldState = initialLoad;
+      }
       return { past: [], present: base, future: [] };
-    }
+    },
   );
 
-  const { present: editorState } = historyState;
-  const { schema, uiSchema, fieldState } = editorState;
+  const { fieldState } = historyState.present;
 
   const dispatch = useCallback(
     (action: EditorAction) => {
       historyDispatch({ type: HISTORY_WRAP, action } as HistoryAction);
     },
-    [historyDispatch]
+    [historyDispatch],
   );
 
   const undo = useCallback(() => historyDispatch({ type: UNDO }), []);
@@ -120,39 +112,80 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   const canUndo = historyState.past.length > 0;
   const canRedo = historyState.future.length > 0;
 
-  const [selection, setSelection] = useState<SelectedElement>(undefined);
   const [selectedScope, setSelectedScope] = useState<string | null>(null);
 
-  const STORAGE_KEY = 'jfd_fieldState_v1';
+  // Asynchrone Hydration (Server-Adapter). Hinweis: läuft als regulärer
+  // History-Schritt — direkt nach der Hydration ist ein Undo zum leeren
+  // Formular möglich.
+  useEffect(() => {
+    if (!(initialLoad instanceof Promise)) return;
+    let cancelled = false;
+    initialLoad
+      .then((state) => {
+        if (state && !cancelled) {
+          dispatch(createSetFieldStateAction(state));
+        }
+      })
+      .catch((err) =>
+        reportError(err, 'Formular-Zustand konnte nicht geladen werden'),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [initialLoad, dispatch]);
+
+  // Auto-Save bei jeder Zustandsänderung über den Persistenz-Adapter.
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(fieldState));
-    } catch { /* storage quota or private mode — ignore */ }
-  }, [fieldState]);
+      void Promise.resolve(fieldStateStorage.save(fieldState)).catch((err) =>
+        reportError(err, 'Auto-Save fehlgeschlagen'),
+      );
+    } catch (err) {
+      reportError(err, 'Auto-Save fehlgeschlagen');
+    }
+  }, [fieldState, fieldStateStorage]);
 
+  // Extern bereitgestellte Schemas (SchemaService) werden in den
+  // Form-First-Zustand konvertiert. Liefert der Service nichts (Default),
+  // bleibt der per fieldStateStorage geladene Zustand bestehen.
   useEffect(() => {
-    schemaService.getSchema().then((s) => { if (s) dispatch(Actions.setSchema(s)); });
-    schemaService.getUiSchema().then((u) => { if (u) dispatch(Actions.setUiSchema(u)); });
-  }, [schemaService]);
+    let cancelled = false;
+    Promise.all([schemaService.getSchema(), schemaService.getUiSchema()])
+      .then(([s, u]) => {
+        if (cancelled) return;
+        const converted = fieldStateFromSchemas(s, u);
+        if (converted) {
+          dispatch(createSetFieldStateAction(converted));
+        }
+      })
+      .catch((err) =>
+        reportError(err, 'SchemaService konnte nicht geladen werden'),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [schemaService, dispatch]);
 
-  useEffect(() => {
-    setSelection((prev) => {
-      if (!prev) return prev;
-      return tryFindByUUID(uiSchema, prev.uuid) ? prev : undefined;
-    });
-  }, [uiSchema]);
-
+  // Selektion aufräumen, wenn das Element nicht mehr existiert
   useEffect(() => {
     if (!selectedScope) return;
-    function existsInUiSchema(elements: any[], key: string): boolean {
+    function existsInUiSchema(elements: UiElement[], key: string): boolean {
       for (const el of elements) {
-        if (el.scope === key || el.id === key) return true;
-        if (el.columns) for (const col of el.columns) { if (existsInUiSchema(col, key)) return true; }
-        if (el.children) { if (existsInUiSchema(el.children, key)) return true; }
+        if (matchesElementKey(el, key)) return true;
+        if (el.type === 'ColumnContainer')
+          for (const col of el.columns) {
+            if (existsInUiSchema(col, key)) return true;
+          }
+        if (el.type === 'GroupContainer') {
+          if (existsInUiSchema(el.children, key)) return true;
+        }
       }
       return false;
     }
-    const stillExists = existsInUiSchema(fieldState.uiSchema.elements as any[], selectedScope);
+    const stillExists = existsInUiSchema(
+      fieldState.uiSchema.elements,
+      selectedScope,
+    );
     if (!stillExists) setSelectedScope(null);
   }, [fieldState, selectedScope]);
 
@@ -161,37 +194,28 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
 
   return (
     <EditorConfigProvider config={config}>
-    <I18nProvider defaultLocale="de">
-    <DndProvider backend={HTML5Backend}>
-      <EditorContextInstance.Provider
-        value={{
-          schemaService,
-          paletteService,
-          propertiesService,
-          schema,
-          uiSchema,
-          dispatch,
-          selection,
-          setSelection,
-          categorizationService,
-          fieldState,
-          selectedScope,
-          setSelectedScope,
-          undo,
-          redo,
-          canUndo,
-          canRedo,
-        }}
-      >
-        <JsonFormsEditorUi
-          editorRenderers={editorRenderers}
-          propertyRenderers={propertyRenderers}
-          header={headerComponent}
-          footer={footerComponent}
-        />
-      </EditorContextInstance.Provider>
-    </DndProvider>
-    </I18nProvider>
+      <I18nProvider defaultLocale="de">
+        <DndProvider backend={HTML5Backend}>
+          <EditorContextInstance.Provider
+            value={{
+              dispatch,
+              reportError,
+              fieldState,
+              selectedScope,
+              setSelectedScope,
+              undo,
+              redo,
+              canUndo,
+              canRedo,
+            }}
+          >
+            <JsonFormsEditorUi
+              header={headerComponent}
+              footer={footerComponent}
+            />
+          </EditorContextInstance.Provider>
+        </DndProvider>
+      </I18nProvider>
     </EditorConfigProvider>
   );
 };

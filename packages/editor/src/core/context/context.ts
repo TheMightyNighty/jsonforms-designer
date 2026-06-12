@@ -1,29 +1,16 @@
-import React, { useContext, Dispatch } from 'react';
+import React, { Dispatch, useContext } from 'react';
 
-import { PropertiesService } from '../properties/propertiesService';
-import { CategorizationService } from '../api/categorizationService';
-import { PaletteService } from '../api/paletteService';
-import { SchemaService } from '../api/schemaService';
-import { SchemaElement } from '../model';
-import { EditorAction } from '../model/actions';
-import { EditorUISchemaElement } from '../model/uischema';
-import { SelectedElement } from '../selection';
-import { FieldAwareState } from '../model/addFieldReducer';
-import { AddFieldAction } from '../model/addFieldActions';
 import { UpdateFieldPropertyAction } from '../../properties/fieldPropertiesActions';
+import { EditorAction } from '../model/actions';
+import { AddFieldAction } from '../model/addFieldActions';
+import { FieldAwareState } from '../model/addFieldReducer';
 
 export type FieldAction = AddFieldAction | UpdateFieldPropertyAction;
 
 export interface EditorContext {
-  schemaService: SchemaService;
-  paletteService: PaletteService;
-  propertiesService: PropertiesService;
-  schema: SchemaElement | undefined;
-  uiSchema: EditorUISchemaElement | undefined;
   dispatch: Dispatch<EditorAction>;
-  selection: SelectedElement;
-  setSelection: (selection: SelectedElement) => void;
-  categorizationService: CategorizationService;
+  /** Zentraler Fehlerkanal — Host-konfigurierbar über die onError-Prop. */
+  reportError: (error: unknown, context: string) => void;
   fieldState: FieldAwareState;
   selectedScope: string | null;
   setSelectedScope: (scope: string | null) => void;
@@ -35,55 +22,16 @@ export interface EditorContext {
   canRedo: boolean;
 }
 
-const defaultContext: any = undefined;
-
-export const EditorContextInstance =
-  React.createContext<EditorContext>(defaultContext);
+export const EditorContextInstance = React.createContext<EditorContext>(
+  undefined as unknown as EditorContext,
+);
 
 export const useEditorContext = (): EditorContext =>
   useContext(EditorContextInstance);
 
-export const useGitLabService = (): SchemaService => {
-  const { schemaService } = useEditorContext();
-  return schemaService;
-};
-
-export const useSchema = (): SchemaElement | undefined => {
-  const { schema } = useEditorContext();
-  return schema;
-};
-
-export const useUiSchema = (): EditorUISchemaElement | undefined => {
-  const { uiSchema } = useEditorContext();
-  return uiSchema;
-};
-
-export const useSelection = (): [
-  SelectedElement,
-  (selection: SelectedElement) => void
-] => {
-  const { selection, setSelection } = useEditorContext();
-  return [selection, setSelection];
-};
-
 export const useDispatch = (): Dispatch<EditorAction> => {
   const { dispatch } = useEditorContext();
   return dispatch;
-};
-
-export const usePaletteService = (): PaletteService => {
-  const { paletteService } = useEditorContext();
-  return paletteService;
-};
-
-export const usePropertiesService = (): PropertiesService => {
-  const { propertiesService } = useEditorContext();
-  return propertiesService;
-};
-
-export const useCategorizationService = (): CategorizationService => {
-  const { categorizationService } = useEditorContext();
-  return categorizationService;
 };
 
 export const useFieldState = (): FieldAwareState => {
@@ -93,7 +41,7 @@ export const useFieldState = (): FieldAwareState => {
 
 export const useSelectedScope = (): [
   string | null,
-  (scope: string | null) => void
+  (scope: string | null) => void,
 ] => {
   const { selectedScope, setSelectedScope } = useEditorContext();
   return [selectedScope, setSelectedScope];
@@ -102,4 +50,9 @@ export const useSelectedScope = (): [
 export const useUndoRedo = () => {
   const { undo, redo, canUndo, canRedo } = useEditorContext();
   return { undo, redo, canUndo, canRedo };
+};
+
+export const useReportError = (): EditorContext['reportError'] => {
+  const { reportError } = useEditorContext();
+  return reportError;
 };

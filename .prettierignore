@@ -1,0 +1,7 @@
+node_modules/
+dist/
+build/
+coverage/
+package-lock.json
+# Markdown wird bewusst nicht von Prettier umformatiert
+*.md

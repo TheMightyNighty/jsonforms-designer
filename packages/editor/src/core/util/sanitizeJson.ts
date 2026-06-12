@@ -14,7 +14,9 @@ export function sanitizeParsedJson<T>(value: T): T {
   }
   if (value !== null && typeof value === 'object') {
     const clean: Record<string, unknown> = {};
-    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    for (const [key, child] of Object.entries(
+      value as Record<string, unknown>,
+    )) {
       if (FORBIDDEN_KEYS.has(key)) continue;
       clean[key] = sanitizeParsedJson(child);
     }

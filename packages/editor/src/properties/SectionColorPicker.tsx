@@ -1,8 +1,9 @@
 import { Box, Divider, Tooltip, Typography } from '@mui/material';
 import { Dispatch } from 'react';
-import { createSetSectionColorAction } from '../core/model/addFieldActions';
-import { EditorAction } from '../core/model/actions';
+
 import { useEditorContext } from '../core/context';
+import { EditorAction } from '../core/model/actions';
+import { createSetSectionColorAction } from '../core/model/addFieldActions';
 
 const SWATCHES = [
   { color: '#C8D8F0', label: 'Blau' },
@@ -19,33 +20,52 @@ const SWATCHES = [
 
 interface SectionColorPickerProps {
   elementId: string;
-  dispatch: Dispatch<EditorAction | any>;
+  dispatch: Dispatch<EditorAction>;
 }
 
-export function SectionColorPicker({ elementId, dispatch }: SectionColorPickerProps) {
+export function SectionColorPicker({
+  elementId,
+  dispatch,
+}: SectionColorPickerProps) {
   const { fieldState } = useEditorContext();
   const current = fieldState.sectionColors[elementId] ?? null;
 
   const set = (color: string | null) => {
-    dispatch(createSetSectionColorAction(elementId, color) as unknown as EditorAction);
+    dispatch(createSetSectionColorAction(elementId, color));
   };
 
   return (
     <Box>
       <Divider sx={{ my: 1 }} />
-      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, display: 'block', mb: 0.75 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+          fontWeight: 500,
+          display: 'block',
+          mb: 0.75,
+        }}
+      >
         Hintergrundfarbe
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
         <Tooltip title="Keine Farbe">
           <Box
-            role="button" tabIndex={0} aria-label="Keine Hintergrundfarbe" aria-pressed={!current}
+            role="button"
+            tabIndex={0}
+            aria-label="Keine Hintergrundfarbe"
+            aria-pressed={!current}
             onClick={() => set(null)}
             onKeyDown={(e) => e.key === 'Enter' && set(null)}
             sx={{
-              width: 26, height: 26, borderRadius: 1, cursor: 'pointer',
-              border: '2px solid', borderColor: !current ? 'primary.main' : 'divider',
-              background: 'linear-gradient(135deg, #fff 45%, #e00 45%, #e00 55%, #fff 55%)',
+              width: 26,
+              height: 26,
+              borderRadius: 1,
+              cursor: 'pointer',
+              border: '2px solid',
+              borderColor: !current ? 'primary.main' : 'divider',
+              background:
+                'linear-gradient(135deg, #fff 45%, #e00 45%, #e00 55%, #fff 55%)',
               flexShrink: 0,
             }}
           />
@@ -53,16 +73,26 @@ export function SectionColorPicker({ elementId, dispatch }: SectionColorPickerPr
         {SWATCHES.map(({ color, label }) => (
           <Tooltip key={color} title={label}>
             <Box
-              role="button" tabIndex={0} aria-label={label} aria-pressed={current === color}
+              role="button"
+              tabIndex={0}
+              aria-label={label}
+              aria-pressed={current === color}
               onClick={() => set(color)}
               onKeyDown={(e) => e.key === 'Enter' && set(color)}
               sx={{
-                width: 26, height: 26, borderRadius: 1, cursor: 'pointer',
+                width: 26,
+                height: 26,
+                borderRadius: 1,
+                cursor: 'pointer',
                 backgroundColor: color,
                 border: '2px solid',
-                borderColor: current === color ? 'primary.main' : 'rgba(0,0,0,0.15)',
+                borderColor:
+                  current === color ? 'primary.main' : 'rgba(0,0,0,0.15)',
                 boxShadow: current === color ? '0 0 0 1px #004A99' : 'none',
-                '&:hover': { transform: 'scale(1.15)', borderColor: 'primary.light' },
+                '&:hover': {
+                  transform: 'scale(1.15)',
+                  borderColor: 'primary.light',
+                },
                 transition: 'transform 0.1s, border-color 0.1s',
                 flexShrink: 0,
               }}
@@ -72,8 +102,21 @@ export function SectionColorPicker({ elementId, dispatch }: SectionColorPickerPr
       </Box>
       {current && (
         <Box sx={{ mt: 0.75, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box sx={{ width: 14, height: 14, borderRadius: 0.5, backgroundColor: current, border: '1px solid rgba(0,0,0,0.2)' }} />
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>{current}</Typography>
+          <Box
+            sx={{
+              width: 14,
+              height: 14,
+              borderRadius: 0.5,
+              backgroundColor: current,
+              border: '1px solid rgba(0,0,0,0.2)',
+            }}
+          />
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary', fontFamily: 'monospace' }}
+          >
+            {current}
+          </Typography>
         </Box>
       )}
     </Box>

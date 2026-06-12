@@ -1,26 +1,12 @@
 /**
- * ---------------------------------------------------------------------
- * Copyright (c) 2021 EclipseSource Munich
- * Licensed under MIT
- * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
- * ---------------------------------------------------------------------
+ * Form-First-Eigenschaften-Panel und zugehörige Editoren.
  */
-import { materialRenderers } from '@jsonforms/material-renderers';
-
-import { RuleEditorRendererRegistration } from './renderers/RuleEditorRenderer';
-
-export { PropertiesPanel } from './components/PropertiesPanel';
-export type { PropertiesPanelProps } from './components/PropertiesPanel';
-export * from './schemaDecorators';
-export * from './schemaProviders';
-export * from '../core/properties/propertiesService';
-
-export const defaultPropertyRenderers = [
-  ...materialRenderers,
-  RuleEditorRendererRegistration,
-];
-
+export * from './ConditionEditor';
 export * from './EnumEditor';
-export * from './StructuralPropertiesPanel';
-
+export * from './fieldPropertiesActions';
+export * from './FieldPropertiesPanel';
+export * from './fieldPropertiesReducer';
 export * from './SectionColorPicker';
+export * from './StructuralPropertiesPanel';
+export * from './TranslationEditor';
+export * from './ValidatorSection';

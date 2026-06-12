@@ -293,12 +293,69 @@ function MyApp() {
 ```tsx
 <JsonFormsEditor
   config={config}
-  schemaService={mySchemaService}      // Vorhandenes Schema laden
-  editorRenderers={customRenderers}    // Eigene JSONForms-Renderer
-  propertyRenderers={propRenderers}    // Eigene Properties-Renderer
-  header={null}                        // Header ausblenden
+  schemaService={mySchemaService}        // Vorhandenes Schema laden (wird konvertiert)
+  fieldStateStorage={myStorageAdapter}   // Persistenz (Default: localStorage)
+  header={null}                          // Header ausblenden
 />
 ```
+
+**Monaco self-hosten (Pflicht für Intranet-Betrieb):**
+
+Der Code-Modus nutzt `@monaco-editor/react`. Ohne Konfiguration lädt dessen
+Loader die Monaco-Runtime zur Laufzeit von einem öffentlichen CDN — in
+abgeschotteten Netzen fällt der Code-Modus damit aus. Die Host-Anwendung
+sollte dem Loader daher eine lokal gebündelte Instanz übergeben, **bevor**
+der erste Editor mountet (Vite-Rezept, vgl. `packages/app/src/monacoSetup.ts`):
+
+```ts
+import { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+
+self.MonacoEnvironment = {
+  getWorker: (_id, label) =>
+    label === 'json' ? new jsonWorker() : new editorWorker(),
+};
+loader.config({ monaco });
+```
+
+> Sicherheitshinweis: `monaco-editor ≥ 0.54` pinnt eine verwundbare
+> `dompurify`-Version. Im Monorepo erzwingt ein npm-Override `dompurify ≥ 3.4.9`
+> (siehe `package.json` → `overrides`); eigene Hosts sollten das übernehmen.
+
+**Persistenz (Server-Speicherung):**
+
+Standardmäßig speichert der Editor den Formular-Zustand automatisch im
+`localStorage` (`jfd_fieldState_v1`). Über die Prop `fieldStateStorage` lässt
+sich ein Adapter einhängen — für REST-Backends bringt das Paket einen
+Referenz-Adapter mit (GET beim Laden, debounctes PUT beim Speichern,
+404 = „noch kein Formular"):
+
+```tsx
+import { HttpFieldStateService } from '@jsonforms-designer/editor';
+
+<JsonFormsEditor
+  fieldStateStorage={
+    new HttpFieldStateService('/api/form/42', {
+      headers: { Authorization: 'Bearer …' },
+      debounceMs: 750,
+      onSaveError: (err) => meinMonitoring.report(err),
+    })
+  }
+  onError={(err, kontext) => meinMonitoring.report(err, kontext)}
+/>;
+```
+
+> Eingehende Daten werden vom Editor normalisiert und gegen
+> Prototype-Pollution bereinigt (`normalizeFieldState`). Die CSP der
+> Host-Anwendung muss den Backend-Origin in `connect-src` erlauben.
+> Eigene Adapter implementieren das Interface `FieldStateStorageService`.
+
+**Fehlerkanal & Version:** Über die Prop `onError(error, kontext)` erhalten
+Betriebs-Hosts alle Editor-Fehler (Laden, Auto-Save, Render-Fehler der
+ErrorBoundary) statt nur `console.error`. Die laufende Version wird im
+Header angezeigt (`EDITOR_VERSION` aus dem Paket).
 
 ---
 
@@ -361,8 +418,17 @@ interface OpenCodeService {
 |---|---|
 | **CORS (FIM-Portal)** | Die FitKo-API muss CORS-Header für die Ziel-Domain setzen oder ein serverseitiger Proxy muss verwendet werden |
 | **Versionierung / Audit-Trail** | Formular-Versionen werden als `x-version`-Metadatum gespeichert; ein automatischer Changelog ist nicht implementiert |
-| **WCAG-Vollprüfung** | Grundlegende Anforderungen (Skip-Link, Focus-Styles, ARIA) sind umgesetzt; eine vollständige BITV-2.0-Prüfung wird projektspezifisch empfohlen |
+| **WCAG-Vollprüfung** | Grundlegende Anforderungen (Skip-Link, Focus-Styles, ARIA) sind umgesetzt; Felder lassen sich per Tastatur hinzufügen (Enter/Leertaste auf Palette-Einträgen) und umsortieren (Alt+Pfeiltasten auf der Feld-Zeile). Eine vollständige BITV-2.0-Prüfung wird projektspezifisch empfohlen |
 | **Codelisten aus FIM** | Codelisten-Werte werden im Basic-List-Endpunkt der FIM-API nicht zurückgegeben; nur `code_list_id` ist verfügbar |
+
+---
+
+## Mitwirken & Roadmap
+
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — Setup, Konventionen, Qualitäts-Gates
+- [ROADMAP.md](./ROADMAP.md) — geplante Weiterentwicklung
+- [docs/BETRIEB.md](./docs/BETRIEB.md) — Deployment, Docker, FIM-Proxy, Diagnose
+- [docs/adr/](./docs/adr/) — Architektur-Entscheidungen (ADRs)
 
 ---
 

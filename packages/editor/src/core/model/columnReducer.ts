@@ -1,13 +1,21 @@
-
+import { getFieldType } from '../../field-types/fieldTypes';
 import {
-  UiElement,
+  buildScope,
+  COLUMN_DROP,
+  ColumnDropAction,
+  MOVE_ELEMENT,
+  MoveElementAction,
+  REORDER_IN_COLUMN,
+  ReorderInColumnAction,
+} from './addFieldActions';
+import { FieldAwareState, resolveKey } from './addFieldReducer';
+import {
   ColumnContainer,
   GroupContainer,
+  LabelElement,
   newId,
+  UiElement,
 } from './uiElements';
-import { FieldAwareState, resolveKey } from './addFieldReducer';
-import { COLUMN_DROP, ColumnDropAction, MOVE_ELEMENT, MoveElementAction, REORDER_IN_COLUMN, ReorderInColumnAction, buildScope } from './addFieldActions';
-import { getFieldType } from '../../field-types/fieldTypes';
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen: Baum traversieren
@@ -15,9 +23,9 @@ import { getFieldType } from '../../field-types/fieldTypes';
 
 /** Findet ein Element by ID (rekursiv), gibt [element, parent, columnIndex?] zurück */
 function findElement(
-  elements: UiElement[] | any[],
+  elements: UiElement[],
   id: string,
-  parent: { elements: UiElement[]; columnIndex?: number } | null = null
+  parent: { elements: UiElement[]; columnIndex?: number } | null = null,
 ): { el: UiElement; siblings: UiElement[]; colIdx?: number } | null {
   for (const el of elements) {
     if (el.id === id) {
@@ -25,7 +33,10 @@ function findElement(
     }
     if (el.type === 'ColumnContainer') {
       for (let c = 0; c < el.columns.length; c++) {
-        const found = findElement(el.columns[c], id, { elements: el.columns[c], columnIndex: c });
+        const found = findElement(el.columns[c], id, {
+          elements: el.columns[c],
+          columnIndex: c,
+        });
         if (found) return found;
       }
     }
@@ -60,7 +71,7 @@ function removeById(elements: UiElement[], id: string): UiElement[] {
 function insertInto(
   elements: UiElement[],
   newEl: UiElement,
-  insertAfterId?: string
+  insertAfterId?: string,
 ): UiElement[] {
   if (!insertAfterId) return [...elements, newEl];
   const idx = elements.findIndex((e) => e.id === insertAfterId);
@@ -74,11 +85,19 @@ function insertInto(
 
 export function columnDropReducer<S extends FieldAwareState>(
   state: S,
-  action: ColumnDropAction
+  action: ColumnDropAction,
 ): S {
   if (action.type !== COLUMN_DROP) return state;
 
-  const { containerId, columnIndex, fieldTypeId, propertyKey, insertAfterId, fimSchema, fimUiOptions } = action.payload;
+  const {
+    containerId,
+    columnIndex,
+    fieldTypeId,
+    propertyKey,
+    insertAfterId,
+    fimSchema,
+    fimUiOptions,
+  } = action.payload;
   const isFim = fieldTypeId.startsWith('fim:');
 
   // Existierende Felder auflösen
@@ -94,7 +113,9 @@ export function columnDropReducer<S extends FieldAwareState>(
       id: newId('ctrl'),
       type: 'Control',
       scope: safeScope,
-      ...(fimUiOptions && Object.keys(fimUiOptions).length > 0 ? { options: fimUiOptions } : {}),
+      ...(fimUiOptions && Object.keys(fimUiOptions).length > 0
+        ? { options: fimUiOptions }
+        : {}),
     };
     nextSchema = {
       ...state.schema,
@@ -102,7 +123,9 @@ export function columnDropReducer<S extends FieldAwareState>(
     };
   } else {
     const fieldType = getFieldType(fieldTypeId);
-    const safeKey = fieldType.isStructural ? propertyKey : resolveKey(propertyKey, existingKeys);
+    const safeKey = fieldType.isStructural
+      ? propertyKey
+      : resolveKey(propertyKey, existingKeys);
     const safeScope = buildScope(safeKey);
 
     // Neues UiElement erzeugen
@@ -112,11 +135,14 @@ export function columnDropReducer<S extends FieldAwareState>(
           id: newId('lbl'),
           type: 'Label',
           label: fieldType.defaults.label,
-          variant: (fieldType.uiSchema.options?.variant ?? 'text') as any,
+          variant: (fieldType.uiSchema.options?.variant ??
+            'text') as LabelElement['variant'],
           options: fieldType.uiSchema.options,
         };
       } else if (fieldType.uiSchema.type === 'HorizontalLayout') {
-        const widths = (fieldType.uiSchema.options?.widths as number[]) ?? [1, 1];
+        const widths = (fieldType.uiSchema.options?.widths as number[]) ?? [
+          1, 1,
+        ];
         newEl = {
           id: newId('col'),
           type: 'ColumnContainer',
@@ -132,7 +158,12 @@ export function columnDropReducer<S extends FieldAwareState>(
         };
       }
     } else {
-      newEl = { id: newId('ctrl'), type: 'Control', scope: safeScope, options: fieldType.uiSchema.options };
+      newEl = {
+        id: newId('ctrl'),
+        type: 'Control',
+        scope: safeScope,
+        options: fieldType.uiSchema.options,
+      };
     }
 
     nextSchema = fieldType.isStructural
@@ -147,12 +178,14 @@ export function columnDropReducer<S extends FieldAwareState>(
   }
 
   // ColumnContainer finden und Spalte aktualisieren
-  const nextElements = (state.uiSchema.elements as any[]).map((el: any) => {
+  const nextElements = state.uiSchema.elements.map((el) => {
     if (el.id !== containerId) return el;
     if (el.type !== 'ColumnContainer') return el;
     const col = el as ColumnContainer;
     const nextColumns = col.columns.map((colItems, ci) =>
-      ci === columnIndex ? insertInto(colItems, newEl, insertAfterId) : colItems
+      ci === columnIndex
+        ? insertInto(colItems, newEl, insertAfterId)
+        : colItems,
     );
     return { ...col, columns: nextColumns };
   });
@@ -170,19 +203,24 @@ export function columnDropReducer<S extends FieldAwareState>(
 
 export function moveElementReducer<S extends FieldAwareState>(
   state: S,
-  action: MoveElementAction
+  action: MoveElementAction,
 ): S {
   if (action.type !== MOVE_ELEMENT) return state;
 
-  const { elementId, targetContainerId, targetColumnIndex = 0, insertAfterId } = action.payload;
+  const {
+    elementId,
+    targetContainerId,
+    targetColumnIndex = 0,
+    insertAfterId,
+  } = action.payload;
 
   // Element finden
-  const found = findElement(state.uiSchema.elements as UiElement[], elementId);
+  const found = findElement(state.uiSchema.elements, elementId);
   if (!found) return state;
   const { el: movingEl } = found;
 
-  // Aus bisheriger Position entfernen
-  const withoutEl = removeById(state.uiSchema.elements as UiElement[], elementId);
+  // Aus aktueller Position entfernen
+  const withoutEl = removeById(state.uiSchema.elements, elementId);
 
   // In Zielposition einfügen
   let nextElements: UiElement[];
@@ -190,20 +228,25 @@ export function moveElementReducer<S extends FieldAwareState>(
   if (targetContainerId === 'root') {
     nextElements = insertInto(withoutEl, movingEl, insertAfterId);
   } else {
-    nextElements = (withoutEl as any[]).map((el: any) => {
+    nextElements = withoutEl.map((el) => {
       if (el.id !== targetContainerId) return el;
       if (el.type === 'ColumnContainer') {
         const col = el as ColumnContainer;
         return {
           ...col,
           columns: col.columns.map((colItems, ci) =>
-            ci === targetColumnIndex ? insertInto(colItems, movingEl, insertAfterId) : colItems
+            ci === targetColumnIndex
+              ? insertInto(colItems, movingEl, insertAfterId)
+              : colItems,
           ),
         };
       }
       if (el.type === 'GroupContainer') {
         const grp = el as GroupContainer;
-        return { ...grp, children: insertInto(grp.children, movingEl, insertAfterId) };
+        return {
+          ...grp,
+          children: insertInto(grp.children, movingEl, insertAfterId),
+        };
       }
       return el;
     });
@@ -221,12 +264,12 @@ export function moveElementReducer<S extends FieldAwareState>(
 
 export function reorderInColumnReducer<S extends FieldAwareState>(
   state: S,
-  action: ReorderInColumnAction
+  action: ReorderInColumnAction,
 ): S {
   if (action.type !== REORDER_IN_COLUMN) return state;
   const { containerId, columnIndex, elementId, insertAfterId } = action.payload;
 
-  const nextElements = (state.uiSchema.elements as any[]).map((el: any) => {
+  const nextElements = state.uiSchema.elements.map((el) => {
     if (el.id !== containerId || el.type !== 'ColumnContainer') return el;
     const col = el as ColumnContainer;
     const nextColumns = col.columns.map((colItems: UiElement[], ci: number) => {
