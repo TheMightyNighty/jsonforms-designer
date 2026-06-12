@@ -22,12 +22,12 @@ Voraussetzungen:
 
 ## Kurzfristig (0.3.x)
 
-- [ ] **Release v0.3.0** mit den konsolidierten Änderungen (CI, self-hosted
-      Monaco, Persistenz-Adapter, E2E-Suite, Tastatur-Pfad, ADR 0001 Stufe 1)
-- [ ] **CSP härten:** Prüfen, ob `'unsafe-eval'` nach der Monaco-ESM-Umstellung
-      entfernt werden kann (TODO in `packages/app/vite.config.ts`)
-- [ ] **Bundle-Optimierung:** Code-Modus (Monaco, ~1 MB gzip) lazy laden,
-      Initial-Bundle zurück Richtung ~0,5 MB gzip
+- [x] ~~**Release v0.3.0**~~ (veröffentlicht 2026-06-12)
+- [x] ~~**CSP härten (`unsafe-eval`)**~~ (geprüft mit Befund: AJV benötigt es
+      für die Schema-Kompilierung in der Vorschau, nicht Monaco — siehe
+      `packages/app/vite.config.ts` und `docs/BETRIEB.md`)
+- [x] ~~**Bundle-Optimierung (Monaco lazy)**~~ (umgesetzt: Initial-Bundle
+      0,48 MB gzip, Code-Modus-Chunk lädt on demand)
 
 ## Mittelfristig
 
@@ -41,10 +41,10 @@ Voraussetzungen:
 - [x] ~~**State-Konsolidierung Stufe 2** (ADR 0001)~~ (umgesetzt in 0.3.0,
       inkl. Stufe 3)
 - [x] ~~**Tastatur-Umsortieren** von Feldern~~ (umgesetzt: Alt+Pfeiltasten)
-- [ ] **Referenz-Backend-Adapter:** kleines Beispiel-Backend +
-      `HttpFieldStateService` als Paket-Export statt nur README-Snippet
-- [ ] **FIM-Proxy-Beispiel** (CORS/Firewall): dokumentierte Reverse-Proxy-
-      Konfiguration für abgeschottete Netze
+- [ ] **Beispiel-Backend** für den bereits enthaltenen
+      `HttpFieldStateService` (Paket-Export seit 0.3.0)
+- [x] ~~**FIM-Proxy-Beispiel**~~ (nginx-Block in `docker/nginx.conf` +
+      `docs/BETRIEB.md`)
 - [ ] **Komponenten-Sandbox** (Storybook o. ä.) evaluieren — bewusst noch
       nicht eingeführt (E2E + Screenshot-Generator decken die visuelle
       Verifikation derzeit ab)
