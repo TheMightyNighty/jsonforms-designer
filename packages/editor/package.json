@@ -37,7 +37,7 @@
     "@jsonforms/material-renderers": "~3.7.0",
     "@jsonforms/react": "~3.7.0",
     "@monaco-editor/react": "^4.6.0",
-    "@mui/icons-material": "^7.0.0",
+    "@mui/icons-material": "^9.1.1",
     "@mui/material": "^7.0.0",
     "monaco-editor": "~0.55.1",
     "react-dnd": "^16.0.1",
