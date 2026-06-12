@@ -31,9 +31,15 @@ Voraussetzungen:
 
 ## Mittelfristig
 
-- [ ] **State-Konsolidierung Stufe 2** (ADR 0001): tote Baum-Module entfernen
-      (alte Palette, `core/renderers/`, Baum-Reducer-Zweige) — Breaking,
-      daher gebündelt als Major-Cleanup
+- [ ] **DnD-Bibliothek migrieren:** `react-dnd` ist seit April 2022 ohne
+      Release (Supply-Chain-Audit 2026-06). Bewertete Alternativen:
+      `@atlaskit/pragmatic-drag-and-drop` (empfohlen — Atlassian-getragen,
+      aktiv, framework-agnostisch) vor `@dnd-kit/core` (beste React-DX und
+      eingebaute Tastatur-A11y, aber Einzel-Maintainer und seit Ende 2024
+      still). Entschärfung bis dahin: der Tastatur-Pfad (Enter,
+      Alt+Pfeile) ist react-dnd-unabhängig implementiert
+- [x] ~~**State-Konsolidierung Stufe 2** (ADR 0001)~~ (umgesetzt in 0.3.0,
+      inkl. Stufe 3)
 - [x] ~~**Tastatur-Umsortieren** von Feldern~~ (umgesetzt: Alt+Pfeiltasten)
 - [ ] **Referenz-Backend-Adapter:** kleines Beispiel-Backend +
       `HttpFieldStateService` als Paket-Export statt nur README-Snippet

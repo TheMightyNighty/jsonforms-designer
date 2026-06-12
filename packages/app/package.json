@@ -20,7 +20,6 @@
     "@jsonforms-designer/editor": "*",
     "@monaco-editor/react": "^4.6.0",
     "@mui/material": "^7.0.0",
-    "@tabler/icons-webfont": "^3.44.0",
     "monaco-editor": "~0.55.1",
     "react": "^19.0.0",
     "react-dnd": "^16.0.1",
