@@ -28,6 +28,11 @@ Voraussetzungen:
       `packages/app/vite.config.ts` und `docs/BETRIEB.md`)
 - [x] ~~**Bundle-Optimierung (Monaco lazy)**~~ (umgesetzt: Initial-Bundle
       0,48 MB gzip, Code-Modus-Chunk lädt on demand)
+- [ ] **Upgrade-Session Dev-Toolchain:** TypeScript 6, ESLint 10,
+      eslint-plugin-react-hooks 7 — als gemeinsames Paket prüfen
+      (offene Dependabot-PRs #7/#8/#10; mögliche Regel-/Codeanpassungen)
+- [ ] **Docker-Image-Smoke-Test:** das Dockerfile wurde lokal nie gebaut
+      (kein Daemon verfügbar) — beim ersten Host-/CI-Build verifizieren
 
 ## Mittelfristig
 
@@ -48,6 +53,19 @@ Voraussetzungen:
 - [ ] **Komponenten-Sandbox** (Storybook o. ä.) evaluieren — bewusst noch
       nicht eingeführt (E2E + Screenshot-Generator decken die visuelle
       Verifikation derzeit ab)
+- [ ] **vitest 4** (gemeinsam mit `@vitest/coverage-v8` 4 — Dependabot-PR
+      #11 wegen Peer-Konflikt geschlossen, kommt nach dem Upgrade wieder)
+- [ ] **MUI 9** (material + icons-material gemeinsam — Dependabot-PR #9
+      wegen Peer-Konflikt geschlossen)
+- [ ] **Tastatur-Hinzufügen auch für FIM-/OpenCode-Paletteneinträge**
+      (der Enter/Leertaste-Pfad deckt bisher die Katalog-Feldtypen ab)
+- [ ] **Async-Hydration ohne History-Schritt:** nach dem Laden über einen
+      Server-Adapter ist aktuell ein Undo zum leeren Formular möglich
+      (dokumentierte Einschränkung in JsonFormsEditor)
+- [ ] **Komponenten-Testabdeckung ausbauen** (FieldFormPreview,
+      PreviewPanel) und Coverage-Schwellwerte entsprechend anheben
+      (Nur-anheben-Politik, siehe vitest.config)
+- [ ] **WebKit als dritter E2E-Browser** evaluieren
 
 ## Langfristig / zu bewerten
 
@@ -58,4 +76,12 @@ Voraussetzungen:
       `x-version`-Metadatum)
 - [ ] **Codelisten-Nachladen** aus der FIM-API
       (`/fields/{fim_id}/{version}`) statt nur `code_list_id`
-- [ ] **npm-Veröffentlichung** von `@jsonforms-designer/editor`
+- [ ] **Mehrbenutzer-/Freigabe-Workflows** (Epic: gemeinsames Bearbeiten,
+      Vier-Augen-Freigabe, Versionsstände) — bewusst außerhalb des
+      1.0-Scopes
+- [ ] **npm-Veröffentlichung** von `@jsonforms-designer/editor` —
+      Arbeitspaket: `private`-Flag entfernen, npm-Scope registrieren +
+      `publishConfig.access`, peerDependencies-Entscheidung (MUI/Emotion/
+      JSONForms/react-dnd), Paket-README + LICENSE, `sideEffects`/
+      Metadaten, `prepublishOnly`, Tarball-Probe in fremdem Vite-Projekt,
+      Publish-Workflow mit `--provenance`
