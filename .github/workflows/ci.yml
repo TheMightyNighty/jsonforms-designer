@@ -42,7 +42,7 @@ jobs:
         run: npm run build
 
       - name: Playwright-Browser installieren
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox
 
       - name: E2E-Smoke-Tests (gegen den Prod-Build)
         run: npm run test:e2e --workspace=packages/app
