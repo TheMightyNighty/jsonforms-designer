@@ -23,7 +23,6 @@ import {
   createReorderElementAction,
 } from '../../core/model/addFieldActions';
 import { FieldAwareState } from '../../core/model/addFieldReducer';
-import { ColumnContainer, FlatElement } from '../../core/model/uiElements';
 import { FIELD_TYPE_CATALOG } from '../../field-types/fieldTypes';
 import { useI18n } from '../../i18n';
 import { useFieldDrop } from '../../palette-panel/useFieldDrop';
@@ -387,66 +386,43 @@ export function FieldFormPreview({
     );
   };
 
-  // Alle Elemente klassifizieren
-  const allElements = (uiSchema.elements as FlatElement[]).map((el) => {
-    const id = el.id ?? el.scope ?? '';
-    if (el.type === 'ColumnContainer' && el.columns) {
-      return {
-        kind: 'column-container' as const,
-        el: el as unknown as ColumnContainer,
-        scope: id,
-      };
+  // Alle Elemente klassifizieren. Identität: Controls und Labels über ihren
+  // (Pseudo-)Scope — daran hängen Selektion und Tab-Zuordnung —, Container
+  // über ihre id.
+  const allElements = uiSchema.elements.map((el) => {
+    if (el.type === 'ColumnContainer') {
+      return { kind: 'column-container' as const, el, scope: el.id };
     }
-    if (el.type === 'GroupContainer' && el.children) {
+    if (el.type === 'GroupContainer') {
       return {
         kind: 'structural' as const,
-        scope: id,
+        scope: el.id,
         type: 'GroupContainer',
-        label: el.label ?? 'Gruppe',
+        label: el.label,
         options: el.options,
       };
     }
-    if (el.type === 'Label' && el.id) {
-      return {
-        kind: 'structural' as const,
-        scope: id,
-        type: 'Label',
-        label: el.label ?? '',
-        options: el.options,
-      };
-    }
-    // Legacy Label mit scope (section-header, annotation)
     if (el.type === 'Label') {
       return {
         kind: 'structural' as const,
-        scope: el.scope ?? id,
+        scope: el.scope ?? el.id,
         type: 'Label',
-        label: el.label ?? '',
+        label: el.label,
         options: el.options,
       };
     }
-    if (el.type === 'Control') {
-      const key = (el.scope ?? '').replace(/^#\/properties\//, '');
-      const fs = schema.properties?.[key] as
-        | (JsonSchema7 & { 'x-opencode-validators'?: string[] })
-        | undefined;
-      return {
-        kind: 'control' as const,
-        scope: el.scope ?? '',
-        propertyKey: key,
-        label: fs?.title ?? key,
-        schemaType: fs?.type as string | undefined,
-        required: schema.required?.includes(key) ?? false,
-        validators: fs?.['x-opencode-validators'] ?? [],
-      };
-    }
-    // Legacy-Fallback
+    const key = el.scope.replace(/^#\/properties\//, '');
+    const fs = schema.properties?.[key] as
+      | (JsonSchema7 & { 'x-opencode-validators'?: string[] })
+      | undefined;
     return {
-      kind: 'structural' as const,
-      scope: el.scope ?? id,
-      type: el.type,
-      label: el.label ?? el.type,
-      options: el.options,
+      kind: 'control' as const,
+      scope: el.scope,
+      propertyKey: key,
+      label: fs?.title ?? key,
+      schemaType: fs?.type as string | undefined,
+      required: schema.required?.includes(key) ?? false,
+      validators: fs?.['x-opencode-validators'] ?? [],
     };
   });
 

@@ -6,11 +6,9 @@ import { defineConfig, Plugin } from 'vite';
 // Content-Security-Policy for the production build. Injected only at build time
 // so Vite's dev server / HMR (which relies on inline module preambles) keeps
 // working. Directives explained:
-//   script-src 'unsafe-eval' — wird NICHT (mehr) von Monaco gebraucht,
-//     sondern von AJV: JSONForms kompiliert Schemas zur Validierung per
-//     `new Function` (Vorschau-Modus). Empirisch verifiziert (E2E, 2026-06):
-//     ohne 'unsafe-eval' rendert die Vorschau nicht; der Code-Modus liefe.
-//     Ausweg wäre AJV ohne Codegenerierung — von JSONForms nicht angeboten.
+//   script-src 'unsafe-eval' — benötigt von AJV: JSONForms kompiliert
+//     Schemas zur Validierung per `new Function` (Vorschau-Modus). Monaco
+//     braucht es nicht.
 //   style-src 'unsafe-inline'  — required by Emotion/MUI runtime styles.
 //   worker-src 'self' blob:    — Monaco-Worker werden als eigene Dateien
 //     gebündelt (?worker-Rezept); blob: als Fallback für Vite-Worker-Helper.

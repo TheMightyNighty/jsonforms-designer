@@ -17,6 +17,7 @@ import { EmptySchemaService, SchemaService } from './core/api/schemaService';
 import { EditorContextInstance } from './core/context';
 import { EditorAction } from './core/model/actions';
 import { createSetFieldStateAction } from './core/model/addFieldActions';
+import { matchesElementKey } from './core/model/addFieldReducer';
 import {
   HISTORY_WRAP,
   HistoryAction,
@@ -25,7 +26,7 @@ import {
   UNDO,
 } from './core/model/historyReducer';
 import { createInitialEditorState } from './core/model/reducer';
-import { FlatElement } from './core/model/uiElements';
+import { UiElement } from './core/model/uiElements';
 import { fieldStateFromSchemas } from './core/util/fieldStateFromSchemas';
 import { I18nProvider } from './i18n';
 import { JsonFormsEditorUi } from './JsonFormsEditorUi';
@@ -145,8 +146,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   }, [fieldState, fieldStateStorage]);
 
   // Extern bereitgestellte Schemas (SchemaService) werden in den
-  // Form-First-Zustand konvertiert — fieldState ist die einzige
-  // Laufzeit-Quelle (ADR 0001). Liefert der Service nichts (Default),
+  // Form-First-Zustand konvertiert. Liefert der Service nichts (Default),
   // bleibt der per fieldStateStorage geladene Zustand bestehen.
   useEffect(() => {
     let cancelled = false;
@@ -169,21 +169,21 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   // Selektion aufräumen, wenn das Element nicht mehr existiert
   useEffect(() => {
     if (!selectedScope) return;
-    function existsInUiSchema(elements: FlatElement[], key: string): boolean {
+    function existsInUiSchema(elements: UiElement[], key: string): boolean {
       for (const el of elements) {
-        if (el.scope === key || el.id === key) return true;
-        if (el.columns)
+        if (matchesElementKey(el, key)) return true;
+        if (el.type === 'ColumnContainer')
           for (const col of el.columns) {
             if (existsInUiSchema(col, key)) return true;
           }
-        if (el.children) {
+        if (el.type === 'GroupContainer') {
           if (existsInUiSchema(el.children, key)) return true;
         }
       }
       return false;
     }
     const stillExists = existsInUiSchema(
-      fieldState.uiSchema.elements as FlatElement[],
+      fieldState.uiSchema.elements,
       selectedScope,
     );
     if (!stillExists) setSelectedScope(null);

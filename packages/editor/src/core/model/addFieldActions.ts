@@ -1,7 +1,7 @@
 import { JsonSchema7 } from '@jsonforms/core';
 
 import { FieldTypeDefinition } from '../../field-types/fieldTypes';
-import { FieldAwareState } from './addFieldReducer';
+import { FieldStateInput } from './addFieldReducer';
 
 // ---------------------------------------------------------------------------
 // ADD_FIELD
@@ -76,10 +76,10 @@ export function createRemoveFieldAction(scope: string): RemoveFieldAction {
 export const LOAD_TEMPLATE = 'LOAD_TEMPLATE' as const;
 export interface LoadTemplateAction {
   type: typeof LOAD_TEMPLATE;
-  payload: FieldAwareState;
+  payload: FieldStateInput;
 }
 export function createLoadTemplateAction(
-  state: FieldAwareState,
+  state: FieldStateInput,
 ): LoadTemplateAction {
   return { type: LOAD_TEMPLATE, payload: state };
 }
@@ -90,10 +90,10 @@ export function createLoadTemplateAction(
 export const SET_FIELD_STATE = 'SET_FIELD_STATE' as const;
 export interface SetFieldStateAction {
   type: typeof SET_FIELD_STATE;
-  payload: FieldAwareState;
+  payload: FieldStateInput;
 }
 export function createSetFieldStateAction(
-  state: FieldAwareState,
+  state: FieldStateInput,
 ): SetFieldStateAction {
   return { type: SET_FIELD_STATE, payload: state };
 }

@@ -30,7 +30,7 @@ import { Dispatch } from 'react';
 import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
-import { FlatElement } from '../core/model/uiElements';
+import { UiElement } from '../core/model/uiElements';
 import { useI18n } from '../i18n';
 import { ConditionEditor } from './ConditionEditor';
 import { EnumEditor } from './EnumEditor';
@@ -77,7 +77,9 @@ function readFieldValues(
     title?: string;
     description?: string;
   };
-  const control = uiSchema.elements.find((el) => el.scope === scope);
+  const control = uiSchema.elements.find(
+    (el) => el.type === 'Control' && el.scope === scope,
+  );
 
   return {
     label: fieldSchema.title ?? '',
@@ -132,24 +134,21 @@ export function FieldPropertiesPanel({
   if (!selectedScope) return <EmptyState />;
 
   // Strukturelle Elemente → eigenes Panel. Suche rekursiv auch in Spalten.
-  function findEl(
-    elements: FlatElement[],
-    key: string,
-  ): FlatElement | undefined {
+  function findEl(elements: UiElement[], key: string): UiElement | undefined {
     for (const el of elements) {
-      if (el.scope === key || el.id === key) return el;
-      if (el.columns)
+      if (el.id === key || ('scope' in el && el.scope === key)) return el;
+      if (el.type === 'ColumnContainer')
         for (const col of el.columns) {
           const f = findEl(col, key);
           if (f) return f;
         }
-      if (el.children) {
+      if (el.type === 'GroupContainer') {
         const f = findEl(el.children, key);
         if (f) return f;
       }
     }
   }
-  const selectedEl = findEl(uiSchema.elements as FlatElement[], selectedScope);
+  const selectedEl = findEl(uiSchema.elements, selectedScope);
   // Element nicht mehr gefunden (z.B. nach dem Löschen) → leeres Panel
   if (!selectedEl) return <EmptyState />;
   const isStructural = selectedEl.type !== 'Control';

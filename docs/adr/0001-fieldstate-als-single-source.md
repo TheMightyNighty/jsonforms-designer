@@ -1,6 +1,6 @@
 # ADR 0001: FieldAwareState als einzige Laufzeit-Quelle
 
-**Status:** Akzeptiert (Stufe 1 + Stufe 2 umgesetzt, 2026-06)
+**Status:** Akzeptiert (Stufe 1–3 umgesetzt, 2026-06)
 **Kontext:** packages/editor
 
 ## Kontext
@@ -67,7 +67,29 @@ Verwendungsanalyse vollständig entfernt (≈ 5.000 LOC):
 `schemaDecorators`, `paletteService`, `categorizationService`,
 `propertiesServiceProvider`, `editorRenderers`, `propertyRenderers`.
 Entfernte Public-Exports siehe oben. Verbleibende Props: `schemaService`,
-`fieldStateStorage`, `config`, `header`, `footer`.
+`fieldStateStorage`, `config`, `header`, `footer`, `onError`.
+
+**Stufe 3 (umgesetzt, 2026-06): Strikter State, Konvertierung nur an den
+Grenzen.**
+
+- `FieldAwareState.uiSchema.elements` ist die strikte `UiElement`-Union
+  (diskriminiert, ids verpflichtend); Reducer und UI arbeiten ohne Casts
+  mit Narrowing.
+- `FlatElement` bleibt als loses **Grenz-Format** („parse, don't
+  validate"); `FieldStateInput` typisiert State-ersetzende Eingänge
+  (Templates, Import, Code-Modus, SET_FIELD_STATE).
+- `fromLegacy()` ist der zentrale Normalisierer und läuft an allen
+  Grenzen: `normalizeFieldState` (Storage/HTTP), `loadTemplateReducer`
+  (Templates/Code-Modus/Import/Hydration), `fieldStateFromSchemas`
+  (SchemaService). `rule`, Label-Pseudo-Scope und ids werden erhalten.
+- Element-Identität einheitlich über `matchesElementKey` (Container per
+  id, Controls/Labels per Scope).
+
+Dabei behobene Alt-Fehler: `rule` wurde von `toJsonForms` verworfen
+(bedingte Anzeige wirkte nie in der Vorschau); Einfügen hinter Containern
+landete am Listenende (`insertControl` matchte nur `scope`); strukturelle
+Elemente wurden in Tab-Formularen stets Tab 0 zugeordnet
+(Identitäts-Mismatch id vs. Pseudo-Scope).
 
 ## Konsequenzen
 

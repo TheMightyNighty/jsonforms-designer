@@ -19,16 +19,16 @@ import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
 import { useMemo, useState } from 'react';
 
 import { FieldAwareState, FormTab } from '../../core/model/addFieldReducer';
-import { FlatElement, toJsonForms } from '../../core/model/uiElements';
+import { toJsonForms, UiElement } from '../../core/model/uiElements';
 
 // ---------------------------------------------------------------------------
 // Konverter internes → JSONForms
 // ---------------------------------------------------------------------------
-function convertEl(el: FlatElement): object | null {
+function convertEl(el: UiElement): object | null {
   if (el.type === 'Label' && el.options?.variant === 'section-header')
     return null; // eigene Darstellung
   if (el.type === 'Label' && el.options?.variant === 'annotation') return null; // eigene Darstellung
-  return toJsonForms(el as FlatElement);
+  return toJsonForms(el);
 }
 
 // ---------------------------------------------------------------------------
@@ -43,8 +43,8 @@ function buildPreviewUiSchema(fieldState: FieldAwareState): object {
     };
   }
   const tabBuckets: object[][] = tabs.map(() => []);
-  (uiSchema.elements as FlatElement[]).forEach((el) => {
-    const id = el.id ?? el.scope ?? '';
+  uiSchema.elements.forEach((el) => {
+    const id = 'scope' in el ? (el.scope ?? el.id) : el.id;
     const idx = Math.min(tabAssignments[id] ?? 0, tabBuckets.length - 1);
     const jfEl = convertEl(el);
     if (jfEl) tabBuckets[idx].push(jfEl);
@@ -118,7 +118,7 @@ function makeContrastTheme(bgColor: string, baseMode: 'light' | 'dark') {
 // PreviewWrapper
 // ---------------------------------------------------------------------------
 interface PreviewWrapperProps {
-  elements: FlatElement[];
+  elements: UiElement[];
   schema: object;
   lineNumbers: boolean;
   sectionColors: Record<string, string>;
@@ -134,7 +134,7 @@ function PreviewWrapper({
   return (
     <Box>
       {elements.map((el, idx: number) => {
-        const id = el.id ?? el.scope ?? String(idx);
+        const id = 'scope' in el ? (el.scope ?? el.id) : el.id;
         const bgColor = sectionColors[id] ?? undefined;
         const numColor = bgColor ? getContrastColor(bgColor) : undefined;
         const isHeader =
@@ -408,7 +408,7 @@ export function PreviewPanel({
         {stepper}
         <Box sx={{ flex: 1, p: 2, overflowY: 'auto' }} className="print-area">
           <PreviewWrapper
-            elements={fieldState.uiSchema.elements as FlatElement[]}
+            elements={fieldState.uiSchema.elements}
             schema={previewSchema}
             lineNumbers={showLineNumbers}
             sectionColors={fieldState.sectionColors}

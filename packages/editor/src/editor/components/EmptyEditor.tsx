@@ -13,10 +13,6 @@ export const EmptyEditor: React.FC = () => {
   const dispatch = useDispatch();
   const { t } = useI18n();
 
-  // Hinweis: Der frühere zweite Drop-Pfad für NEW_UI_SCHEMA_ELEMENT (alte
-  // Baum-Palette) wurde mit der State-Konsolidierung entfernt — die alte
-  // Palette wird nicht mehr gerendert, der Drag-Typ kann nicht entstehen
-  // (ADR 0001).
   const [{ isOver }, fieldDrop] = useFieldDrop(dispatch);
 
   const setRef = (el: HTMLDivElement | null) => {

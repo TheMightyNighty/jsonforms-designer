@@ -25,7 +25,9 @@ function sampleState(): FieldAwareState {
     },
     uiSchema: {
       type: 'VerticalLayout',
-      elements: [{ type: 'Control', scope: '#/properties/vorname' }],
+      elements: [
+        { id: 'ctrl_v', type: 'Control', scope: '#/properties/vorname' },
+      ],
     },
     tabs: [{ label: 'Schritt 1' }],
     activeTabIndex: 0,

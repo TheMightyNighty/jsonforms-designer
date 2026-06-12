@@ -23,6 +23,7 @@ import {
   resolveKey,
   tabReducer,
 } from './addFieldReducer';
+import { UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -70,9 +71,13 @@ describe('resolveKey()', () => {
 // ---------------------------------------------------------------------------
 
 describe('insertControl()', () => {
-  const a = { type: 'Control', scope: '#/properties/a' };
-  const b = { type: 'Control', scope: '#/properties/b' };
-  const neu = { type: 'Control', scope: '#/properties/neu' };
+  const a: UiElement = { id: 'a', type: 'Control', scope: '#/properties/a' };
+  const b: UiElement = { id: 'b', type: 'Control', scope: '#/properties/b' };
+  const neu: UiElement = {
+    id: 'neu',
+    type: 'Control',
+    scope: '#/properties/neu',
+  };
 
   it('hängt ans Ende wenn kein insertAfterScope', () => {
     const result = insertControl([a, b], neu);
@@ -123,7 +128,10 @@ describe('addFieldReducer()', () => {
     const next = addFieldReducer(state, action);
 
     expect(next.uiSchema.elements).toHaveLength(1);
-    expect(next.uiSchema.elements[0].scope).toBe('#/properties/vorname');
+    const first = next.uiSchema.elements[0];
+    expect(first.type === 'Control' && first.scope).toBe(
+      '#/properties/vorname',
+    );
     expect(next.uiSchema.elements[0].type).toBe('Control');
   });
 
@@ -214,7 +222,9 @@ describe('addFieldReducer() — Einfügeposition', () => {
     );
     state = addFieldReducer(state, action);
 
-    const scopes = state.uiSchema.elements.map((e) => e.scope);
+    const scopes = state.uiSchema.elements.map((e) =>
+      'scope' in e ? e.scope : undefined,
+    );
     expect(scopes).toEqual([
       '#/properties/a',
       '#/properties/zwischen',
@@ -306,7 +316,9 @@ describe('removeFieldReducer()', () => {
       schema: { type: 'object', properties: { name: { type: 'string' } } },
       uiSchema: {
         type: 'VerticalLayout',
-        elements: [{ type: 'Control', scope: '#/properties/name' }],
+        elements: [
+          { id: 'ctrl_name', type: 'Control', scope: '#/properties/name' },
+        ],
       },
     };
     const next = removeFieldReducer(
@@ -328,7 +340,9 @@ describe('removeFieldReducer()', () => {
       },
       uiSchema: {
         type: 'VerticalLayout',
-        elements: [{ type: 'Control', scope: '#/properties/email' }],
+        elements: [
+          { id: 'ctrl_email', type: 'Control', scope: '#/properties/email' },
+        ],
       },
     };
     const next = removeFieldReducer(
@@ -343,6 +357,29 @@ describe('removeFieldReducer()', () => {
 // reorderElementReducer
 // ---------------------------------------------------------------------------
 
+describe('insertControl() — Einfügen hinter Containern', () => {
+  it('matcht Container über ihre id (nicht nur scope)', () => {
+    const container: UiElement = {
+      id: 'col_1',
+      type: 'ColumnContainer',
+      widths: [1, 1],
+      columns: [[], []],
+    };
+    const ctrl: UiElement = {
+      id: 'b',
+      type: 'Control',
+      scope: '#/properties/b',
+    };
+    const neu: UiElement = {
+      id: 'n',
+      type: 'Control',
+      scope: '#/properties/n',
+    };
+    const result = insertControl([container, ctrl], neu, 'col_1');
+    expect(result.map((e) => e.id)).toEqual(['col_1', 'n', 'b']);
+  });
+});
+
 describe('reorderElementReducer()', () => {
   function threeFields(): FieldAwareState {
     let state = emptyState();
@@ -355,7 +392,7 @@ describe('reorderElementReducer()', () => {
     return state;
   }
   const scopes = (s: FieldAwareState) =>
-    s.uiSchema.elements.map((e) => e.scope);
+    s.uiSchema.elements.map((e) => ('scope' in e ? e.scope : undefined));
 
   it('ohne insertAfterKey → an den ANFANG (Bugfix: vorher Ende)', () => {
     const state = threeFields();

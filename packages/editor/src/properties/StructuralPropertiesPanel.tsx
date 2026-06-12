@@ -5,7 +5,7 @@ import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { createSetFieldStateAction } from '../core/model/addFieldActions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
-import { FlatElement } from '../core/model/uiElements';
+import { UiElement } from '../core/model/uiElements';
 import { useI18n } from '../i18n';
 import { SectionColorPicker } from './SectionColorPicker';
 
@@ -34,23 +34,23 @@ export function StructuralPropertiesPanel({
   const { t } = useI18n();
 
   function findElDeep(
-    elements: FlatElement[],
+    elements: UiElement[],
     key: string,
-  ): FlatElement | undefined {
+  ): UiElement | undefined {
     for (const e of elements) {
-      if (e.scope === key || e.id === key) return e;
-      if (e.columns)
+      if (e.id === key || ('scope' in e && e.scope === key)) return e;
+      if (e.type === 'ColumnContainer')
         for (const col of e.columns) {
           const f = findElDeep(col, key);
           if (f) return f;
         }
-      if (e.children) {
+      if (e.type === 'GroupContainer') {
         const f = findElDeep(e.children, key);
         if (f) return f;
       }
     }
   }
-  const el = findElDeep(uiSchema.elements as FlatElement[], selectedScope);
+  const el = findElDeep(uiSchema.elements, selectedScope);
   if (!el) return null;
 
   const isLabel = el.type === 'Label' && !el.options?.variant;
@@ -58,21 +58,21 @@ export function StructuralPropertiesPanel({
     el.type === 'Label' && el.options?.variant === 'section-header';
   const isAnnotation =
     el.type === 'Label' && el.options?.variant === 'annotation';
-  const isGroup = el.type === 'Group' || el.type === 'GroupContainer';
-  const isLayout =
-    el.type === 'HorizontalLayout' || el.type === 'ColumnContainer';
+  const isGroup = el.type === 'GroupContainer';
+  const isLayout = el.type === 'ColumnContainer';
 
   const updateElement = (patch: Record<string, unknown>) => {
-    function patchDeep(elements: FlatElement[]): FlatElement[] {
+    function patchDeep(elements: UiElement[]): UiElement[] {
       return elements.map((e) => {
-        if (e.scope === selectedScope || e.id === selectedScope)
-          return { ...e, ...patch };
-        if (e.columns)
-          return {
-            ...e,
-            columns: e.columns.map((col) => patchDeep(col)),
-          };
-        if (e.children) return { ...e, children: patchDeep(e.children) };
+        if (
+          e.id === selectedScope ||
+          ('scope' in e && e.scope === selectedScope)
+        )
+          return { ...e, ...patch } as UiElement;
+        if (e.type === 'ColumnContainer')
+          return { ...e, columns: e.columns.map((col) => patchDeep(col)) };
+        if (e.type === 'GroupContainer')
+          return { ...e, children: patchDeep(e.children) };
         return e;
       });
     }
@@ -81,7 +81,7 @@ export function StructuralPropertiesPanel({
         ...fieldState,
         uiSchema: {
           ...uiSchema,
-          elements: patchDeep(uiSchema.elements as FlatElement[]),
+          elements: patchDeep(uiSchema.elements),
         },
       }),
     );

@@ -1,7 +1,5 @@
 /**
- * Editor-Reducer — verarbeitet ausschließlich den Form-First-Zustand
- * (FieldAwareState). Der frühere Baum-State (SchemaElement /
- * EditorUISchemaElement) wurde mit ADR 0001 Stufe 2 entfernt.
+ * Editor-Reducer für den Form-First-Zustand (FieldAwareState).
  */
 import { SET_FIELD_RULE } from '../../properties/fieldPropertiesActions';
 import { fieldPropertiesReducer } from '../../properties/fieldPropertiesReducer';

@@ -2,6 +2,24 @@
 
 Stand: Juni 2026. Reihenfolge = grobe Priorität; keine Terminzusagen.
 
+## Kriterien für 1.0
+
+Eine 1.0 ist ein Stabilitätsversprechen (Breaking nur noch per Major).
+Voraussetzungen:
+
+1. **API-Beruhigung:** mindestens zwei 0.x-Releases ohne Breaking Changes
+   nach der State-Konsolidierung (0.3.0)
+2. **Definierte Public API:** dokumentierte Trennung offiziell/intern in
+   den Paket-Exporten
+3. **Persistenzformat-Garantie:** dokumentierte Migrationspolitik für
+   `jfd_fieldState_v1` („wird von allen 1.x gelesen")
+4. **Praxis-Härtung:** mindestens ein produktiver Pilot mit Issue-Zyklus
+5. **npm-Veröffentlichung** von `@jsonforms-designer/editor` mit erstem
+   Embedder-Feedback
+6. **Externes BITV-2.0-Audit** bestanden
+7. **XDF-Entscheidung:** Export auf 3.x gehoben oder 2.0 bewusst als
+   Scope dokumentiert
+
 ## Kurzfristig (0.3.x)
 
 - [ ] **Release v0.3.0** mit den konsolidierten Änderungen (CI, self-hosted

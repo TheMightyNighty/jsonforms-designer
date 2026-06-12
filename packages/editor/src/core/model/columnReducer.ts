@@ -178,7 +178,7 @@ export function columnDropReducer<S extends FieldAwareState>(
   }
 
   // ColumnContainer finden und Spalte aktualisieren
-  const nextElements = (state.uiSchema.elements as UiElement[]).map((el) => {
+  const nextElements = state.uiSchema.elements.map((el) => {
     if (el.id !== containerId) return el;
     if (el.type !== 'ColumnContainer') return el;
     const col = el as ColumnContainer;
@@ -215,15 +215,12 @@ export function moveElementReducer<S extends FieldAwareState>(
   } = action.payload;
 
   // Element finden
-  const found = findElement(state.uiSchema.elements as UiElement[], elementId);
+  const found = findElement(state.uiSchema.elements, elementId);
   if (!found) return state;
   const { el: movingEl } = found;
 
-  // Aus bisheriger Position entfernen
-  const withoutEl = removeById(
-    state.uiSchema.elements as UiElement[],
-    elementId,
-  );
+  // Aus aktueller Position entfernen
+  const withoutEl = removeById(state.uiSchema.elements, elementId);
 
   // In Zielposition einfügen
   let nextElements: UiElement[];
@@ -272,7 +269,7 @@ export function reorderInColumnReducer<S extends FieldAwareState>(
   if (action.type !== REORDER_IN_COLUMN) return state;
   const { containerId, columnIndex, elementId, insertAfterId } = action.payload;
 
-  const nextElements = (state.uiSchema.elements as UiElement[]).map((el) => {
+  const nextElements = state.uiSchema.elements.map((el) => {
     if (el.id !== containerId || el.type !== 'ColumnContainer') return el;
     const col = el as ColumnContainer;
     const nextColumns = col.columns.map((colItems: UiElement[], ci: number) => {

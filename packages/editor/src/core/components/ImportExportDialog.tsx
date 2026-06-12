@@ -17,7 +17,7 @@ import { useRef, useState } from 'react';
 
 import { useI18n } from '../../i18n';
 import { FieldAwareState } from '../model/addFieldReducer';
-import { FlatElement, fromLegacy, toLegacy } from '../model/uiElements';
+import { FlatElement, fromLegacy, UiElement } from '../model/uiElements';
 import { sanitizeParsedJson } from '../util/sanitizeJson';
 import { downloadXdf } from '../util/xdfExport';
 import { FormattedJson } from './Formatted';
@@ -31,9 +31,9 @@ interface ImportExportDialogProps {
 
 /** Baut aus fieldState ein reines JSONForms-uiSchema (ohne interne IDs) */
 function buildExportUiSchema(fieldState: FieldAwareState): object {
-  const elements = fieldState.uiSchema.elements as FlatElement[];
+  const elements = fieldState.uiSchema.elements;
 
-  function convert(el: FlatElement): object | null {
+  function convert(el: UiElement): object | null {
     if (!el) return null;
     if (el.type === 'ColumnContainer' && el.columns) {
       return {
@@ -44,11 +44,9 @@ function buildExportUiSchema(fieldState: FieldAwareState): object {
         })),
       };
     }
-    if (el.type === 'GroupContainer' && (el.children || el.elements)) {
-      const kids = (el.children ?? el.elements ?? [])
-        .map(convert)
-        .filter(Boolean);
-      return { type: 'Group', label: el.label ?? '', elements: kids };
+    if (el.type === 'GroupContainer') {
+      const kids = el.children.map(convert).filter(Boolean);
+      return { type: 'Group', label: el.label, elements: kids };
     }
     if (el.type === 'Label') {
       return { type: 'Label', text: el.label ?? '' };
@@ -67,14 +65,11 @@ function buildExportUiSchema(fieldState: FieldAwareState): object {
 }
 
 /** Baut aus einem importierten uiSchema einen fieldState-kompatiblen uiSchema-Eintrag */
-function buildImportElements(uiSchemaRaw: unknown): FlatElement[] {
+function buildImportElements(uiSchemaRaw: unknown): UiElement[] {
   const raw = uiSchemaRaw as { elements?: unknown[] };
   const elements: unknown[] =
     raw?.elements ?? (Array.isArray(uiSchemaRaw) ? uiSchemaRaw : []);
-  return elements.map((el) => {
-    const converted = fromLegacy(el as FlatElement);
-    return toLegacy(converted) as FlatElement;
-  });
+  return elements.map((el) => fromLegacy(el as FlatElement));
 }
 
 export function ImportExportDialog({

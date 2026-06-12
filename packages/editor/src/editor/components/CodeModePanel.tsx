@@ -7,7 +7,7 @@ import { Alert, Box, Tab, Tabs, useTheme } from '@mui/material';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FieldAwareState } from '../../core/model/addFieldReducer';
-import { FlatElement, fromLegacy, toLegacy } from '../../core/model/uiElements';
+import { FlatElement, fromLegacy } from '../../core/model/uiElements';
 
 /** Baut JSONForms-kompatibles uiSchema für Monaco-Anzeige */
 function buildDisplayUiSchema(fieldState: FieldAwareState): object {
@@ -47,10 +47,7 @@ function buildDisplayUiSchema(fieldState: FieldAwareState): object {
 /** Parst bearbeitetes uiSchema und konvertiert zurück in internes Format */
 function parseUiSchema(raw: unknown): FieldAwareState['uiSchema'] {
   const elements = (raw as { elements?: unknown[] })?.elements ?? [];
-  const converted = elements.map((el) => {
-    const uiEl = fromLegacy(el as FlatElement);
-    return toLegacy(uiEl) as FlatElement;
-  });
+  const converted = elements.map((el) => fromLegacy(el as FlatElement));
   return { type: 'VerticalLayout', elements: converted };
 }
 

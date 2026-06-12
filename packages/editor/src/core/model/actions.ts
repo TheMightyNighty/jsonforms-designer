@@ -1,10 +1,6 @@
 /**
- * Action-Union des Editors.
- *
- * Enthält ausschließlich Form-First-Actions (FieldAwareState). Die frühere
- * Baum-Action-Welt (SET_SCHEMA, ADD_SCOPED_ELEMENT_TO_LAYOUT, …) wurde mit
- * ADR 0001 Stufe 2 entfernt — extern geladene Schemas laufen über
- * `fieldStateFromSchemas()` + SET_FIELD_STATE.
+ * Action-Union des Editors (Form-First). Extern geladene Schemas laufen
+ * über `fieldStateFromSchemas()` + SET_FIELD_STATE.
  */
 import type {
   SetFieldRuleAction,

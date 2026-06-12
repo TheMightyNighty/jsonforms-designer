@@ -13,6 +13,8 @@ interface BaseUiElement {
   id: string;
   type: UiElementType;
   options?: Record<string, unknown>;
+  /** JSONForms-Rule für bedingte Anzeige (SHOW/HIDE/DISABLE). */
+  rule?: unknown;
 }
 
 export interface ControlElement extends BaseUiElement {
@@ -24,6 +26,12 @@ export interface LabelElement extends BaseUiElement {
   type: 'Label';
   label: string;
   variant?: 'heading' | 'text' | 'info' | 'warning';
+  /**
+   * Legacy-Identität: strukturelle Elemente aus dem Feldtypen-Katalog tragen
+   * einen Pseudo-Scope (z. B. '#/properties/_label'), über den Selektion und
+   * Tab-Zuordnung historisch laufen. Wird von den Konvertern erhalten.
+   */
+  scope?: string;
 }
 
 export interface ColumnContainer extends BaseUiElement {
@@ -44,13 +52,20 @@ export type UiElement =
   | ColumnContainer
   | GroupContainer;
 
-/** Flaches Legacy-Element wie in uiSchema.elements */
+/**
+ * Loses Grenz-Format („parse, don't validate"): beschreibt, was von außen
+ * hereinkommen darf — localStorage-Stände (auch v0.1 ohne ids), Datei-Import,
+ * Code-Modus-JSON, Templates, JSONForms-uiSchemas. Alles außer `type` ist
+ * optional; `fromLegacy()` normalisiert in die strikte `UiElement`-Union,
+ * mit der State und Reducer arbeiten.
+ */
 export type FlatElement = {
   type: string;
   scope?: string;
   label?: string;
   id?: string;
   options?: Record<string, unknown>;
+  rule?: unknown;
   elements?: FlatElement[];
   children?: FlatElement[];
   columns?: FlatElement[][];
@@ -75,6 +90,7 @@ export function fromLegacy(el: FlatElement): UiElement {
       type: 'Control',
       scope: el.scope ?? '',
       options: el.options,
+      rule: el.rule,
     };
   }
   if (el.type === 'Label') {
@@ -84,7 +100,9 @@ export function fromLegacy(el: FlatElement): UiElement {
       type: 'Label',
       label: el.label ?? '',
       variant,
+      scope: el.scope,
       options: el.options,
+      rule: el.rule,
     };
   }
   if (el.type === 'HorizontalLayout' || el.type === 'ColumnContainer') {
@@ -97,6 +115,7 @@ export function fromLegacy(el: FlatElement): UiElement {
         widths,
         columns: el.columns.map((col) => col.map(fromLegacy)),
         options: el.options,
+        rule: el.rule,
       };
     }
     // Legacy: elements → erste Spalte befüllen
@@ -109,6 +128,7 @@ export function fromLegacy(el: FlatElement): UiElement {
       type: 'ColumnContainer',
       widths,
       columns: cols,
+      rule: el.rule,
     };
   }
   if (el.type === 'Group' || el.type === 'GroupContainer') {
@@ -119,6 +139,7 @@ export function fromLegacy(el: FlatElement): UiElement {
       label: el.label ?? 'Gruppe',
       children,
       options: el.options,
+      rule: el.rule,
     };
   }
   // Fallback
@@ -135,14 +156,22 @@ export function fromLegacy(el: FlatElement): UiElement {
 // ---------------------------------------------------------------------------
 export function toLegacy(el: UiElement): FlatElement {
   if (el.type === 'Control') {
-    return { id: el.id, type: 'Control', scope: el.scope, options: el.options };
+    return {
+      id: el.id,
+      type: 'Control',
+      scope: el.scope,
+      options: el.options,
+      rule: el.rule,
+    };
   }
   if (el.type === 'Label') {
     return {
       id: el.id,
       type: 'Label',
       label: el.label,
+      scope: el.scope,
       options: { ...el.options, variant: el.variant },
+      rule: el.rule,
     };
   }
   if (el.type === 'ColumnContainer') {
@@ -152,6 +181,7 @@ export function toLegacy(el: UiElement): FlatElement {
       widths: el.widths,
       columns: el.columns.map((col) => col.map(toLegacy)),
       options: el.options,
+      rule: el.rule,
     };
   }
   if (el.type === 'GroupContainer') {
@@ -161,6 +191,7 @@ export function toLegacy(el: UiElement): FlatElement {
       label: el.label,
       children: el.children.map(toLegacy),
       options: el.options,
+      rule: el.rule,
     };
   }
   return { type: 'Label', label: '' };
@@ -170,6 +201,8 @@ export function toLegacy(el: UiElement): FlatElement {
 // toJsonForms: internes Format → JSONForms-uiSchema (für Vorschau + Renderer)
 // ---------------------------------------------------------------------------
 export function toJsonForms(el: UiElement | FlatElement): object | null {
+  const rule = el.rule !== undefined ? { rule: el.rule } : {};
+
   if (el.type === 'ColumnContainer' && el.columns) {
     const columns = el.columns as Array<UiElement[] | FlatElement[]>;
     return {
@@ -178,6 +211,7 @@ export function toJsonForms(el: UiElement | FlatElement): object | null {
         type: 'VerticalLayout',
         elements: col.map(toJsonForms).filter(Boolean),
       })),
+      ...rule,
     };
   }
   if (el.type === 'GroupContainer' && el.children) {
@@ -185,19 +219,21 @@ export function toJsonForms(el: UiElement | FlatElement): object | null {
       type: 'Group',
       label: el.label ?? '',
       elements: el.children.map(toJsonForms).filter(Boolean),
+      ...rule,
     };
   }
   if (el.type === 'Label') {
-    return { type: 'Label', text: el.label ?? '' };
+    return { type: 'Label', text: el.label ?? '', ...rule };
   }
   if (el.type === 'Control' && el.scope) {
-    return { type: 'Control', scope: el.scope, options: el.options };
+    return { type: 'Control', scope: el.scope, options: el.options, ...rule };
   }
   // Legacy HorizontalLayout (Fallback)
   if (el.type === 'HorizontalLayout' && el.elements) {
     return {
       type: 'HorizontalLayout',
       elements: (el.elements ?? []).map(toJsonForms).filter(Boolean),
+      ...rule,
     };
   }
   return null;

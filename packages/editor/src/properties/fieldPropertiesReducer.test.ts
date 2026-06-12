@@ -28,6 +28,7 @@ function stateWithField(): FieldAwareState {
       type: 'VerticalLayout',
       elements: [
         {
+          id: 'ctrl_v',
           type: 'Control',
           scope: '#/properties/vorname',
           options: { placeholder: '' },
@@ -130,7 +131,7 @@ describe('UPDATE_FIELD_PROPERTY placeholder', () => {
     );
     const next = fieldPropertiesReducer(state, action);
     const control = next.uiSchema.elements.find(
-      (el) => el.scope === '#/properties/vorname',
+      (el) => 'scope' in el && el.scope === '#/properties/vorname',
     );
     expect(control?.options?.['placeholder']).toBe('z. B. Max');
   });
@@ -143,7 +144,7 @@ describe('UPDATE_FIELD_PROPERTY placeholder', () => {
       },
       uiSchema: {
         type: 'VerticalLayout',
-        elements: [{ type: 'Control', scope: '#/properties/x' }],
+        elements: [{ id: 'ctrl_x', type: 'Control', scope: '#/properties/x' }],
       },
       tabs: [],
       activeTabIndex: 0,

@@ -17,7 +17,7 @@ import { Dispatch, useEffect, useState } from 'react';
 
 import { EditorAction } from '../core/model/actions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
-import { FlatElement } from '../core/model/uiElements';
+import { UiElement } from '../core/model/uiElements';
 import {
   createSetFieldRuleAction,
   RuleEffect,
@@ -35,24 +35,25 @@ function findRule(
   uiSchema: FieldAwareState['uiSchema'],
   scope: string,
 ): UISchemaRule | null {
-  type RuleElement = FlatElement & { rule?: UISchemaRule | null };
-  function search(elements: RuleElement[]): UISchemaRule | null {
+  function search(elements: UiElement[]): UISchemaRule | null {
     for (const el of elements) {
-      if (el.scope === scope) return el.rule ?? null;
-      if (el.columns) {
+      if ('scope' in el && el.scope === scope) {
+        return (el.rule as UISchemaRule | undefined) ?? null;
+      }
+      if (el.type === 'ColumnContainer') {
         for (const col of el.columns) {
           const found = search(col);
           if (found !== null) return found;
         }
       }
-      if (el.children) {
+      if (el.type === 'GroupContainer') {
         const found = search(el.children);
         if (found !== null) return found;
       }
     }
     return null;
   }
-  return search(uiSchema.elements as RuleElement[]);
+  return search(uiSchema.elements);
 }
 
 /** Alle Felder aus dem Schema als Auswahlliste */

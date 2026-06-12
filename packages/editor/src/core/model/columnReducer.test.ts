@@ -15,7 +15,7 @@ import {
   moveElementReducer,
   reorderInColumnReducer,
 } from './columnReducer';
-import { FlatElement } from './uiElements';
+import { UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -32,7 +32,7 @@ function stateWithColumn(): FieldAwareState {
           type: 'ColumnContainer',
           widths: [1, 1],
           columns: [[], []],
-        } as FlatElement,
+        } as UiElement,
       ],
     },
     tabs: [],
@@ -60,7 +60,7 @@ function stateWithFilledColumn(): FieldAwareState {
             [{ id: 'ctrl_001', type: 'Control', scope: '#/properties/name' }],
             [],
           ],
-        } as FlatElement,
+        } as UiElement,
       ],
     },
     tabs: [],
@@ -85,10 +85,12 @@ describe('columnDropReducer()', () => {
       propertyKey: 'textfeld',
     });
     const next = columnDropReducer(state, action);
-    const col = (next.uiSchema.elements[0] as FlatElement).columns![0];
+    const col = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns[0];
     expect(col).toHaveLength(1);
     expect(col[0].type).toBe('Control');
-    expect(col[0].scope).toBe('#/properties/textfeld');
+    expect('scope' in col[0] && col[0].scope).toBe('#/properties/textfeld');
   });
 
   it('ergänzt schema.properties', () => {
@@ -138,7 +140,9 @@ describe('columnDropReducer()', () => {
       propertyKey: '_label',
     });
     const next = columnDropReducer(state, action);
-    const col = (next.uiSchema.elements[0] as FlatElement).columns![0];
+    const col = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns[0];
     expect(col[0].type).toBe('Label');
     expect(next.schema.properties).toEqual({});
   });
@@ -169,7 +173,7 @@ describe('reorderInColumnReducer()', () => {
               ],
               [],
             ],
-          } as FlatElement,
+          } as UiElement,
         ],
       },
       tabs: [],
@@ -186,7 +190,9 @@ describe('reorderInColumnReducer()', () => {
       'ctrl_b',
     );
     const next = reorderInColumnReducer(state, action);
-    const col = (next.uiSchema.elements[0] as FlatElement).columns![0];
+    const col = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns[0];
     expect(col[0].id).toBe('ctrl_b');
     expect(col[1].id).toBe('ctrl_a');
   });
@@ -205,12 +211,12 @@ describe('moveElementReducer()', () => {
     });
     const next = moveElementReducer(state, action);
     // Spalte ist leer
-    const col = (next.uiSchema.elements[0] as FlatElement).columns![0];
+    const col = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns[0];
     expect(col).toHaveLength(0);
     // Element ist in root
     const rootElements = next.uiSchema.elements;
-    expect(
-      rootElements.some((el) => (el as FlatElement).id === 'ctrl_001'),
-    ).toBe(true);
+    expect(rootElements.some((el) => el.id === 'ctrl_001')).toBe(true);
   });
 });

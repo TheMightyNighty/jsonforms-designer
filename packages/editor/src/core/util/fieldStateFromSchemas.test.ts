@@ -26,10 +26,9 @@ describe('fieldStateFromSchemas()', () => {
     const state = fieldStateFromSchemas(SCHEMA, undefined)!;
     expect(state.schema.title).toBe('Antrag');
     expect(state.schema.required).toEqual(['vorname']);
-    expect(state.uiSchema.elements.map((e) => e.scope)).toEqual([
-      '#/properties/vorname',
-      '#/properties/alter',
-    ]);
+    expect(
+      state.uiSchema.elements.map((e) => ('scope' in e ? e.scope : undefined)),
+    ).toEqual(['#/properties/vorname', '#/properties/alter']);
     expect(state.uiSchema.elements.every((e) => e.type === 'Control')).toBe(
       true,
     );

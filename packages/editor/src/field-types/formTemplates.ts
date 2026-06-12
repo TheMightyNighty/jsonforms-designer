@@ -1,11 +1,11 @@
-import { FieldAwareState } from '../core/model/addFieldReducer';
+import { FieldStateInput } from '../core/model/addFieldReducer';
 
 export interface FormTemplate {
   id: string;
   displayName: string;
   description: string;
   icon: string;
-  state: FieldAwareState;
+  state: FieldStateInput;
 }
 
 export const FORM_TEMPLATES: FormTemplate[] = [

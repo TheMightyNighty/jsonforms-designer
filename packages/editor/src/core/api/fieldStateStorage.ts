@@ -11,6 +11,7 @@
  * werden nach dem Mount per SET_FIELD_STATE hydriert.
  */
 import { FieldAwareState } from '../model/addFieldReducer';
+import { FlatElement, fromLegacy } from '../model/uiElements';
 import { sanitizeParsedJson } from '../util/sanitizeJson';
 
 export interface FieldStateStorageService {
@@ -36,7 +37,12 @@ export const normalizeFieldState = (
   if (!parsed?.schema || !parsed?.uiSchema) return undefined;
   return {
     schema: parsed.schema,
-    uiSchema: parsed.uiSchema,
+    uiSchema: {
+      type: parsed.uiSchema.type ?? 'VerticalLayout',
+      elements: ((parsed.uiSchema.elements ?? []) as FlatElement[]).map(
+        fromLegacy,
+      ),
+    },
     tabs: parsed.tabs ?? [],
     activeTabIndex: parsed.activeTabIndex ?? 0,
     tabAssignments: parsed.tabAssignments ?? {},
