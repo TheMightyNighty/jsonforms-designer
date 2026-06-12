@@ -1,6 +1,6 @@
 {
   "name": "jsonforms-designer-root",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Modernized fork of eclipsesource/jsonforms-editor — visual editor for JSON Schema and JSON Forms UI Schema",
   "license": "MIT",

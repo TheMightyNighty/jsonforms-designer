@@ -7,6 +7,10 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+---
+
+## [0.3.0] — 2026-06-12
+
 ### Geändert (Performance)
 - **Code-Modus lädt lazy:** Monaco (≈ 1 MB gzip) liegt jetzt in einem eigenen Chunk, der erst beim Öffnen des Code-Modus geladen wird (racefrei: `loader.config` lebt im selben Chunk). Initial-Bundle: **≈ 0,48 MB gzip** (zwischenzeitlich 1,5 MB, vor der Monaco-Umstellung 0,55 MB). Die toten Baum-Module (Stufe 2) zahlen mit ein. `CodeModePanel` ist kein Public-Export mehr (nötig für den Split).
 
@@ -16,6 +20,10 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - **vitest auf ≥ 3.2.6** (GHSA-5xrq-8626-4rwp, critical: Datei-Lesezugriff über den Vitest-UI-Server).
 
 ### Hinzugefügt
+- **Unit-Tests für `xdfExport`** (XML-Escaping/Injection-Schutz, Typ-Mapping, Codelisten, Einschränkungen) **und `fimApiService`** (URL-Bau, Header, Normalisierung, Fehlerfälle) — 28 neue Tests.
+- **CI-Workflow** (GitHub Actions): Lint, Typecheck, Tests und Build laufen bei jedem Push/PR.
+- **E2E-Smoke-Tests** (Playwright, `packages/app/e2e/`): sichern die Kernpfade gegen den **Produktions-Build** ab — App-Start, Drag & Drop (inkl. Auto-Save über Reload), Eigenschaften-Bearbeitung, JSONForms-Vorschau, Code-Modus (verifiziert: Monaco lädt lokal, **null CDN-Requests**) und Export-Dialog. Lokal: `npm run test:e2e`; in der CI nach dem Build.
+- **Persistenz-Adapter** (`FieldStateStorageService`): Der Formular-Zustand wird nicht mehr fest in `localStorage` gespeichert, sondern über eine austauschbare Schnittstelle (Prop `fieldStateStorage` am `<JsonFormsEditor>`). Default bleibt localStorage (`LocalStorageFieldStateService`); asynchrone Adapter (REST-Backend) werden nach dem Mount hydriert. README enthält ein HTTP-Adapter-Beispiel.
 - **Qualitäts-Gates verschärft:** Coverage-Schwellwerte als Regressions-Gate (`@vitest/coverage-v8`, Werte knapp unter Ist-Stand, werden nur angehoben); erste **Komponenten-Tests** mit Testing Library (Palette-Tastaturpfad, ErrorBoundary→onError, MetadataDialog); E2E-Suite läuft zusätzlich in **Firefox** (16 Läufe gesamt).
 - **Betriebsartefakte:** Multi-Stage-`Dockerfile` (node → nginx, Healthcheck, Port 8080), Referenz-`nginx.conf` (SPA-Fallback, Cache-Strategie, Security-Header, auskommentierter FIM-Reverse-Proxy für abgeschottete Netze) und `docs/BETRIEB.md` (Deploy, CSP-Erklärung, Persistenz, Diagnose, Update-Prozess).
 - **Betriebs-Diagnostik:** Neue Prop `onError(error, kontext)` als zentraler Fehlerkanal (Laden, Auto-Save, Render-Fehler der ErrorBoundary) — Default bleibt `console.error`. Die Editor-Version (aus `package.json`) wird im Header angezeigt.
@@ -29,10 +37,6 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - **Einfügen hinter Spalten-/Gruppen-Containern** landete am Listenende statt direkt dahinter (`insertControl` matchte nur `scope`, Container haben aber nur eine `id`).
 - **Strukturelle Elemente (Überschriften, Hinweise) in mehrstufigen Formularen** wurden immer Tab 1 zugeordnet (Identitäts-Mismatch zwischen Element-id und Pseudo-Scope der Tab-Zuweisung).
 - **Reorder auf die oberste Drop-Zone** sortierte das Element fälschlich ans Ende statt an den Anfang (`reorderElementReducer` ohne `insertAfterKey`) — beim Bau des Tastatur-Umsortierens gefunden, durch 4 neue Reducer-Tests abgesichert.
-- **Unit-Tests für `xdfExport`** (XML-Escaping/Injection-Schutz, Typ-Mapping, Codelisten, Einschränkungen) **und `fimApiService`** (URL-Bau, Header, Normalisierung, Fehlerfälle) — 28 neue Tests.
-- **CI-Workflow** (GitHub Actions): Lint, Typecheck, Tests und Build laufen bei jedem Push/PR.
-- **E2E-Smoke-Tests** (Playwright, `packages/app/e2e/`): sichern die Kernpfade gegen den **Produktions-Build** ab — App-Start, Drag & Drop (inkl. Auto-Save über Reload), Eigenschaften-Bearbeitung, JSONForms-Vorschau, Code-Modus (verifiziert: Monaco lädt lokal, **null CDN-Requests**) und Export-Dialog. Lokal: `npm run test:e2e`; in der CI nach dem Build.
-- **Persistenz-Adapter** (`FieldStateStorageService`): Der Formular-Zustand wird nicht mehr fest in `localStorage` gespeichert, sondern über eine austauschbare Schnittstelle (Prop `fieldStateStorage` am `<JsonFormsEditor>`). Default bleibt localStorage (`LocalStorageFieldStateService`); asynchrone Adapter (REST-Backend) werden nach dem Mount hydriert. README enthält ein HTTP-Adapter-Beispiel.
 
 ### Geändert (Architektur)
 - **State-Konsolidierung, Stufe 3 (ADR 0001):** `uiSchema.elements` ist jetzt die strikte `UiElement`-Union (ids verpflichtend, Narrowing statt Casts in allen Reducern/Komponenten). Lose Eingangsformen (`FlatElement`/`FieldStateInput`: Templates, Import, Code-Modus, Storage, SchemaService) werden ausschließlich an den Grenzen über `fromLegacy()` normalisiert — alte gespeicherte Stände werden beim Laden automatisch migriert.
@@ -104,7 +108,8 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - OpenCode-Integration (Validatoren, UI-Bausteine)
 - DE/EN-Lokalisierung
 
-[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/releases/tag/v0.1.0
