@@ -38,7 +38,7 @@ export interface SetFieldRuleAction {
 
 export function createSetFieldRuleAction(
   scope: string,
-  rule: UISchemaRule | null
+  rule: UISchemaRule | null,
 ): SetFieldRuleAction {
   return { type: SET_FIELD_RULE, payload: { scope, rule } };
 }
@@ -49,7 +49,11 @@ export function createSetFieldRuleAction(
 
 export const UPDATE_FIELD_PROPERTY = 'UPDATE_FIELD_PROPERTY' as const;
 
-export type FieldPropertyKey = 'label' | 'description' | 'placeholder' | 'required';
+export type FieldPropertyKey =
+  | 'label'
+  | 'description'
+  | 'placeholder'
+  | 'required';
 
 export interface UpdateFieldPropertyPayload {
   /** scope des Controls, z. B. "#/properties/vorname" */
@@ -68,7 +72,7 @@ export interface UpdateFieldPropertyAction {
 export function createUpdateFieldPropertyAction(
   scope: string,
   property: FieldPropertyKey,
-  value: string | boolean
+  value: string | boolean,
 ): UpdateFieldPropertyAction {
   return {
     type: UPDATE_FIELD_PROPERTY,

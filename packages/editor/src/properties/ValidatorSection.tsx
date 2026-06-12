@@ -3,14 +3,22 @@
  * x-opencode-validators wird im Schema hinterlegt.
  * Nutzt useEditorContext für vollen fieldState (tabs, tabAssignments etc.).
  */
-import { Box, Checkbox, CircularProgress, Divider, FormControlLabel, Typography } from '@mui/material';
+import { JsonSchema7 } from '@jsonforms/core';
+import {
+  Box,
+  Checkbox,
+  CircularProgress,
+  Divider,
+  FormControlLabel,
+  Typography,
+} from '@mui/material';
 import { Dispatch, useEffect, useState } from 'react';
 
 import { useEditorContext } from '../core/context';
-import { useI18n } from '../i18n';
-import { createSetFieldStateAction } from '../core/model/addFieldActions';
 import { EditorAction } from '../core/model/actions';
+import { createSetFieldStateAction } from '../core/model/addFieldActions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
+import { useI18n } from '../i18n';
 import { defaultOpenCodeService } from '../opencode/mockOpenCodeService';
 import { OpenCodeBaustein, OpenCodeService } from '../opencode/openCodeService';
 
@@ -18,7 +26,7 @@ interface ValidatorSectionProps {
   selectedScope: string;
   schema: FieldAwareState['schema'];
   uiSchema: FieldAwareState['uiSchema'];
-  dispatch: Dispatch<EditorAction | any>;
+  dispatch: Dispatch<EditorAction>;
   service?: OpenCodeService;
 }
 
@@ -42,7 +50,9 @@ export function ValidatorSection({
   }, [service]);
 
   const key = selectedScope.replace(/^#\/properties\//, '');
-  const fieldDef = (schema.properties?.[key] ?? {}) as any;
+  const fieldDef = (schema.properties?.[key] ?? {}) as JsonSchema7 & {
+    'x-opencode-validators'?: string[];
+  };
   const current: string[] = fieldDef['x-opencode-validators'] ?? [];
 
   const toggle = (id: string) => {
@@ -66,29 +76,47 @@ export function ValidatorSection({
         tabAssignments: fieldState.tabAssignments,
         lineNumbersEnabled: fieldState.lineNumbersEnabled,
         sectionColors: fieldState.sectionColors,
-      }) as unknown as EditorAction
+      }),
     );
   };
 
   if (loading) {
-    return <Box sx={{ py: 1, display: 'flex', justifyContent: 'center' }}><CircularProgress size={16} /></Box>;
+    return (
+      <Box sx={{ py: 1, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress size={16} />
+      </Box>
+    );
   }
   if (validators.length === 0) return null;
 
   return (
     <Box>
       <Divider sx={{ my: 1 }} />
-      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, display: 'block', mb: 0.5 }}>
+      <Typography
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+          fontWeight: 500,
+          display: 'block',
+          mb: 0.5,
+        }}
+      >
         {t.properties.validatoren}
       </Typography>
       {validators.map((v) => (
         <FormControlLabel
           key={v.id}
           control={
-            <Checkbox size="small" checked={current.includes(v.id)} onChange={() => toggle(v.id)} />
+            <Checkbox
+              size="small"
+              checked={current.includes(v.id)}
+              onChange={() => toggle(v.id)}
+            />
           }
           label={
-            <Typography variant="body2" title={v.description}>{v.displayName}</Typography>
+            <Typography variant="body2" title={v.description}>
+              {v.displayName}
+            </Typography>
           }
           sx={{ display: 'flex', ml: 0, mb: 0.25 }}
         />

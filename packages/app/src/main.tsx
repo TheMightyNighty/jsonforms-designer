@@ -1,8 +1,10 @@
+// Self-hosted icon font (kein CDN).
+import '@tabler/icons-webfont/dist/tabler-icons.min.css';
+// Monaco-Worker-Umgebung (Vite-?worker-Rezept).
+import './monacoSetup';
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-
-// Self-hosted icon font (previously loaded from a CDN without SRI).
-import '@tabler/icons-webfont/dist/tabler-icons.min.css';
 
 import { App } from './App';
 

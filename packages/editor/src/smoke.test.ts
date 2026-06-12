@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { EDITOR_VERSION } from './index';
+import pkg from '../package.json';
+import { EDITOR_VERSION } from './version';
 
 describe('package smoke test', () => {
-  it('exposes a version', () => {
-    expect(EDITOR_VERSION).toBe('0.1.0');
+  it('EDITOR_VERSION entspricht der package.json-Version (SemVer)', () => {
+    expect(EDITOR_VERSION).toBe(pkg.version);
+    expect(EDITOR_VERSION).toMatch(/^\d+\.\d+\.\d+/);
   });
 });

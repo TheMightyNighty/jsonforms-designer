@@ -3,19 +3,12 @@
  * Licensed under MIT
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  */
-import { JsonFormsRendererRegistryEntry } from '@jsonforms/core';
 import { Box } from '@mui/material';
 import React from 'react';
 
 import { Editor } from './Editor';
 
-interface EditorPanelProps {
-  editorRenderers: JsonFormsRendererRegistryEntry[];
-}
-
-export const EditorPanel: React.FC<EditorPanelProps> = ({
-  editorRenderers,
-}) => {
+export const EditorPanel: React.FC = () => {
   return (
     <Box
       sx={{
@@ -26,7 +19,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
         overflow: 'auto',
       }}
     >
-      <Editor editorRenderers={editorRenderers} />
+      <Editor />
     </Box>
   );
 };

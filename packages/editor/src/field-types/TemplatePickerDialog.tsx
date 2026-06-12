@@ -12,8 +12,8 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 
-import { FORM_TEMPLATES, FormTemplate } from './formTemplates';
 import { useI18n } from '../i18n';
+import { FORM_TEMPLATES, FormTemplate } from './formTemplates';
 
 interface TemplatePickerDialogProps {
   open: boolean;
@@ -41,7 +41,9 @@ export function TemplatePickerDialog({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t.dialog.templateTitle}</DialogTitle>
       <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 0.5 }}>
+        <Box
+          sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 0.5 }}
+        >
           {FORM_TEMPLATES.map((tpl) => (
             <Card
               key={tpl.id}
@@ -52,7 +54,9 @@ export function TemplatePickerDialog({
               }}
             >
               <CardActionArea onClick={() => setSelected(tpl.id)}>
-                <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <CardContent
+                  sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+                >
                   <Box
                     component="i"
                     className={`ti ti-${tpl.icon}`}
@@ -60,7 +64,9 @@ export function TemplatePickerDialog({
                     aria-hidden
                   />
                   <Box>
-                    <Typography variant="subtitle2">{tpl.displayName}</Typography>
+                    <Typography variant="subtitle2">
+                      {tpl.displayName}
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {tpl.description}
                     </Typography>

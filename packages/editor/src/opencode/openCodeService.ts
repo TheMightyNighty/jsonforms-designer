@@ -1,4 +1,3 @@
-
 export type OpenCodeBausteinKategorie = 'validator' | 'ui-baustein';
 
 export interface OpenCodeBaustein {
@@ -7,14 +6,19 @@ export interface OpenCodeBaustein {
   description: string;
   kategorie: OpenCodeBausteinKategorie;
   icon: string;
-  parameters?: Record<string, {
-    label: string;
-    type: 'string' | 'number' | 'boolean';
-    default?: unknown;
-  }>;
+  parameters?: Record<
+    string,
+    {
+      label: string;
+      type: 'string' | 'number' | 'boolean';
+      default?: unknown;
+    }
+  >;
 }
 
 export interface OpenCodeService {
   getBausteine(): Promise<OpenCodeBaustein[]>;
-  getBausteineByKategorie(kategorie: OpenCodeBausteinKategorie): Promise<OpenCodeBaustein[]>;
+  getBausteineByKategorie(
+    kategorie: OpenCodeBausteinKategorie,
+  ): Promise<OpenCodeBaustein[]>;
 }

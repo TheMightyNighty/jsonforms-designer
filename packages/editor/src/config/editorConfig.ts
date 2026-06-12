@@ -1,6 +1,6 @@
+import { FieldGroup } from '../field-types/fieldTypes';
 import { FimService } from '../fim/fimService';
 import { OpenCodeService } from '../opencode/openCodeService';
-import { FieldGroup } from '../field-types/fieldTypes';
 
 export interface FimModuleConfig {
   enabled: boolean;
@@ -30,7 +30,7 @@ export interface EditorConfig {
 /** Vollständige Config mit allen Defaults. Wird beim Mergen als Basis verwendet. */
 export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
   modules: {
-    fim:      { enabled: true },
+    fim: { enabled: true },
     openCode: { enabled: true },
   },
   palette: {

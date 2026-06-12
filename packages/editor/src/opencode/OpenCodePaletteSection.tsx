@@ -16,9 +16,9 @@ import {
 import { useEffect, useState } from 'react';
 import { useDrag } from 'react-dnd';
 
-import { OpenCodeBaustein, OpenCodeService } from './openCodeService';
 import { useI18n } from '../i18n';
 import { defaultOpenCodeService } from './mockOpenCodeService';
+import { OpenCodeBaustein, OpenCodeService } from './openCodeService';
 
 // ---------------------------------------------------------------------------
 // DnD-Typ
@@ -56,9 +56,14 @@ function OpenCodeItem({ baustein }: { baustein: OpenCodeBaustein }) {
       <Box
         ref={dragRef as unknown as React.Ref<HTMLDivElement>}
         sx={{
-          display: 'flex', alignItems: 'center', gap: 1,
-          px: 1.5, py: 0.75, borderRadius: 1,
-          cursor: 'grab', userSelect: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          px: 1.5,
+          py: 0.75,
+          borderRadius: 1,
+          cursor: 'grab',
+          userSelect: 'none',
           opacity: isDragging ? 0.4 : 1,
           transition: 'background-color 0.15s, opacity 0.15s',
           '&:hover': { backgroundColor: 'action.hover' },
@@ -71,7 +76,11 @@ function OpenCodeItem({ baustein }: { baustein: OpenCodeBaustein }) {
           sx={{ fontSize: 16, color: 'secondary.main', flexShrink: 0 }}
           aria-hidden
         />
-        <Typography variant="body2" noWrap sx={{ color: 'text.primary', fontSize: '0.8rem' }}>
+        <Typography
+          variant="body2"
+          noWrap
+          sx={{ color: 'text.primary', fontSize: '0.8rem' }}
+        >
           {baustein.displayName}
         </Typography>
       </Box>
@@ -102,7 +111,7 @@ export function OpenCodePaletteSection({
     });
   }, [service]);
 
-  const validators  = bausteine.filter((b) => b.kategorie === 'validator');
+  const validators = bausteine.filter((b) => b.kategorie === 'validator');
   const uiBausteine = bausteine.filter((b) => b.kategorie === 'ui-baustein');
 
   return (
@@ -113,9 +122,15 @@ export function OpenCodePaletteSection({
       <Box
         onClick={() => setOpen((v) => !v)}
         sx={{
-          display: 'flex', alignItems: 'center', gap: 0.5,
-          px: 1.5, py: 0.5, cursor: 'pointer', userSelect: 'none',
-          borderRadius: 1, '&:hover': { backgroundColor: 'action.hover' },
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          px: 1.5,
+          py: 0.5,
+          cursor: 'pointer',
+          userSelect: 'none',
+          borderRadius: 1,
+          '&:hover': { backgroundColor: 'action.hover' },
         }}
       >
         <Box
@@ -125,12 +140,21 @@ export function OpenCodePaletteSection({
         />
         <Typography
           variant="caption"
-          sx={{ color: 'text.disabled', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', flex: 1 }}
+          sx={{
+            color: 'text.disabled',
+            fontWeight: 500,
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            flex: 1,
+          }}
         >
           OpenCode
         </Typography>
         {!loading && (
-          <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.68rem' }}>
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.disabled', fontSize: '0.68rem' }}
+          >
             ({bausteine.length})
           </Typography>
         )}
@@ -145,19 +169,42 @@ export function OpenCodePaletteSection({
 
         {!loading && validators.length > 0 && (
           <Box role="group" aria-label="Validatoren">
-            <Typography variant="caption" sx={{ px: 1.5, color: 'text.disabled', display: 'block', mt: 1, mb: 0.25, fontSize: '0.68rem' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                px: 1.5,
+                color: 'text.disabled',
+                display: 'block',
+                mt: 1,
+                mb: 0.25,
+                fontSize: '0.68rem',
+              }}
+            >
               {t.palette.validators}
             </Typography>
-            {validators.map((b) => <OpenCodeItem key={b.id} baustein={b} />)}
+            {validators.map((b) => (
+              <OpenCodeItem key={b.id} baustein={b} />
+            ))}
           </Box>
         )}
 
         {!loading && uiBausteine.length > 0 && (
           <Box role="group" aria-label="UI-Bausteine" sx={{ mt: 1 }}>
-            <Typography variant="caption" sx={{ px: 1.5, color: 'text.disabled', display: 'block', mb: 0.25, fontSize: '0.68rem' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                px: 1.5,
+                color: 'text.disabled',
+                display: 'block',
+                mb: 0.25,
+                fontSize: '0.68rem',
+              }}
+            >
               {t.palette.uiBausteine}
             </Typography>
-            {uiBausteine.map((b) => <OpenCodeItem key={b.id} baustein={b} />)}
+            {uiBausteine.map((b) => (
+              <OpenCodeItem key={b.id} baustein={b} />
+            ))}
           </Box>
         )}
       </Collapse>

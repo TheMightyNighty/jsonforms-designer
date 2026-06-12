@@ -1,16 +1,31 @@
-
 import { JsonSchema7 } from '@jsonforms/core';
-import { newId } from './uiElements';
+
 import {
-  ADD_FIELD, AddFieldAction, buildScope,
-  REORDER_ELEMENT, ReorderElementAction,
-  REMOVE_FIELD, RemoveFieldAction,
-  LOAD_TEMPLATE, LoadTemplateAction,
-  SET_FIELD_STATE, SetFieldStateAction,
-  ADD_TAB, REMOVE_TAB, RENAME_TAB, REORDER_TABS, SET_ACTIVE_TAB,
-  AddTabAction, RemoveTabAction, RenameTabAction, ReorderTabsAction, SetActiveTabAction,
-  ADD_FIM_GRUPPE, AddFimGruppeAction,
+  ADD_FIELD,
+  ADD_FIM_GRUPPE,
+  ADD_TAB,
+  AddFieldAction,
+  AddFimGruppeAction,
+  AddTabAction,
+  buildScope,
+  LOAD_TEMPLATE,
+  LoadTemplateAction,
+  REMOVE_FIELD,
+  REMOVE_TAB,
+  RemoveFieldAction,
+  RemoveTabAction,
+  RENAME_TAB,
+  RenameTabAction,
+  REORDER_ELEMENT,
+  REORDER_TABS,
+  ReorderElementAction,
+  ReorderTabsAction,
+  SET_ACTIVE_TAB,
+  SET_FIELD_STATE,
+  SetActiveTabAction,
+  SetFieldStateAction,
 } from './addFieldActions';
+import { FlatElement, fromLegacy, newId, UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
 // Tab-Struktur
@@ -31,7 +46,9 @@ export interface FieldAwareState {
   };
   uiSchema: {
     type: string;
-    elements: Array<{ type: string; scope?: string; options?: Record<string, unknown> }>;
+    /** Strikte UiElement-Union; lose Formate (FlatElement) werden an den
+     *  Grenzen über fromLegacy normalisiert. */
+    elements: UiElement[];
   };
   tabs: FormTab[];
   activeTabIndex: number;
@@ -40,13 +57,31 @@ export interface FieldAwareState {
   sectionColors: Record<string, string>;
 }
 
+/**
+ * Lose Eingangsform an den Grenzen (Templates, Import, Code-Modus):
+ * Elemente dürfen als FlatElement ankommen und werden beim Verarbeiten
+ * über fromLegacy in die strikte UiElement-Union normalisiert.
+ */
+export interface FieldStateInput extends Omit<FieldAwareState, 'uiSchema'> {
+  uiSchema: { type: string; elements: FlatElement[] };
+}
+
 // ---------------------------------------------------------------------------
 // addFieldReducer
 // ---------------------------------------------------------------------------
 
-export function addFieldReducer<S extends FieldAwareState>(state: S, action: AddFieldAction): S {
+export function addFieldReducer<S extends FieldAwareState>(
+  state: S,
+  action: AddFieldAction,
+): S {
   if (action.type !== ADD_FIELD) return state;
-  const { propertyKey, schemaFragment, uiSchemaOptions, insertAfterScope, tabIndex } = action.payload;
+  const {
+    propertyKey,
+    schemaFragment,
+    uiSchemaOptions,
+    insertAfterScope,
+    tabIndex,
+  } = action.payload;
 
   const existingKeys = Object.keys(state.schema.properties ?? {});
   const safeKey = resolveKey(propertyKey, existingKeys);
@@ -56,14 +91,14 @@ export function addFieldReducer<S extends FieldAwareState>(state: S, action: Add
   const { isStructural } = action.payload;
 
   // Für Layout-Container sofort das neue UiElement-Format erzeugen
-  let newControl: any;
+  let newControl: UiElement;
   if (isStructural && action.payload.uiSchemaType === 'HorizontalLayout') {
     const widths = (uiSchemaOptions?.widths as number[]) ?? [1, 1];
     newControl = {
       id: newId('col'),
       type: 'ColumnContainer',
       widths,
-      columns: widths.map(() => [] as any[]),
+      columns: widths.map(() => [] as UiElement[]),
     };
   } else if (isStructural && action.payload.uiSchemaType === 'Group') {
     newControl = {
@@ -73,17 +108,18 @@ export function addFieldReducer<S extends FieldAwareState>(state: S, action: Add
       children: [],
     };
   } else if (isStructural) {
-    // Label, Alert etc.
+    // Label, Alert etc. — Pseudo-Scope als Legacy-Identität (Tab-Zuordnung)
     newControl = {
       id: newId('lbl'),
-      type: action.payload.uiSchemaType ?? 'Label',
-      scope: safeScope,
+      type: 'Label',
       label: action.payload.label,
+      scope: safeScope,
       ...(uiSchemaOptions ? { options: uiSchemaOptions } : {}),
     };
   } else {
     // Normales Control-Feld
     newControl = {
+      id: newId('ctrl'),
       type: 'Control' as const,
       scope: safeScope,
       ...(uiSchemaOptions ? { options: uiSchemaOptions } : {}),
@@ -91,7 +127,8 @@ export function addFieldReducer<S extends FieldAwareState>(state: S, action: Add
   }
 
   // Tab-Zuweisung: wenn tabIndex angegeben, dann diesem Tab zuweisen; sonst activeTabIndex
-  const effectiveTabIndex = tabIndex ?? (state.tabs.length > 0 ? state.activeTabIndex : undefined);
+  const effectiveTabIndex =
+    tabIndex ?? (state.tabs.length > 0 ? state.activeTabIndex : undefined);
   const nextTabAssignments =
     effectiveTabIndex !== undefined
       ? { ...state.tabAssignments, [safeScope]: effectiveTabIndex }
@@ -102,7 +139,10 @@ export function addFieldReducer<S extends FieldAwareState>(state: S, action: Add
     ? state.schema
     : {
         ...state.schema,
-        properties: { ...(state.schema.properties ?? {}), [safeKey]: schemaFragment },
+        properties: {
+          ...(state.schema.properties ?? {}),
+          [safeKey]: schemaFragment,
+        },
       };
 
   return {
@@ -110,7 +150,11 @@ export function addFieldReducer<S extends FieldAwareState>(state: S, action: Add
     schema: nextSchema,
     uiSchema: {
       ...state.uiSchema,
-      elements: insertControl(state.uiSchema.elements, newControl, insertAfterScope),
+      elements: insertControl(
+        state.uiSchema.elements,
+        newControl,
+        insertAfterScope,
+      ),
     },
     tabAssignments: nextTabAssignments,
   };
@@ -120,7 +164,10 @@ export function addFieldReducer<S extends FieldAwareState>(state: S, action: Add
 // removeFieldReducer
 // ---------------------------------------------------------------------------
 
-export function removeFieldReducer<S extends FieldAwareState>(state: S, action: RemoveFieldAction): S {
+export function removeFieldReducer<S extends FieldAwareState>(
+  state: S,
+  action: RemoveFieldAction,
+): S {
   if (action.type !== REMOVE_FIELD) return state;
   const target = action.payload.scope;
   const key = target.replace(/^#\/properties\//, '');
@@ -129,14 +176,14 @@ export function removeFieldReducer<S extends FieldAwareState>(state: S, action: 
   const { [target]: _tab, ...restTabs } = state.tabAssignments;
 
   /** Entfernt Element mit scope/id === target aus einem Array rekursiv */
-  function removeDeep(elements: any[]): any[] {
+  function removeDeep(elements: UiElement[]): UiElement[] {
     return elements
-      .filter((el: any) => el.scope !== target && el.id !== target)
-      .map((el: any) => {
-        if (el.columns) {
-          return { ...el, columns: el.columns.map((col: any[]) => removeDeep(col)) };
+      .filter((el) => !matchesElementKey(el, target))
+      .map((el) => {
+        if (el.type === 'ColumnContainer') {
+          return { ...el, columns: el.columns.map((col) => removeDeep(col)) };
         }
-        if (el.children) {
+        if (el.type === 'GroupContainer') {
           return { ...el, children: removeDeep(el.children) };
         }
         return el;
@@ -145,12 +192,17 @@ export function removeFieldReducer<S extends FieldAwareState>(state: S, action: 
 
   return {
     ...state,
-    schema: isPropertyScope ? {
-      ...state.schema,
-      properties: rest,
-      required: state.schema.required?.filter((k) => k !== key),
-    } : state.schema,
-    uiSchema: { ...state.uiSchema, elements: removeDeep(state.uiSchema.elements as any[]) },
+    schema: isPropertyScope
+      ? {
+          ...state.schema,
+          properties: rest,
+          required: state.schema.required?.filter((k) => k !== key),
+        }
+      : state.schema,
+    uiSchema: {
+      ...state.uiSchema,
+      elements: removeDeep(state.uiSchema.elements),
+    },
     tabAssignments: restTabs,
   };
 }
@@ -161,15 +213,24 @@ export function removeFieldReducer<S extends FieldAwareState>(state: S, action: 
 
 export function loadTemplateReducer<S extends FieldAwareState>(
   state: S,
-  action: LoadTemplateAction | SetFieldStateAction
+  action: LoadTemplateAction | SetFieldStateAction,
 ): S {
-  if (action.type !== LOAD_TEMPLATE && action.type !== SET_FIELD_STATE) return state;
-  // Incoming payload kann ohne tabs/tabAssignments sein (alte Formate) — Defaults ergänzen
-  const incoming = action.payload as Partial<FieldAwareState>;
+  if (action.type !== LOAD_TEMPLATE && action.type !== SET_FIELD_STATE)
+    return state;
+  // Incoming payload kann ohne tabs/tabAssignments sein (alte Formate) —
+  // Defaults ergänzen und Elemente in die strikte UiElement-Union
+  // normalisieren (Templates, Code-Modus, Import liefern lose Formen).
+  const incoming = action.payload as Partial<FieldStateInput>;
+  const incomingUiSchema = incoming.uiSchema
+    ? {
+        type: incoming.uiSchema.type ?? 'VerticalLayout',
+        elements: (incoming.uiSchema.elements ?? []).map(fromLegacy),
+      }
+    : state.uiSchema;
   return {
     ...state,
     schema: incoming.schema ?? state.schema,
-    uiSchema: incoming.uiSchema ?? state.uiSchema,
+    uiSchema: incomingUiSchema,
     tabs: incoming.tabs ?? [],
     activeTabIndex: incoming.activeTabIndex ?? 0,
     tabAssignments: incoming.tabAssignments ?? {},
@@ -182,9 +243,17 @@ export function loadTemplateReducer<S extends FieldAwareState>(
 // tabReducer
 // ---------------------------------------------------------------------------
 
-type AnyTabAction = AddTabAction | RemoveTabAction | RenameTabAction | ReorderTabsAction | SetActiveTabAction;
+type AnyTabAction =
+  | AddTabAction
+  | RemoveTabAction
+  | RenameTabAction
+  | ReorderTabsAction
+  | SetActiveTabAction;
 
-export function tabReducer<S extends FieldAwareState>(state: S, action: AnyTabAction): S {
+export function tabReducer<S extends FieldAwareState>(
+  state: S,
+  action: AnyTabAction,
+): S {
   switch (action.type) {
     case ADD_TAB: {
       const newTabs = [...state.tabs, { label: action.payload.label }];
@@ -206,11 +275,18 @@ export function tabReducer<S extends FieldAwareState>(state: S, action: AnyTabAc
         }
       }
       const nextActive = Math.min(state.activeTabIndex, newTabs.length - 1);
-      return { ...state, tabs: newTabs, activeTabIndex: nextActive, tabAssignments: nextAssignments };
+      return {
+        ...state,
+        tabs: newTabs,
+        activeTabIndex: nextActive,
+        tabAssignments: nextAssignments,
+      };
     }
     case RENAME_TAB: {
       const newTabs = state.tabs.map((t, i) =>
-        i === action.payload.tabIndex ? { ...t, label: action.payload.label } : t
+        i === action.payload.tabIndex
+          ? { ...t, label: action.payload.label }
+          : t,
       );
       return { ...state, tabs: newTabs };
     }
@@ -252,22 +328,40 @@ export function resolveKey(desired: string, existing: string[]): string {
   return `${desired}_${i}`;
 }
 
+/**
+ * Element-Identität: Controls und Labels werden historisch über ihren
+ * (Pseudo-)Scope angesprochen, Container über ihre id — der Matcher
+ * akzeptiert beides.
+ */
+export function matchesElementKey(el: UiElement, key: string): boolean {
+  return el.id === key || ('scope' in el && el.scope === key);
+}
+
 export function insertControl(
-  elements: FieldAwareState['uiSchema']['elements'],
-  newControl: FieldAwareState['uiSchema']['elements'][number],
-  insertAfterScope?: string
-): FieldAwareState['uiSchema']['elements'] {
+  elements: UiElement[],
+  newControl: UiElement,
+  insertAfterScope?: string,
+): UiElement[] {
   if (!insertAfterScope) return [...elements, newControl];
-  const idx = elements.findIndex((el) => el.scope === insertAfterScope);
+  const idx = elements.findIndex((el) =>
+    matchesElementKey(el, insertAfterScope),
+  );
   if (idx === -1) return [...elements, newControl];
-  return [...elements.slice(0, idx + 1), newControl, ...elements.slice(idx + 1)];
+  return [
+    ...elements.slice(0, idx + 1),
+    newControl,
+    ...elements.slice(idx + 1),
+  ];
 }
 
 // ---------------------------------------------------------------------------
 // fimGruppeReducer
 // ---------------------------------------------------------------------------
 
-export function fimGruppeReducer<S extends FieldAwareState>(state: S, action: AddFimGruppeAction): S {
+export function fimGruppeReducer<S extends FieldAwareState>(
+  state: S,
+  action: AddFimGruppeAction,
+): S {
   if (action.type !== ADD_FIM_GRUPPE) return state;
   const { gruppenName, felder, insertAfterScope, tabIndex } = action.payload;
 
@@ -302,10 +396,13 @@ export function fimGruppeReducer<S extends FieldAwareState>(state: S, action: Ad
     })),
   };
 
-  const effectiveTabIndex = tabIndex ?? (state.tabs.length > 0 ? state.activeTabIndex : undefined);
+  const effectiveTabIndex =
+    tabIndex ?? (state.tabs.length > 0 ? state.activeTabIndex : undefined);
   const newTabAssignments =
     effectiveTabIndex !== undefined
-      ? Object.fromEntries(resolvedFelder.map((f) => [f.safeScope, effectiveTabIndex]))
+      ? Object.fromEntries(
+          resolvedFelder.map((f) => [f.safeScope, effectiveTabIndex]),
+        )
       : {};
 
   return {
@@ -316,7 +413,11 @@ export function fimGruppeReducer<S extends FieldAwareState>(state: S, action: Ad
     },
     uiSchema: {
       ...state.uiSchema,
-      elements: insertControl(state.uiSchema.elements, groupControl, insertAfterScope),
+      elements: insertControl(
+        state.uiSchema.elements,
+        groupControl,
+        insertAfterScope,
+      ),
     },
     tabAssignments: { ...state.tabAssignments, ...newTabAssignments },
   };
@@ -328,25 +429,28 @@ export function fimGruppeReducer<S extends FieldAwareState>(state: S, action: Ad
 
 export function reorderElementReducer<S extends FieldAwareState>(
   state: S,
-  action: ReorderElementAction
+  action: ReorderElementAction,
 ): S {
   if (action.type !== REORDER_ELEMENT) return state;
   const { elementKey, insertAfterKey } = action.payload;
 
-  const elements = state.uiSchema.elements as any[];
+  const elements = state.uiSchema.elements;
 
   // Element herausfiltern
-  const moving = elements.find((el) => (el.id ?? el.scope) === elementKey);
+  const moving = elements.find((el) => matchesElementKey(el, elementKey));
   if (!moving) return state;
 
-  const without = elements.filter((el) => (el.id ?? el.scope) !== elementKey);
+  const without = elements.filter((el) => !matchesElementKey(el, elementKey));
 
-  // Einfüge-Position bestimmen
-  let nextElements: any[];
+  // Ohne insertAfterKey → an den Anfang (oberste Drop-Zone und
+  // Tastatur-Hochsortieren übergeben undefined und meinen Position 0).
+  let nextElements: UiElement[];
   if (!insertAfterKey) {
-    nextElements = [...without, moving];
+    nextElements = [moving, ...without];
   } else {
-    const idx = without.findIndex((el) => (el.id ?? el.scope) === insertAfterKey);
+    const idx = without.findIndex((el) =>
+      matchesElementKey(el, insertAfterKey),
+    );
     if (idx === -1) {
       nextElements = [...without, moving];
     } else {

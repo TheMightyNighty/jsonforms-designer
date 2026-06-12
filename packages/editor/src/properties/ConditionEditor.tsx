@@ -1,3 +1,4 @@
+import { JsonSchema7 } from '@jsonforms/core';
 import {
   Box,
   Divider,
@@ -12,11 +13,16 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { JsonSchema7 } from '@jsonforms/core';
-import { Dispatch, useState, useEffect } from 'react';
+import { Dispatch, useEffect, useState } from 'react';
+
 import { EditorAction } from '../core/model/actions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
-import { UISchemaRule, RuleEffect, createSetFieldRuleAction } from './fieldPropertiesActions';
+import { UiElement } from '../core/model/uiElements';
+import {
+  createSetFieldRuleAction,
+  RuleEffect,
+  UISchemaRule,
+} from './fieldPropertiesActions';
 
 interface ConditionEditorProps {
   selectedScope: string;
@@ -25,51 +31,74 @@ interface ConditionEditorProps {
   dispatch: Dispatch<EditorAction>;
 }
 
-function findRule(uiSchema: FieldAwareState['uiSchema'], scope: string): UISchemaRule | null {
-  function search(elements: any[]): UISchemaRule | null {
+function findRule(
+  uiSchema: FieldAwareState['uiSchema'],
+  scope: string,
+): UISchemaRule | null {
+  function search(elements: UiElement[]): UISchemaRule | null {
     for (const el of elements) {
-      if (el.scope === scope) return el.rule ?? null;
-      if (el.columns) {
+      if ('scope' in el && el.scope === scope) {
+        return (el.rule as UISchemaRule | undefined) ?? null;
+      }
+      if (el.type === 'ColumnContainer') {
         for (const col of el.columns) {
           const found = search(col);
           if (found !== null) return found;
         }
       }
-      if (el.children) {
+      if (el.type === 'GroupContainer') {
         const found = search(el.children);
         if (found !== null) return found;
       }
     }
     return null;
   }
-  return search(uiSchema.elements as any[]);
+  return search(uiSchema.elements);
 }
 
 /** Alle Felder aus dem Schema als Auswahlliste */
 function getAvailableFields(
   schema: FieldAwareState['schema'],
-  excludeScope: string
+  excludeScope: string,
 ): Array<{ scope: string; label: string; enumValues?: unknown[] }> {
   const excludeKey = excludeScope.replace('#/properties/', '');
-  return Object.entries(schema.properties ?? {}).flatMap(([key, fieldSchema]) => {
-    if (key === excludeKey) return [];
-    const fs = fieldSchema as JsonSchema7 & { title?: string; enum?: unknown[] };
-    return [{
-      scope: `#/properties/${key}`,
-      label: fs.title ?? key,
-      enumValues: Array.isArray((fs as any).enum) ? (fs as any).enum : undefined,
-    }];
-  });
+  return Object.entries(schema.properties ?? {}).flatMap(
+    ([key, fieldSchema]) => {
+      if (key === excludeKey) return [];
+      const fs = fieldSchema as JsonSchema7 & {
+        title?: string;
+        enum?: unknown[];
+      };
+      return [
+        {
+          scope: `#/properties/${key}`,
+          label: fs.title ?? key,
+          enumValues: Array.isArray(fs.enum) ? fs.enum : undefined,
+        },
+      ];
+    },
+  );
 }
 
-export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: ConditionEditorProps) {
+export function ConditionEditor({
+  selectedScope,
+  schema,
+  uiSchema,
+  dispatch,
+}: ConditionEditorProps) {
   const existingRule = findRule(uiSchema, selectedScope);
-  const fields       = getAvailableFields(schema, selectedScope);
+  const fields = getAvailableFields(schema, selectedScope);
 
-  const [enabled,       setEnabled]       = useState(!!existingRule);
-  const [sourceScope,   setSourceScope]   = useState(existingRule?.condition.scope ?? '');
-  const [condValue,     setCondValue]     = useState<string>(String(existingRule?.condition.schema.const ?? ''));
-  const [effect,        setEffect]        = useState<RuleEffect>(existingRule?.effect ?? 'HIDE');
+  const [enabled, setEnabled] = useState(!!existingRule);
+  const [sourceScope, setSourceScope] = useState(
+    existingRule?.condition.scope ?? '',
+  );
+  const [condValue, setCondValue] = useState<string>(
+    String(existingRule?.condition.schema.const ?? ''),
+  );
+  const [effect, setEffect] = useState<RuleEffect>(
+    existingRule?.effect ?? 'HIDE',
+  );
 
   // Sync wenn das selektierte Feld wechselt
   useEffect(() => {
@@ -86,11 +115,11 @@ export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: C
       effect,
       condition: { scope: sourceScope, schema: { const: condValue } },
     };
-    dispatch(createSetFieldRuleAction(selectedScope, rule) as any);
+    dispatch(createSetFieldRuleAction(selectedScope, rule));
   }
 
   function removeRule() {
-    dispatch(createSetFieldRuleAction(selectedScope, null) as any);
+    dispatch(createSetFieldRuleAction(selectedScope, null));
     setEnabled(false);
     setSourceScope('');
     setCondValue('');
@@ -115,14 +144,24 @@ export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: C
   }, [enabled, sourceScope, condValue, effect]);
 
   const sourceField = fields.find((f) => f.scope === sourceScope);
-  const hasEnums    = !!sourceField?.enumValues?.length;
+  const hasEnums = !!sourceField?.enumValues?.length;
 
   return (
     <Box>
       <Divider sx={{ mb: 2 }} />
 
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 1,
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{ color: 'text.secondary', fontWeight: 600 }}
+        >
           Bedingte Anzeige
         </Typography>
         <Switch
@@ -142,7 +181,6 @@ export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: C
 
       {enabled && fields.length > 0 && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-
           {/* Quellfeld */}
           <FormControl size="small" fullWidth>
             <InputLabel id="cond-source-label">Wenn Feld</InputLabel>
@@ -153,14 +191,16 @@ export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: C
               onChange={(e) => handleSourceChange(e.target.value)}
             >
               {fields.map((f) => (
-                <MenuItem key={f.scope} value={f.scope}>{f.label}</MenuItem>
+                <MenuItem key={f.scope} value={f.scope}>
+                  {f.label}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
 
           {/* Wert */}
-          {sourceScope && (
-            hasEnums ? (
+          {sourceScope &&
+            (hasEnums ? (
               <FormControl size="small" fullWidth>
                 <InputLabel id="cond-value-label">den Wert hat</InputLabel>
                 <Select
@@ -170,7 +210,9 @@ export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: C
                   onChange={(e) => setCondValue(String(e.target.value))}
                 >
                   {sourceField!.enumValues!.map((v) => (
-                    <MenuItem key={String(v)} value={String(v)}>{String(v)}</MenuItem>
+                    <MenuItem key={String(v)} value={String(v)}>
+                      {String(v)}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -183,13 +225,15 @@ export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: C
                 onChange={(e) => setCondValue(e.target.value)}
                 placeholder='z. B. "ja" oder "DE"'
               />
-            )
-          )}
+            ))}
 
           {/* Effekt */}
           {sourceScope && condValue !== '' && (
             <Box>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: 'text.secondary', fontWeight: 500 }}
+              >
                 Dann dieses Feld:
               </Typography>
               <RadioGroup
@@ -198,27 +242,51 @@ export function ConditionEditor({ selectedScope, schema, uiSchema, dispatch }: C
                 onChange={(e) => setEffect(e.target.value as RuleEffect)}
                 aria-label="Effekt"
               >
-                <FormControlLabel value="SHOW" control={<Radio size="small" />}
-                  label={<Typography variant="caption">Anzeigen</Typography>} />
-                <FormControlLabel value="HIDE" control={<Radio size="small" />}
-                  label={<Typography variant="caption">Ausblenden</Typography>} />
-                <FormControlLabel value="DISABLE" control={<Radio size="small" />}
-                  label={<Typography variant="caption">Deaktivieren</Typography>} />
+                <FormControlLabel
+                  value="SHOW"
+                  control={<Radio size="small" />}
+                  label={<Typography variant="caption">Anzeigen</Typography>}
+                />
+                <FormControlLabel
+                  value="HIDE"
+                  control={<Radio size="small" />}
+                  label={<Typography variant="caption">Ausblenden</Typography>}
+                />
+                <FormControlLabel
+                  value="DISABLE"
+                  control={<Radio size="small" />}
+                  label={
+                    <Typography variant="caption">Deaktivieren</Typography>
+                  }
+                />
               </RadioGroup>
             </Box>
           )}
 
           {/* Vorschau */}
           {sourceScope && condValue !== '' && (
-            <Box sx={{ p: 1, borderRadius: 1, bgcolor: 'action.selected', border: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                {effect === 'SHOW' && `Dieses Feld wird nur angezeigt, wenn „${sourceField?.label}" = „${condValue}"`}
-                {effect === 'HIDE' && `Dieses Feld wird ausgeblendet, wenn „${sourceField?.label}" = „${condValue}"`}
-                {effect === 'DISABLE' && `Dieses Feld wird deaktiviert, wenn „${sourceField?.label}" = „${condValue}"`}
+            <Box
+              sx={{
+                p: 1,
+                borderRadius: 1,
+                bgcolor: 'action.selected',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+              >
+                {effect === 'SHOW' &&
+                  `Dieses Feld wird nur angezeigt, wenn „${sourceField?.label}" = „${condValue}"`}
+                {effect === 'HIDE' &&
+                  `Dieses Feld wird ausgeblendet, wenn „${sourceField?.label}" = „${condValue}"`}
+                {effect === 'DISABLE' &&
+                  `Dieses Feld wird deaktiviert, wenn „${sourceField?.label}" = „${condValue}"`}
               </Typography>
             </Box>
           )}
-
         </Box>
       )}
     </Box>

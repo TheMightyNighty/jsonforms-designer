@@ -5,6 +5,5 @@
  * https://github.com/eclipsesource/jsonforms-editor/blob/master/LICENSE
  * ---------------------------------------------------------------------
  */
+export * from './fieldStateStorage';
 export * from './schemaService';
-export * from './paletteService';
-export * from './categorizationService';

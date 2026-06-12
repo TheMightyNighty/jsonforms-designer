@@ -2,10 +2,28 @@
  * F-2: Tests für addFieldReducer und Hilfsfunktionen
  */
 
-import { describe, it, expect } from 'vitest';
-import { addFieldReducer, resolveKey, insertControl, tabReducer, removeFieldReducer, FieldAwareState } from './addFieldReducer';
-import { createAddFieldAction, createAddTabAction, createRemoveTabAction, createRenameTabAction, createSetActiveTabAction, createRemoveFieldAction } from './addFieldActions';
+import { describe, expect, it } from 'vitest';
+
 import { getFieldType } from '../../field-types/fieldTypes';
+import {
+  createAddFieldAction,
+  createAddTabAction,
+  createRemoveFieldAction,
+  createRemoveTabAction,
+  createRenameTabAction,
+  createReorderElementAction,
+  createSetActiveTabAction,
+} from './addFieldActions';
+import {
+  addFieldReducer,
+  FieldAwareState,
+  insertControl,
+  removeFieldReducer,
+  reorderElementReducer,
+  resolveKey,
+  tabReducer,
+} from './addFieldReducer';
+import { UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -53,9 +71,13 @@ describe('resolveKey()', () => {
 // ---------------------------------------------------------------------------
 
 describe('insertControl()', () => {
-  const a = { type: 'Control', scope: '#/properties/a' };
-  const b = { type: 'Control', scope: '#/properties/b' };
-  const neu = { type: 'Control', scope: '#/properties/neu' };
+  const a: UiElement = { id: 'a', type: 'Control', scope: '#/properties/a' };
+  const b: UiElement = { id: 'b', type: 'Control', scope: '#/properties/b' };
+  const neu: UiElement = {
+    id: 'neu',
+    type: 'Control',
+    scope: '#/properties/neu',
+  };
 
   it('hängt ans Ende wenn kein insertAfterScope', () => {
     const result = insertControl([a, b], neu);
@@ -106,13 +128,19 @@ describe('addFieldReducer()', () => {
     const next = addFieldReducer(state, action);
 
     expect(next.uiSchema.elements).toHaveLength(1);
-    expect(next.uiSchema.elements[0].scope).toBe('#/properties/vorname');
+    const first = next.uiSchema.elements[0];
+    expect(first.type === 'Control' && first.scope).toBe(
+      '#/properties/vorname',
+    );
     expect(next.uiSchema.elements[0].type).toBe('Control');
   });
 
   it('überträgt uiSchema.options (z.B. multi: true bei text-long)', () => {
     const state = emptyState();
-    const action = createAddFieldAction(getFieldType('text-long'), 'beschreibung');
+    const action = createAddFieldAction(
+      getFieldType('text-long'),
+      'beschreibung',
+    );
     const next = addFieldReducer(state, action);
 
     expect(next.uiSchema.elements[0].options).toMatchObject({ multi: true });
@@ -123,7 +151,9 @@ describe('addFieldReducer()', () => {
     const action = createAddFieldAction(getFieldType('radio'), 'geschlecht');
     const next = addFieldReducer(state, action);
 
-    expect(next.uiSchema.elements[0].options).toMatchObject({ format: 'radio' });
+    expect(next.uiSchema.elements[0].options).toMatchObject({
+      format: 'radio',
+    });
   });
 
   it('ist immutabel — der Original-State bleibt unverändert', () => {
@@ -161,7 +191,11 @@ describe('addFieldReducer() — Kollisionserkennung', () => {
       state = addFieldReducer(state, action);
     }
 
-    expect(Object.keys(state.schema.properties!)).toEqual(['feld', 'feld_1', 'feld_2']);
+    expect(Object.keys(state.schema.properties!)).toEqual([
+      'feld',
+      'feld_1',
+      'feld_2',
+    ]);
   });
 });
 
@@ -172,17 +206,25 @@ describe('addFieldReducer() — Kollisionserkennung', () => {
 describe('addFieldReducer() — Einfügeposition', () => {
   it('fügt nach einem vorhandenen Control ein', () => {
     let state = emptyState();
-    state = addFieldReducer(state, createAddFieldAction(getFieldType('text-short'), 'a'));
-    state = addFieldReducer(state, createAddFieldAction(getFieldType('text-short'), 'b'));
+    state = addFieldReducer(
+      state,
+      createAddFieldAction(getFieldType('text-short'), 'a'),
+    );
+    state = addFieldReducer(
+      state,
+      createAddFieldAction(getFieldType('text-short'), 'b'),
+    );
 
     const action = createAddFieldAction(
       getFieldType('text-short'),
       'zwischen',
-      '#/properties/a' // insertAfterScope
+      '#/properties/a', // insertAfterScope
     );
     state = addFieldReducer(state, action);
 
-    const scopes = state.uiSchema.elements.map((e) => e.scope);
+    const scopes = state.uiSchema.elements.map((e) =>
+      'scope' in e ? e.scope : undefined,
+    );
     expect(scopes).toEqual([
       '#/properties/a',
       '#/properties/zwischen',
@@ -197,17 +239,29 @@ describe('addFieldReducer() — Einfügeposition', () => {
 
 describe('addFieldReducer() — alle Katalog-Feldtypen', () => {
   const fieldTypeIds = [
-    'text-short', 'text-long', 'number', 'date',
-    'checkbox', 'dropdown', 'radio', 'group',
+    'text-short',
+    'text-long',
+    'number',
+    'date',
+    'checkbox',
+    'dropdown',
+    'radio',
+    'group',
   ];
 
   fieldTypeIds.forEach((id) => {
     it(`verarbeitet Feldtyp "${id}" ohne Fehler`, () => {
+      const fieldType = getFieldType(id);
       const state = emptyState();
-      const action = createAddFieldAction(getFieldType(id), id.replace('-', '_'));
+      const action = createAddFieldAction(fieldType, id.replace('-', '_'));
       const next = addFieldReducer(state, action);
 
-      expect(Object.keys(next.schema.properties!).length).toBe(1);
+      // Strukturelle Elemente (z. B. "group") erzeugen keine schema.property,
+      // nur ein uiSchema-Element.
+      const expectedProperties = fieldType.isStructural ? 0 : 1;
+      expect(Object.keys(next.schema.properties!).length).toBe(
+        expectedProperties,
+      );
       expect(next.uiSchema.elements.length).toBe(1);
     });
   });
@@ -216,7 +270,6 @@ describe('addFieldReducer() — alle Katalog-Feldtypen', () => {
 // ---------------------------------------------------------------------------
 // tabReducer Tests
 // ---------------------------------------------------------------------------
-
 
 describe('tabReducer()', () => {
   it('fügt einen Tab hinzu und setzt activeTabIndex', () => {
@@ -261,9 +314,17 @@ describe('removeFieldReducer()', () => {
     const withField: typeof base = {
       ...base,
       schema: { type: 'object', properties: { name: { type: 'string' } } },
-      uiSchema: { type: 'VerticalLayout', elements: [{ type: 'Control', scope: '#/properties/name' }] },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [
+          { id: 'ctrl_name', type: 'Control', scope: '#/properties/name' },
+        ],
+      },
     };
-    const next = removeFieldReducer(withField, createRemoveFieldAction('#/properties/name'));
+    const next = removeFieldReducer(
+      withField,
+      createRemoveFieldAction('#/properties/name'),
+    );
     expect(next.schema.properties?.['name']).toBeUndefined();
     expect(next.uiSchema.elements).toHaveLength(0);
   });
@@ -272,10 +333,112 @@ describe('removeFieldReducer()', () => {
     const base = emptyState();
     const withField: typeof base = {
       ...base,
-      schema: { type: 'object', properties: { email: { type: 'string' } }, required: ['email'] },
-      uiSchema: { type: 'VerticalLayout', elements: [{ type: 'Control', scope: '#/properties/email' }] },
+      schema: {
+        type: 'object',
+        properties: { email: { type: 'string' } },
+        required: ['email'],
+      },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [
+          { id: 'ctrl_email', type: 'Control', scope: '#/properties/email' },
+        ],
+      },
     };
-    const next = removeFieldReducer(withField, createRemoveFieldAction('#/properties/email'));
+    const next = removeFieldReducer(
+      withField,
+      createRemoveFieldAction('#/properties/email'),
+    );
     expect(next.schema.required).not.toContain('email');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// reorderElementReducer
+// ---------------------------------------------------------------------------
+
+describe('insertControl() — Einfügen hinter Containern', () => {
+  it('matcht Container über ihre id (nicht nur scope)', () => {
+    const container: UiElement = {
+      id: 'col_1',
+      type: 'ColumnContainer',
+      widths: [1, 1],
+      columns: [[], []],
+    };
+    const ctrl: UiElement = {
+      id: 'b',
+      type: 'Control',
+      scope: '#/properties/b',
+    };
+    const neu: UiElement = {
+      id: 'n',
+      type: 'Control',
+      scope: '#/properties/n',
+    };
+    const result = insertControl([container, ctrl], neu, 'col_1');
+    expect(result.map((e) => e.id)).toEqual(['col_1', 'n', 'b']);
+  });
+});
+
+describe('reorderElementReducer()', () => {
+  function threeFields(): FieldAwareState {
+    let state = emptyState();
+    for (const key of ['a', 'b', 'c']) {
+      state = addFieldReducer(
+        state,
+        createAddFieldAction(getFieldType('text-short'), key),
+      );
+    }
+    return state;
+  }
+  const scopes = (s: FieldAwareState) =>
+    s.uiSchema.elements.map((e) => ('scope' in e ? e.scope : undefined));
+
+  it('ohne insertAfterKey → an den ANFANG (Bugfix: vorher Ende)', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/c', undefined),
+    );
+    expect(scopes(next)).toEqual([
+      '#/properties/c',
+      '#/properties/a',
+      '#/properties/b',
+    ]);
+  });
+
+  it('mit insertAfterKey → direkt dahinter', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/a', '#/properties/b'),
+    );
+    expect(scopes(next)).toEqual([
+      '#/properties/b',
+      '#/properties/a',
+      '#/properties/c',
+    ]);
+  });
+
+  it('unbekannter insertAfterKey → ans Ende (Fallback)', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/a', '#/properties/nix'),
+    );
+    expect(scopes(next)).toEqual([
+      '#/properties/b',
+      '#/properties/c',
+      '#/properties/a',
+    ]);
+  });
+
+  it('unbekanntes Element → State unverändert', () => {
+    const state = threeFields();
+    const next = reorderElementReducer(
+      state,
+      createReorderElementAction('#/properties/nix', undefined),
+    );
+    expect(next).toBe(state);
   });
 });

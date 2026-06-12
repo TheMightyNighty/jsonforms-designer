@@ -34,14 +34,16 @@ export const MOCK_DATENFELDER: FimDatenfeld[] = [
   {
     identifier: 'F60000006',
     name: 'Vorname',
-    beschreibung: 'Alle Vornamen einer natürlichen Person, durch Leerzeichen getrennt',
+    beschreibung:
+      'Alle Vornamen einer natürlichen Person, durch Leerzeichen getrennt',
     datentyp: 'text',
     einschraenkungen: { minLength: 1, maxLength: 120 },
   },
   {
     identifier: 'F60000007',
     name: 'Geburtsname',
-    beschreibung: 'Geburtsname (Familienname vor erster Heirat), sofern abweichend',
+    beschreibung:
+      'Geburtsname (Familienname vor erster Heirat), sofern abweichend',
     datentyp: 'text',
     einschraenkungen: { maxLength: 120 },
   },
@@ -75,7 +77,8 @@ export const MOCK_DATENFELDER: FimDatenfeld[] = [
   {
     identifier: 'F60000072',
     name: 'Steueridentifikationsnummer',
-    beschreibung: 'Steuerliche Identifikationsnummer (11-stellig, vergeben durch das BZSt)',
+    beschreibung:
+      'Steuerliche Identifikationsnummer (11-stellig, vergeben durch das BZSt)',
     datentyp: 'text',
     einschraenkungen: { minLength: 11, maxLength: 11, pattern: '^[0-9]{11}$' },
   },
@@ -124,7 +127,8 @@ export const MOCK_DATENFELDER: FimDatenfeld[] = [
   {
     identifier: 'F60000091',
     name: 'Telefonnummer',
-    beschreibung: 'Rufnummer in internationaler Schreibweise (E.164-Format empfohlen)',
+    beschreibung:
+      'Rufnummer in internationaler Schreibweise (E.164-Format empfohlen)',
     datentyp: 'text',
     einschraenkungen: { maxLength: 25, pattern: '^[+0-9 ()\\-\\/]+$' },
   },
@@ -133,14 +137,22 @@ export const MOCK_DATENFELDER: FimDatenfeld[] = [
     name: 'IBAN',
     beschreibung: 'Internationale Bankkontonummer (ISO 13616)',
     datentyp: 'text',
-    einschraenkungen: { minLength: 15, maxLength: 34, pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$' },
+    einschraenkungen: {
+      minLength: 15,
+      maxLength: 34,
+      pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$',
+    },
   },
   {
     identifier: 'F60000101',
     name: 'BIC',
     beschreibung: 'Bank Identifier Code (ISO 9362)',
     datentyp: 'text',
-    einschraenkungen: { minLength: 8, maxLength: 11, pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$' },
+    einschraenkungen: {
+      minLength: 8,
+      maxLength: 11,
+      pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$',
+    },
   },
   {
     identifier: 'F60000105',
@@ -182,7 +194,14 @@ export const MOCK_DATENFELDGRUPPEN: FimDatenfeldgruppe[] = [
     identifier: 'G60000001',
     name: 'Natürliche Person',
     beschreibung: 'Personenidentifizierende Daten einer natürlichen Person',
-    felder: byId('F60000004', 'F60000006', 'F60000007', 'F60000010', 'F60000059', 'F60000028'),
+    felder: byId(
+      'F60000004',
+      'F60000006',
+      'F60000007',
+      'F60000010',
+      'F60000059',
+      'F60000028',
+    ),
   },
   {
     identifier: 'G60000002',
@@ -221,7 +240,7 @@ export class MockFimService implements FimService {
       (f) =>
         matchesSuche(f.name, suchbegriff) ||
         matchesSuche(f.identifier, suchbegriff) ||
-        matchesSuche(f.beschreibung, suchbegriff)
+        matchesSuche(f.beschreibung, suchbegriff),
     );
   }
 
@@ -231,7 +250,7 @@ export class MockFimService implements FimService {
       (g) =>
         matchesSuche(g.name, suchbegriff) ||
         matchesSuche(g.identifier, suchbegriff) ||
-        g.felder.some((f) => matchesSuche(f.name, suchbegriff))
+        g.felder.some((f) => matchesSuche(f.name, suchbegriff)),
     );
   }
 }
