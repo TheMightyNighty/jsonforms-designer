@@ -38,7 +38,7 @@
     "@jsonforms/react": "~3.7.0",
     "@monaco-editor/react": "^4.6.0",
     "@mui/icons-material": "^7.0.0",
-    "@mui/material": "^7.0.0",
+    "@mui/material": "^9.1.1",
     "monaco-editor": "~0.55.1",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
