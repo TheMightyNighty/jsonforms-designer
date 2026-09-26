@@ -53,6 +53,10 @@ export const de: EditorTranslations = {
     required: 'Pflichtfeld',
     options: 'Auswahloptionen',
     validatoren: 'OpenCode-Validatoren',
+    keineValidatoren: 'Keine Prüfungen verfügbar.',
+    keinePassendenValidatoren:
+      'Für diese Art von Feld gibt es keine passende Prüfung.',
+    feldtyp: 'Art des Feldes',
     textElement: 'Text-Element',
     gruppe: 'Gruppe',
     spaltenLayout: 'Spalten-Layout',

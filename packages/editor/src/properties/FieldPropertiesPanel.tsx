@@ -33,6 +33,7 @@ import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { UiElement } from '../core/model/uiElements';
+import { FeldSchema, feldtypLabel } from '../field-types/feldtypErkennung';
 import { useI18n } from '../i18n';
 import { ConditionEditor } from './ConditionEditor';
 import { EnumEditor } from './EnumEditor';
@@ -67,6 +68,8 @@ interface FieldValues {
   required: boolean;
   isStringType: boolean;
   hasEnum: boolean;
+  /** Fachsprachliche Art des Feldes für die Anzeige, z. B. „Datum". */
+  feldtyp: string;
 }
 
 function readFieldValues(
@@ -90,6 +93,9 @@ function readFieldValues(
     required: schema.required?.includes(key) ?? false,
     isStringType: fieldSchema.type === 'string',
     hasEnum: Array.isArray(fieldSchema.enum),
+    // Fachsprachliche Art des Feldes (Datum, IBAN, Ja/Nein …) statt des
+    // JSON-Basistyps — siehe feldtypErkennung.
+    feldtyp: feldtypLabel(fieldSchema as FeldSchema, control?.options),
   };
 }
 
@@ -207,6 +213,21 @@ export function FieldPropertiesPanel({
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {tab === 0 && (
           <>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 1,
+              }}
+            >
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {t.properties.feldtyp}:
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                {values.feldtyp}
+              </Typography>
+            </Box>
+
             <TextField
               label="Label"
               value={values.label}

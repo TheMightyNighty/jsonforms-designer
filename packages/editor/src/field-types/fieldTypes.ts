@@ -218,7 +218,7 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
     id: 'checkbox-group',
     displayName: 'Mehrfachauswahl',
     group: 'auswahl',
-    icon: 'checkboxes',
+    icon: 'list-check',
     schema: {
       type: 'array',
       title: 'Mehrfachauswahl',

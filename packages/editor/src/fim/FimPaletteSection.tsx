@@ -327,7 +327,7 @@ function SubLabel({ label, count }: { label: string; count?: number }) {
       <Typography
         variant="caption"
         sx={{
-          color: 'text.disabled',
+          color: 'text.secondary',
           fontSize: '0.68rem',
           fontWeight: 500,
           textTransform: 'uppercase',
@@ -339,7 +339,7 @@ function SubLabel({ label, count }: { label: string; count?: number }) {
       {count !== undefined && (
         <Typography
           variant="caption"
-          sx={{ color: 'text.disabled', fontSize: '0.68rem' }}
+          sx={{ color: 'text.secondary', fontSize: '0.68rem' }}
         >
           ({count})
         </Typography>
@@ -472,12 +472,12 @@ export function FimPaletteSection({
         <Box
           component="i"
           className={`ti ti-chevron-${open ? 'down' : 'right'}`}
-          sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }}
+          sx={{ fontSize: 12, color: 'text.secondary', flexShrink: 0 }}
         />
         <Typography
           variant="caption"
           sx={{
-            color: 'text.disabled',
+            color: 'text.secondary',
             fontWeight: 500,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
@@ -489,7 +489,7 @@ export function FimPaletteSection({
         {!gruppenLoading && (
           <Typography
             variant="caption"
-            sx={{ color: 'text.disabled', fontSize: '0.68rem', mr: 0.5 }}
+            sx={{ color: 'text.secondary', fontSize: '0.68rem', mr: 0.5 }}
           >
             ({totalCount})
           </Typography>

@@ -51,6 +51,9 @@ export interface EditorTranslations {
     required: string;
     options: string;
     validatoren: string;
+    keineValidatoren: string;
+    keinePassendenValidatoren: string;
+    feldtyp: string;
     textElement: string;
     gruppe: string;
     spaltenLayout: string;

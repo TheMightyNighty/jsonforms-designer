@@ -136,12 +136,12 @@ export function OpenCodePaletteSection({
         <Box
           component="i"
           className={`ti ti-chevron-${open ? 'down' : 'right'}`}
-          sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }}
+          sx={{ fontSize: 12, color: 'text.secondary', flexShrink: 0 }}
         />
         <Typography
           variant="caption"
           sx={{
-            color: 'text.disabled',
+            color: 'text.secondary',
             fontWeight: 500,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
@@ -153,7 +153,7 @@ export function OpenCodePaletteSection({
         {!loading && (
           <Typography
             variant="caption"
-            sx={{ color: 'text.disabled', fontSize: '0.68rem' }}
+            sx={{ color: 'text.secondary', fontSize: '0.68rem' }}
           >
             ({bausteine.length})
           </Typography>

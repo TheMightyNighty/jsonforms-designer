@@ -1,7 +1,11 @@
 /**
- * Mehrfach-Auswahl für OpenCode-Validatoren im Properties-Panel.
+ * Mehrfach-Auswahl der Prüfungen (OpenCode-Validatoren) im Properties-Panel.
  * x-opencode-validators wird im Schema hinterlegt.
  * Nutzt useEditorContext für vollen fieldState (tabs, tabAssignments etc.).
+ *
+ * Angeboten werden nur die Prüfungen, die zur Art des ausgewählten Feldes
+ * passen (siehe validatorZuordnung) — die Steuer-ID-Prüfung erscheint nicht
+ * mehr am Geburtsdatum.
  */
 import { JsonSchema7 } from '@jsonforms/core';
 import {
@@ -17,9 +21,11 @@ import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { createSetFieldStateAction } from '../core/model/addFieldActions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
+import { ermittleFeldtyp, FeldSchema } from '../field-types/feldtypErkennung';
 import { useI18n } from '../i18n';
 import { defaultOpenCodeService } from '../opencode/mockOpenCodeService';
 import { OpenCodeBaustein, OpenCodeService } from '../opencode/openCodeService';
+import { filtereValidatoren } from '../opencode/validatorZuordnung';
 
 interface ValidatorSectionProps {
   selectedScope: string;
@@ -54,6 +60,21 @@ export function ValidatorSection({
   };
   const current: string[] = fieldDef['x-opencode-validators'] ?? [];
 
+  // Art des Feldes aus Schema + UI-Optionen zurückgewinnen; sie steuert,
+  // welche Prüfungen überhaupt angeboten werden.
+  const uiOptionen = uiSchema.elements.find(
+    (el) => el.type === 'Control' && el.scope === selectedScope,
+  )?.options;
+  const feldtypId = ermittleFeldtyp(fieldDef as FeldSchema, uiOptionen)?.id;
+  const passende = filtereValidatoren(validators, feldtypId);
+
+  // Bereits gesetzte Prüfungen bleiben sichtbar, auch wenn sie nach einem
+  // Typwechsel nicht mehr passen — sonst verschwände eine gesetzte Prüfung
+  // unbemerkt aus der Oberfläche, ohne aus dem Schema zu verschwinden.
+  const sichtbar = validators.filter(
+    (v) => passende.includes(v) || current.includes(v.id),
+  );
+
   const toggle = (id: string) => {
     const next = current.includes(id)
       ? current.filter((v) => v !== id)
@@ -87,10 +108,12 @@ export function ValidatorSection({
       </Box>
     );
   }
-  if (validators.length === 0) {
+  if (sichtbar.length === 0) {
     return (
-      <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-        Keine OpenCode-Validatoren verfügbar.
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {validators.length === 0
+          ? t.properties.keineValidatoren
+          : t.properties.keinePassendenValidatoren}
       </Typography>
     );
   }
@@ -108,7 +131,7 @@ export function ValidatorSection({
       >
         {t.properties.validatoren}
       </Typography>
-      {validators.map((v) => (
+      {sichtbar.map((v) => (
         <FormControlLabel
           key={v.id}
           control={
