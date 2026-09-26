@@ -14,6 +14,7 @@ import { EditorAction } from '../../core/model/actions';
 import { createRemoveFieldAction } from '../../core/model/addFieldActions';
 import { sectionColorDisplay } from '../../core/model/sectionColorTokens';
 import { useI18n } from '../../i18n';
+import { KERN_FARBEN } from '../../theme/kernTokens';
 
 export interface StructuralElement {
   scope: string;
@@ -316,8 +317,9 @@ export function StructuralElementRow({
     const bgColor =
       (el.options?.bgColor as string) ??
       (headerToken ? sectionColorDisplay(headerToken) : undefined) ??
-      '#004A99';
-    const textColor = (el.options?.textColor as string) ?? '#ffffff';
+      KERN_FARBEN.aktion;
+    const textColor =
+      (el.options?.textColor as string) ?? KERN_FARBEN.aufAktion;
     return (
       <Box
         onClick={() => onSelect(el.scope)}

@@ -159,7 +159,10 @@ export const Header: React.FC<HeaderProps> = ({
               <Typography
                 variant="body2"
                 noWrap
-                sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+                // Kein Kursiv: Von Fira Sans ist nur der aufrechte Schnitt
+                // vendored, ein kursiver würde vom Browser schräg gestellt
+                // und überlappt dabei den Folgetext.
+                sx={{ color: 'text.secondary' }}
               >
                 — {formularName}
               </Typography>

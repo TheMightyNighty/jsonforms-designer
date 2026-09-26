@@ -7,6 +7,12 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert (Design)
+- **Visuelle Neuausrichtung am Verwaltungs-Designsystem KERN** (ADR 0004): Farben, Abstände, Radien, Rahmenbreiten und Typografie kommen aus den KERN-Design-Token statt aus einer eigenen Markenpalette; Schrift ist Fira Sans. Betroffen sind die Werkzeug-Oberfläche (Kopfzeile, Palette, Eigenschaften, Dialoge) **und** die KERN-Vorschau-Variante — beide bauen auf derselben Theme-Funktion auf, die frühere Nachempfindung mit geschätzten Farben entfällt.
+- **KERN ist vendored, keine Laufzeit-Abhängigkeit:** `scripts/vendor-kern.mjs` zieht `@kern-ux/native` (EUPL-1.2) einmalig, löst die Token des hellen Themes auf, rechnet die oklch-Werte nach sRGB-Hex um (MUI versteht kein oklch) und schreibt sie als generiertes Modul `kernTokens.ts`; dazu kommen drei Fira-Sans-Schnitte als woff2 (~400 KB), getrimmtes `@font-face`-CSS, Lizenz und Herkunftsnotiz. Keine neue Abhängigkeit in `package.json`, kein Laufzeit-CDN, `npm audit` unverändert. Aktualisierung: `node scripts/vendor-kern.mjs <version>`.
+- **Kontrast als Gate statt Zusage:** Ein Unit-Test rechnet die Kontraste der tatsächlich verwendeten Farbpaare nach WCAG 2.1 durch — 4,5:1 für Text (Fließtext, gedämpfter Text, Aktionsfarbe, Rückmeldungen) und 3:1 für Fokusindikator und Feldrahmen.
+- **Abschnittsfarben** (Auswahl und Vorgabewert für Abschnittsköpfe) kommen aus den KERN-Token. Gespeicherte Alt-Farben bleiben gültig und werden beim Laden weiterhin über `legacyColorToToken` migriert.
+
 ### Geändert (Editor-UX)
 - **Eigenschaften in Reitern „Inhalt · Prüfung · Bedingungen · Übersetzung"** (vorher „Allgemein · Validierung · Sichtbarkeit · Übersetzung", hart codiert — die Beschriftungen kommen jetzt aus `i18n`). Strukturelemente zeigen nur den passenden Reiter „Inhalt".
 - **Art des Feldes wechselbar:** Im Reiter „Inhalt" steht die Art des Feldes als Auswahl. Angeboten werden nur Arten mit demselben JSON-Basistyp (Text ↔ E-Mail ↔ Datum, nicht Text → Ja/Nein). Neue Action `CHANGE_FIELD_TYPE` mit Reducer-Tests; Bezeichnung, Hilfetext, selbst gesetzter Platzhalter, Property-Schlüssel und damit Bedingungen und Übersetzungen bleiben erhalten.

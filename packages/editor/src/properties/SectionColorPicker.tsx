@@ -86,7 +86,10 @@ export function SectionColorPicker({
                 border: '2px solid',
                 borderColor:
                   current === token ? 'primary.main' : 'rgba(0,0,0,0.15)',
-                boxShadow: current === token ? '0 0 0 1px #004A99' : 'none',
+                boxShadow: (t) =>
+                  current === token
+                    ? `0 0 0 1px ${t.palette.primary.main}`
+                    : 'none',
                 '&:hover': {
                   transform: 'scale(1.15)',
                   borderColor: 'primary.light',

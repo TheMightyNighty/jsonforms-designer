@@ -25,6 +25,16 @@ export default [
   },
   js.configs.recommended,
   {
+    // Werkzeug-Skripte laufen in Node, nicht im Browser (z. B. das
+    // KERN-Vendoring, siehe ADR 0004).
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { console: 'readonly', process: 'readonly' },
+    },
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsParser,
