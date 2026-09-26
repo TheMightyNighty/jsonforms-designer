@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { FieldAwareState } from '../core/model/addFieldReducer';
+import { emptyManifestMeta } from '../core/model/manifestMeta';
 import {
   createUpdateFieldPropertyAction,
   propertyKeyFromScope,
@@ -40,6 +41,7 @@ function stateWithField(): FieldAwareState {
     tabAssignments: {},
     lineNumbersEnabled: false,
     sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
   };
 }
 
@@ -151,6 +153,7 @@ describe('UPDATE_FIELD_PROPERTY placeholder', () => {
       tabAssignments: {},
       lineNumbersEnabled: false,
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     };
     const action = createUpdateFieldPropertyAction(
       '#/properties/x',

@@ -1,5 +1,6 @@
 import { JsonSchema7 } from '@jsonforms/core';
 
+import { migrateLegacyFieldState } from '../util/legacyMetadataMigration';
 import {
   ADD_FIELD,
   ADD_FIM_GRUPPE,
@@ -25,6 +26,7 @@ import {
   SetActiveTabAction,
   SetFieldStateAction,
 } from './addFieldActions';
+import { emptyManifestMeta, FormManifestMeta } from './manifestMeta';
 import { FlatElement, fromLegacy, newId, UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
@@ -54,7 +56,10 @@ export interface FieldAwareState {
   activeTabIndex: number;
   tabAssignments: Record<string, number>;
   lineNumbersEnabled: boolean;
+  /** Abschnittsfarben je Element-ID; Werte sind Registry-Token (OFM-R-421). */
   sectionColors: Record<string, string>;
+  /** Formular-Metadaten für das Manifest (OFM-R-205/OFM-R-304). */
+  manifestMeta: FormManifestMeta;
 }
 
 /**
@@ -227,7 +232,7 @@ export function loadTemplateReducer<S extends FieldAwareState>(
         elements: (incoming.uiSchema.elements ?? []).map(fromLegacy),
       }
     : state.uiSchema;
-  return {
+  const next: S = {
     ...state,
     schema: incoming.schema ?? state.schema,
     uiSchema: incomingUiSchema,
@@ -236,7 +241,10 @@ export function loadTemplateReducer<S extends FieldAwareState>(
     tabAssignments: incoming.tabAssignments ?? {},
     lineNumbersEnabled: incoming.lineNumbersEnabled ?? false,
     sectionColors: incoming.sectionColors ?? {},
+    manifestMeta: incoming.manifestMeta ?? { ...emptyManifestMeta },
   };
+  // Alt-Bestände (x-Metadaten im Schema, Hex-Farben) beim Laden migrieren.
+  return migrateLegacyFieldState(next).state as S;
 }
 
 // ---------------------------------------------------------------------------

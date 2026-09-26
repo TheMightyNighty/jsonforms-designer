@@ -1,7 +1,6 @@
 import { JsonSchema7 } from '@jsonforms/core';
 import {
   Box,
-  Divider,
   FormControl,
   FormControlLabel,
   InputLabel,
@@ -148,8 +147,6 @@ export function ConditionEditor({
 
   return (
     <Box>
-      <Divider sx={{ mb: 2 }} />
-
       <Box
         sx={{
           display: 'flex',

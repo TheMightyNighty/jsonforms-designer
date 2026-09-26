@@ -5,6 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { FieldAwareState } from '../model/addFieldReducer';
+import { emptyManifestMeta } from '../model/manifestMeta';
 import {
   FIELD_STATE_STORAGE_KEY,
   HttpFieldStateService,
@@ -33,7 +34,8 @@ function sampleState(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: { '#/properties/vorname': 0 },
     lineNumbersEnabled: true,
-    sectionColors: { col_1: '#004A99' },
+    sectionColors: { col_1: 'blue' },
+    manifestMeta: { ...emptyManifestMeta },
   };
 }
 
@@ -73,6 +75,7 @@ describe('normalizeFieldState()', () => {
       tabAssignments: {},
       lineNumbersEnabled: false,
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     });
   });
 

@@ -1,3 +1,4 @@
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import {
   Box,
   Button,
@@ -6,30 +7,44 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  IconButton,
+  MenuItem,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import { FormMetadata } from '../model/addFieldActions';
 import { FieldAwareState } from '../model/addFieldReducer';
+import {
+  FormManifestMeta,
+  isValidFormUrn,
+  suggestFormUrn,
+} from '../model/manifestMeta';
 
 interface MetadataDialogProps {
   open: boolean;
   onClose: () => void;
   schema: FieldAwareState['schema'];
+  manifestMeta: FormManifestMeta;
   onSave: (meta: FormMetadata) => void;
 }
 
-function readMeta(schema: FieldAwareState['schema']): FormMetadata {
+function readMeta(
+  schema: FieldAwareState['schema'],
+  manifestMeta: FormManifestMeta,
+): FormMetadata {
   const s = schema as Record<string, unknown>;
   return {
     title: String(s.title ?? ''),
     description: String(s.description ?? ''),
-    publisher: String(s['x-publisher'] ?? ''),
-    legalBasis: String(s['x-legal-basis'] ?? ''),
-    version: String(s['x-version'] ?? ''),
-    validFrom: String(s['x-valid-from'] ?? ''),
+    id: manifestMeta.id,
+    publisher: manifestMeta.publisher,
+    legalBasis: manifestMeta.legalBasis,
+    version: manifestMeta.version,
+    validFrom: manifestMeta.validFrom,
+    language: manifestMeta.language || 'de',
   };
 }
 
@@ -37,13 +52,16 @@ export function MetadataDialog({
   open,
   onClose,
   schema,
+  manifestMeta,
   onSave,
 }: MetadataDialogProps) {
-  const [meta, setMeta] = useState<FormMetadata>(readMeta(schema));
+  const [meta, setMeta] = useState<FormMetadata>(
+    readMeta(schema, manifestMeta),
+  );
 
   useEffect(() => {
-    if (open) setMeta(readMeta(schema));
-  }, [open, schema]);
+    if (open) setMeta(readMeta(schema, manifestMeta));
+  }, [open, schema, manifestMeta]);
 
   function set(key: keyof FormMetadata, value: string) {
     setMeta((prev) => ({ ...prev, [key]: value }));
@@ -53,6 +71,9 @@ export function MetadataDialog({
     onSave(meta);
     onClose();
   }
+
+  const urn = String(meta.id ?? '');
+  const urnInvalid = urn.trim() !== '' && !isValidFormUrn(urn.trim());
 
   return (
     <Dialog
@@ -92,6 +113,43 @@ export function MetadataDialog({
           helperText="Kurze Beschreibung des Antragsvorgangs"
         />
 
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+          <TextField
+            label="Formular-ID (URN)"
+            value={urn}
+            onChange={(e) => set('id', e.target.value)}
+            size="small"
+            fullWidth
+            error={urnInvalid}
+            placeholder="urn:de:bonn:formular:bewohnerparkausweis"
+            helperText={
+              urnInvalid
+                ? 'Muster: urn:<namensraum>:<rest>, z. B. urn:de:bonn:formular:bewohnerparkausweis'
+                : 'Stabile Formular-ID über alle Versionen (Manifest form.id)'
+            }
+            slotProps={{ htmlInput: { spellCheck: false } }}
+          />
+          <Tooltip title="URN-Vorschlag aus Behörde und Titel erzeugen">
+            <span>
+              <IconButton
+                aria-label="URN-Vorschlag erzeugen"
+                onClick={() =>
+                  set(
+                    'id',
+                    suggestFormUrn(
+                      String(meta.publisher ?? ''),
+                      String(meta.title ?? ''),
+                    ),
+                  )
+                }
+                sx={{ mt: 0.25 }}
+              >
+                <AutoFixHighIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
+
         <Divider>
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
             Behördeninformationen
@@ -106,7 +164,7 @@ export function MetadataDialog({
           size="small"
           fullWidth
           placeholder="z. B. Bundesagentur für Arbeit"
-          helperText="Wird als x-publisher im Schema gespeichert"
+          helperText="Wird im Manifest als form.publisher geführt"
         />
 
         <TextField
@@ -116,7 +174,7 @@ export function MetadataDialog({
           size="small"
           fullWidth
           placeholder="z. B. § 16 SGB II, OZG-Leistungs-ID 99001234"
-          helperText="Wird als x-legal-basis im Schema gespeichert"
+          helperText="Wird im Manifest als form.legalBasis geführt"
         />
 
         <Divider>
@@ -133,6 +191,7 @@ export function MetadataDialog({
             size="small"
             fullWidth
             placeholder="z. B. 1.0.0"
+            helperText="SemVer"
           />
           <TextField
             label="Gültig ab"
@@ -143,6 +202,17 @@ export function MetadataDialog({
             type="date"
             slotProps={{ inputLabel: { shrink: true } }}
           />
+          <TextField
+            label="Sprache"
+            value={meta.language ?? 'de'}
+            onChange={(e) => set('language', e.target.value)}
+            size="small"
+            select
+            sx={{ minWidth: 110 }}
+          >
+            <MenuItem value="de">Deutsch</MenuItem>
+            <MenuItem value="en">Englisch</MenuItem>
+          </TextField>
         </Box>
       </DialogContent>
 
@@ -154,7 +224,7 @@ export function MetadataDialog({
         <Button
           onClick={handleSave}
           variant="contained"
-          disabled={!meta.title?.trim()}
+          disabled={!meta.title?.trim() || urnInvalid}
         >
           Speichern
         </Button>

@@ -11,7 +11,9 @@
  * werden nach dem Mount per SET_FIELD_STATE hydriert.
  */
 import { FieldAwareState } from '../model/addFieldReducer';
+import { emptyManifestMeta } from '../model/manifestMeta';
 import { FlatElement, fromLegacy } from '../model/uiElements';
+import { migrateLegacyFieldState } from '../util/legacyMetadataMigration';
 import { sanitizeParsedJson } from '../util/sanitizeJson';
 
 export interface FieldStateStorageService {
@@ -35,7 +37,7 @@ export const normalizeFieldState = (
 ): FieldAwareState | undefined => {
   const parsed = sanitizeParsedJson(raw) as Partial<FieldAwareState> | null;
   if (!parsed?.schema || !parsed?.uiSchema) return undefined;
-  return {
+  return migrateLegacyFieldState({
     schema: parsed.schema,
     uiSchema: {
       type: parsed.uiSchema.type ?? 'VerticalLayout',
@@ -48,7 +50,8 @@ export const normalizeFieldState = (
     tabAssignments: parsed.tabAssignments ?? {},
     lineNumbersEnabled: parsed.lineNumbersEnabled ?? false,
     sectionColors: parsed.sectionColors ?? {},
-  };
+    manifestMeta: parsed.manifestMeta ?? { ...emptyManifestMeta },
+  }).state;
 };
 
 export interface HttpFieldStateServiceOptions {

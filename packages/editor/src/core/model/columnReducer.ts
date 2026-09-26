@@ -79,6 +79,67 @@ function insertInto(
   return [...elements.slice(0, idx + 1), newEl, ...elements.slice(idx + 1)];
 }
 
+/**
+ * Fügt ein Element in einen Container (ColumnContainer-Spalte oder
+ * GroupContainer-Kinderliste) ein — rekursiv, damit Drops auch in
+ * verschachtelten Strukturen (Gruppe in Spalte, Spalte in Gruppe) den
+ * Ziel-Container finden, egal auf welcher Ebene er liegt.
+ */
+function insertIntoContainer(
+  elements: UiElement[],
+  containerId: string,
+  columnIndex: number,
+  newEl: UiElement,
+  insertAfterId?: string,
+): UiElement[] {
+  return elements.map((el) => {
+    if (el.id === containerId) {
+      if (el.type === 'ColumnContainer') {
+        const nextColumns = el.columns.map((colItems, ci) =>
+          ci === columnIndex
+            ? insertInto(colItems, newEl, insertAfterId)
+            : colItems,
+        );
+        return { ...el, columns: nextColumns };
+      }
+      if (el.type === 'GroupContainer') {
+        return {
+          ...el,
+          children: insertInto(el.children, newEl, insertAfterId),
+        };
+      }
+      return el;
+    }
+    if (el.type === 'ColumnContainer') {
+      return {
+        ...el,
+        columns: el.columns.map((col) =>
+          insertIntoContainer(
+            col,
+            containerId,
+            columnIndex,
+            newEl,
+            insertAfterId,
+          ),
+        ),
+      };
+    }
+    if (el.type === 'GroupContainer') {
+      return {
+        ...el,
+        children: insertIntoContainer(
+          el.children,
+          containerId,
+          columnIndex,
+          newEl,
+          insertAfterId,
+        ),
+      };
+    }
+    return el;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // COLUMN_DROP Reducer
 // ---------------------------------------------------------------------------
@@ -177,18 +238,15 @@ export function columnDropReducer<S extends FieldAwareState>(
         };
   }
 
-  // ColumnContainer finden und Spalte aktualisieren
-  const nextElements = state.uiSchema.elements.map((el) => {
-    if (el.id !== containerId) return el;
-    if (el.type !== 'ColumnContainer') return el;
-    const col = el as ColumnContainer;
-    const nextColumns = col.columns.map((colItems, ci) =>
-      ci === columnIndex
-        ? insertInto(colItems, newEl, insertAfterId)
-        : colItems,
-    );
-    return { ...col, columns: nextColumns };
-  });
+  // Ziel-Container (ColumnContainer-Spalte oder GroupContainer) finden und
+  // aktualisieren — rekursiv, auch über verschachtelte Strukturen hinweg.
+  const nextElements = insertIntoContainer(
+    state.uiSchema.elements,
+    containerId,
+    columnIndex,
+    newEl,
+    insertAfterId,
+  );
 
   return {
     ...state,

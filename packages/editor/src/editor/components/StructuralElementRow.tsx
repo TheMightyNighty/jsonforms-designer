@@ -12,6 +12,7 @@ import { Dispatch } from 'react';
 import { useEditorContext } from '../../core/context';
 import { EditorAction } from '../../core/model/actions';
 import { createRemoveFieldAction } from '../../core/model/addFieldActions';
+import { sectionColorDisplay } from '../../core/model/sectionColorTokens';
 import { useI18n } from '../../i18n';
 
 export interface StructuralElement {
@@ -41,7 +42,8 @@ export function StructuralElementRow({
 
   const { fieldState } = useEditorContext();
   const { t } = useI18n();
-  const bgColor = fieldState.sectionColors[el.scope] ?? undefined;
+  const storedColor = fieldState.sectionColors[el.scope];
+  const bgColor = storedColor ? sectionColorDisplay(storedColor) : undefined;
 
   const baseSx = {
     borderRadius: 1,
@@ -310,9 +312,10 @@ export function StructuralElementRow({
 
   // Abschnittskopf (section-header)
   if (el.type === 'Label' && el.options?.variant === 'section-header') {
+    const headerToken = fieldState.sectionColors[el.scope];
     const bgColor =
       (el.options?.bgColor as string) ??
-      fieldState.sectionColors[el.scope] ??
+      (headerToken ? sectionColorDisplay(headerToken) : undefined) ??
       '#004A99';
     const textColor = (el.options?.textColor as string) ?? '#ffffff';
     return (

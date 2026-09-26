@@ -15,6 +15,7 @@ import {
   moveElementReducer,
   reorderInColumnReducer,
 } from './columnReducer';
+import { emptyManifestMeta } from './manifestMeta';
 import { UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,7 @@ function stateWithColumn(): FieldAwareState {
     tabAssignments: {},
     lineNumbersEnabled: false,
     sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
   };
 }
 
@@ -68,6 +70,7 @@ function stateWithFilledColumn(): FieldAwareState {
     tabAssignments: {},
     lineNumbersEnabled: false,
     sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
   };
 }
 
@@ -146,6 +149,95 @@ describe('columnDropReducer()', () => {
     expect(col[0].type).toBe('Label');
     expect(next.schema.properties).toEqual({});
   });
+
+  it('fügt ein Feld in die Kinderliste einer Gruppe ein', () => {
+    const state: FieldAwareState = {
+      schema: { type: 'object', properties: {} },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [
+          {
+            id: 'grp_001',
+            type: 'GroupContainer',
+            label: 'Gruppe',
+            children: [],
+          } as UiElement,
+        ],
+      },
+      tabs: [],
+      activeTabIndex: 0,
+      tabAssignments: {},
+      lineNumbersEnabled: false,
+      sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
+    };
+    const action = createColumnDropAction({
+      containerId: 'grp_001',
+      columnIndex: 0,
+      fieldTypeId: 'text-short',
+      propertyKey: 'textfeld',
+    });
+    const next = columnDropReducer(state, action);
+    const grp = next.uiSchema.elements[0] as Extract<
+      UiElement,
+      { children: unknown }
+    >;
+    expect(grp.children).toHaveLength(1);
+    expect(grp.children[0].type).toBe('Control');
+    expect('scope' in grp.children[0] && grp.children[0].scope).toBe(
+      '#/properties/textfeld',
+    );
+  });
+
+  it('findet eine Gruppe auch verschachtelt in einer Spalte', () => {
+    const state: FieldAwareState = {
+      schema: { type: 'object', properties: {} },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [
+          {
+            id: 'col_001',
+            type: 'ColumnContainer',
+            widths: [1, 1],
+            columns: [
+              [
+                {
+                  id: 'grp_nested',
+                  type: 'GroupContainer',
+                  label: 'Verschachtelte Gruppe',
+                  children: [],
+                },
+              ],
+              [],
+            ],
+          } as UiElement,
+        ],
+      },
+      tabs: [],
+      activeTabIndex: 0,
+      tabAssignments: {},
+      lineNumbersEnabled: false,
+      sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
+    };
+    const action = createColumnDropAction({
+      containerId: 'grp_nested',
+      columnIndex: 0,
+      fieldTypeId: 'text-short',
+      propertyKey: 'textfeld',
+    });
+    const next = columnDropReducer(state, action);
+    const col = next.uiSchema.elements[0] as Extract<
+      UiElement,
+      { columns: unknown }
+    >;
+    const nestedGroup = col.columns[0][0] as Extract<
+      UiElement,
+      { children: unknown }
+    >;
+    expect(nestedGroup.children).toHaveLength(1);
+    expect(nestedGroup.children[0].type).toBe('Control');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -181,6 +273,7 @@ describe('reorderInColumnReducer()', () => {
       tabAssignments: {},
       lineNumbersEnabled: false,
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     };
 
     const action = createReorderInColumnAction(

@@ -6,6 +6,7 @@ import { EditorAction } from '../core/model/actions';
 import { createSetFieldStateAction } from '../core/model/addFieldActions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { UiElement } from '../core/model/uiElements';
+import { stripHtml } from '../core/util/plainText';
 import { useI18n } from '../i18n';
 import { SectionColorPicker } from './SectionColorPicker';
 
@@ -113,7 +114,7 @@ export function StructuralPropertiesPanel({
         <TextField
           label={isGroup ? t.properties.gruppenTitle : t.properties.textInhalt}
           value={el.label ?? ''}
-          onChange={(e) => updateElement({ label: e.target.value })}
+          onChange={(e) => updateElement({ label: stripHtml(e.target.value) })}
           size="small"
           fullWidth
           multiline={isLabel || isAnnotation}

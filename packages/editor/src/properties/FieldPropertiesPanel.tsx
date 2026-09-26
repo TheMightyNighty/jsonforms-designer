@@ -22,10 +22,12 @@ import {
   Checkbox,
   Divider,
   FormControlLabel,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from '@mui/material';
-import { Dispatch } from 'react';
+import { Dispatch, useEffect, useState } from 'react';
 
 import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
@@ -123,6 +125,8 @@ function EmptyState() {
 // Haupt-Komponente
 // ---------------------------------------------------------------------------
 
+const TAB_LABELS = ['Allgemein', 'Validierung', 'Sichtbarkeit', 'Übersetzung'];
+
 export function FieldPropertiesPanel({
   selectedScope,
   schema,
@@ -131,6 +135,14 @@ export function FieldPropertiesPanel({
 }: FieldPropertiesPanelProps) {
   const { fieldState } = useEditorContext();
   const { t } = useI18n();
+  const [tab, setTab] = useState(0);
+
+  // Tab-Auswahl je Feld zurücksetzen — sonst bliebe man beim Wechsel zu
+  // einem anderen Feld z. B. auf "Übersetzung" stehen.
+  useEffect(() => {
+    setTab(0);
+  }, [selectedScope]);
+
   if (!selectedScope) return <EmptyState />;
 
   // Strukturelle Elemente → eigenes Panel. Suche rekursiv auch in Spalten.
@@ -172,101 +184,115 @@ export function FieldPropertiesPanel({
   };
 
   return (
-    <Box
-      sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2.5 }}
-      role="form"
-      aria-label="Feldeigenschaften"
-    >
+    <Box role="form" aria-label="Feldeigenschaften">
       <Typography
         variant="subtitle2"
-        sx={{ color: 'text.secondary', fontWeight: 500 }}
+        sx={{ color: 'text.secondary', fontWeight: 500, px: 2, pt: 2 }}
       >
         Feldeigenschaften
       </Typography>
 
-      <Divider />
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        variant="scrollable"
+        scrollButtons="auto"
+        sx={{ px: 1, minHeight: 36 }}
+      >
+        {TAB_LABELS.map((label) => (
+          <Tab key={label} label={label} sx={{ minHeight: 36, py: 0.5 }} />
+        ))}
+      </Tabs>
 
-      {/* Label */}
-      <TextField
-        label="Label"
-        value={values.label}
-        onChange={(e) => update('label', e.target.value)}
-        size="small"
-        fullWidth
-        inputProps={{ 'aria-label': 'Label des Feldes' }}
-      />
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {tab === 0 && (
+          <>
+            <TextField
+              label="Label"
+              value={values.label}
+              onChange={(e) => update('label', e.target.value)}
+              size="small"
+              fullWidth
+              inputProps={{ 'aria-label': 'Label des Feldes' }}
+            />
 
-      {/* Hinweistext */}
-      <TextField
-        label={t.properties.description}
-        value={values.description}
-        onChange={(e) => update('description', e.target.value)}
-        size="small"
-        fullWidth
-        multiline
-        minRows={2}
-        inputProps={{ 'aria-label': 'Hinweistext des Feldes' }}
-        helperText="Wird unter dem Feld angezeigt"
-      />
+            <TextField
+              label={t.properties.description}
+              value={values.description}
+              onChange={(e) => update('description', e.target.value)}
+              size="small"
+              fullWidth
+              multiline
+              minRows={2}
+              inputProps={{ 'aria-label': 'Hinweistext des Feldes' }}
+              helperText="Wird unter dem Feld angezeigt"
+            />
 
-      {/* Platzhalter — nur bei String-Feldern sinnvoll */}
-      {values.isStringType && (
-        <TextField
-          label={t.properties.placeholder}
-          value={values.placeholder}
-          onChange={(e) => update('placeholder', e.target.value)}
-          size="small"
-          fullWidth
-          inputProps={{ 'aria-label': 'Platzhalter-Text des Feldes' }}
-          helperText="Beispieltext im leeren Feld"
-        />
-      )}
+            {values.isStringType && (
+              <TextField
+                label={t.properties.placeholder}
+                value={values.placeholder}
+                onChange={(e) => update('placeholder', e.target.value)}
+                size="small"
+                fullWidth
+                inputProps={{ 'aria-label': 'Platzhalter-Text des Feldes' }}
+                helperText="Beispieltext im leeren Feld"
+              />
+            )}
 
-      {/* Enum-Optionen für Dropdown/Radio */}
-      {values.hasEnum && (
-        <EnumEditor
-          selectedScope={selectedScope}
-          schema={schema}
-          uiSchema={uiSchema}
-          tabs={fieldState.tabs}
-          activeTabIndex={fieldState.activeTabIndex}
-          tabAssignments={fieldState.tabAssignments}
-          dispatch={dispatch}
-        />
-      )}
+            <Divider />
 
-      <Divider />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={values.required}
+                  onChange={(e) => update('required', e.target.checked)}
+                  size="small"
+                />
+              }
+              label={<Typography variant="body2">Pflichtfeld</Typography>}
+            />
 
-      {/* Pflicht-Flag */}
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={values.required}
-            onChange={(e) => update('required', e.target.checked)}
-            size="small"
+            {values.hasEnum && (
+              <EnumEditor
+                selectedScope={selectedScope}
+                schema={schema}
+                uiSchema={uiSchema}
+                tabs={fieldState.tabs}
+                activeTabIndex={fieldState.activeTabIndex}
+                tabAssignments={fieldState.tabAssignments}
+                dispatch={dispatch}
+              />
+            )}
+          </>
+        )}
+
+        {tab === 1 && (
+          <ValidatorSection
+            selectedScope={selectedScope}
+            schema={schema}
+            uiSchema={uiSchema}
+            dispatch={dispatch}
           />
-        }
-        label={<Typography variant="body2">Pflichtfeld</Typography>}
-      />
-      <ValidatorSection
-        selectedScope={selectedScope}
-        schema={schema}
-        uiSchema={uiSchema}
-        dispatch={dispatch}
-      />
+        )}
 
-      <ConditionEditor
-        selectedScope={selectedScope}
-        schema={schema}
-        uiSchema={uiSchema}
-        dispatch={dispatch}
-      />
+        {tab === 2 && (
+          <ConditionEditor
+            selectedScope={selectedScope}
+            schema={schema}
+            uiSchema={uiSchema}
+            dispatch={dispatch}
+          />
+        )}
 
-      <TranslationEditor
-        selectedScope={selectedScope}
-        schema={schema}
-        dispatch={dispatch}
-      />
+        {tab === 3 && (
+          <TranslationEditor
+            selectedScope={selectedScope}
+            schema={schema}
+            dispatch={dispatch}
+          />
+        )}
+      </Box>
     </Box>
   );
 }

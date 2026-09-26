@@ -12,7 +12,17 @@ import {
 import { EmptyEditor } from './EmptyEditor';
 import { FieldFormPreview } from './FieldFormPreview';
 
-export const Editor: React.FC = () => {
+interface EditorProps {
+  testMode: boolean;
+  testData: Record<string, unknown>;
+  onTestDataChange: (data: Record<string, unknown>) => void;
+}
+
+export const Editor: React.FC<EditorProps> = ({
+  testMode,
+  testData,
+  onTestDataChange,
+}) => {
   const fieldState = useFieldState();
   const dispatch = useDispatch();
   const [selectedScope, setSelectedScope] = useSelectedScope();
@@ -29,6 +39,9 @@ export const Editor: React.FC = () => {
         selectedScope={selectedScope}
         onSelectScope={setSelectedScope}
         dispatch={dispatch}
+        testMode={testMode}
+        testData={testData}
+        onTestDataChange={onTestDataChange}
       />
     );
   }

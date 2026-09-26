@@ -8,8 +8,8 @@ export interface EditorTranslations {
     copySchema: string;
     codeModeOn: string;
     codeModeOff: string;
-    previewOn: string;
-    previewOff: string;
+    testModeOn: string;
+    testModeOff: string;
     exportImport: string;
   };
   palette: {

@@ -1,1 +1,1 @@
-export type EditorMode = 'visual' | 'code' | 'preview';
+export type EditorMode = 'visual' | 'code';

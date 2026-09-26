@@ -23,6 +23,7 @@ import {
   resolveKey,
   tabReducer,
 } from './addFieldReducer';
+import { emptyManifestMeta } from './manifestMeta';
 import { UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ function emptyState(): FieldAwareState {
     tabAssignments: {},
     lineNumbersEnabled: false,
     sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
   };
 }
 

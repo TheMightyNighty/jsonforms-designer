@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { FieldAwareState } from '../model/addFieldReducer';
+import { emptyManifestMeta } from '../model/manifestMeta';
 import { exportToXdf } from './xdfExport';
 
 function stateWith(
@@ -19,6 +20,7 @@ function stateWith(
     tabAssignments: {},
     lineNumbersEnabled: false,
     sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
   } as FieldAwareState;
 }
 
