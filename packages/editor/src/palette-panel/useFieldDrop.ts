@@ -8,6 +8,12 @@ import {
   createAddFieldAction,
   createAddFimGruppeAction,
 } from '../core/model/addFieldActions';
+import {
+  BAUSTEIN_DND_TYPE,
+  BausteinDragItem,
+  createBausteinAction,
+  getBaustein,
+} from '../field-types/bausteine';
 import { getFieldType } from '../field-types/fieldTypes';
 import { mapDatenfeld, mapDatenfeldgruppe } from '../fim/fimMapper';
 import { FIM_DND_TYPE, FimDragItem } from '../fim/FimPaletteSection';
@@ -54,7 +60,12 @@ function derivePropertyKey(fieldTypeId: string): string {
   return keyMap[fieldTypeId] ?? fieldTypeId.replace(/[^a-z0-9]/gi, '_');
 }
 
-function handleFimDrop(
+/**
+ * Erzeugt die Action für einen FIM-Eintrag — gemeinsame Logik für den
+ * Drop-Pfad (Maus) und den Tastatur-Pfad (Enter/Leertaste auf einem
+ * FIM-Eintrag).
+ */
+export function createFimPaletteAction(
   item: FimDragItem,
   insertAfterScope?: string,
   tabIndex?: number,
@@ -118,15 +129,25 @@ export function useFieldDrop(
   tabIndex?: number,
 ) {
   return useDrop<
-    FieldTypeDragItem | FimDragItem,
+    FieldTypeDragItem | FimDragItem | BausteinDragItem,
     unknown,
     { isOver: boolean; canDrop: boolean }
   >(
     () => ({
-      accept: [FIELD_TYPE_DND_TYPE, FIM_DND_TYPE],
+      accept: [FIELD_TYPE_DND_TYPE, FIM_DND_TYPE, BAUSTEIN_DND_TYPE],
       drop: (item) => {
+        if (item.dndType === BAUSTEIN_DND_TYPE) {
+          dispatch(
+            createBausteinAction(
+              getBaustein(item.bausteinId),
+              insertAfterScope,
+              tabIndex,
+            ),
+          );
+          return;
+        }
         if (item.dndType === FIM_DND_TYPE) {
-          dispatch(handleFimDrop(item, insertAfterScope, tabIndex));
+          dispatch(createFimPaletteAction(item, insertAfterScope, tabIndex));
           return;
         }
         dispatch(

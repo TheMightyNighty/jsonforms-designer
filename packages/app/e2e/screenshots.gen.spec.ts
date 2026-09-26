@@ -135,14 +135,14 @@ test('screenshot: Code-Modus', async ({ page }) => {
 test('screenshot: FIM-Bausteine', async ({ page }) => {
   await gotoDemo(page);
 
-  // Die FIM-Sektion steht am Ende der Palette und liegt bei 1600x900 unter
-  // dem sichtbaren Bereich. Das Bild zeigte deshalb keine FIM-Bausteine,
-  // obwohl der Test grün war: Er prüfte nur die Sichtbarkeit im DOM.
-  // FIM-Sektion aufklappen, falls sie nicht schon offen ist
+  // FIM liegt seit dem Palette-Umbau in einem eigenen Reiter.
+  await page.getByRole('tab', { name: 'FIM' }).click();
+
+  // Die FIM-Einträge stehen unter der Suche; bei 1600x900 kann der erste
+  // Treffer unter dem Bildausschnitt liegen. Das Bild zeigte deshalb früher
+  // keine FIM-Bausteine, obwohl der Test grün war: Er prüfte nur die
+  // Sichtbarkeit im DOM.
   const fimItem = page.getByText('Anschrift Inland').first();
-  if (!(await fimItem.isVisible().catch(() => false))) {
-    await page.getByText('FIM-Bausteine', { exact: false }).first().click();
-  }
   await expect(fimItem).toBeVisible({ timeout: 10_000 });
   await fimItem.scrollIntoViewIfNeeded();
 

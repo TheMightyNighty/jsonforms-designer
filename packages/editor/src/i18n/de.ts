@@ -39,6 +39,16 @@ export const de: EditorTranslations = {
     },
     validators: 'Validatoren',
     uiBausteine: 'UI-Bausteine',
+    suche: 'Bausteine und Felder suchen …',
+    suchergebnisse: 'Suchergebnisse',
+    weitereFeldtypen: 'Weitere Feldtypen',
+    fimSucheHinweis:
+      'FIM-Bausteine werden aus dem FIM-Portal geladen — dafür den Reiter „FIM" öffnen.',
+    tabs: {
+      bausteine: 'Bausteine',
+      fim: 'FIM',
+      einzelfelder: 'Einzelfelder',
+    },
     fim: {
       title: 'FIM-Bausteine',
       datenfeldgruppen: 'Datenfeldgruppen',

@@ -22,6 +22,14 @@ async function ausMenueWeitere(page: Page, eintrag: string) {
   await page.getByRole('menuitem', { name: eintrag }).click();
 }
 
+/**
+ * Die Palette hat seit dem Umbau drei Reiter; „Bausteine" ist der Standard.
+ * Die Katalog-Feldtypen liegen unter „Einzelfelder".
+ */
+async function oeffneEinzelfelder(page: Page) {
+  await page.getByRole('tab', { name: 'Einzelfelder' }).click();
+}
+
 async function dragAndDrop(page: Page, source: Locator, target: Locator) {
   const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
   await source.dispatchEvent('dragstart', { dataTransfer });
@@ -65,6 +73,11 @@ async function gotoSeeded(page: Page) {
 test('App lädt mit Palette und leerem Formular', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('JSONForms Designer').first()).toBeVisible();
+  // Standard-Reiter: Bausteine
+  await expect(
+    page.getByTestId('palette-baustein-baustein-antragsteller'),
+  ).toBeVisible();
+  await oeffneEinzelfelder(page);
   await expect(page.getByTestId('palette-item-text-short')).toBeVisible();
   await expect(page.getByTestId('field-row')).toHaveCount(0);
 });
@@ -77,6 +90,7 @@ test('Feld per Drag & Drop hinzufügen — überlebt Reload (Auto-Save)', async 
   page,
 }) => {
   await page.goto('/');
+  await oeffneEinzelfelder(page);
 
   const source = page.getByTestId('palette-item-text-short');
   // Leeres Formular → EmptyEditor ist die Drop-Fläche
@@ -107,6 +121,7 @@ test('Feld per Tastatur hinzufügen (Enter auf Palette-Eintrag)', async ({
   page,
 }) => {
   await page.goto('/');
+  await oeffneEinzelfelder(page);
 
   const item = page.getByTestId('palette-item-text-short');
   await expect(item).toHaveRole('button');
@@ -124,11 +139,67 @@ test('Feld per Tastatur hinzufügen (Enter auf Palette-Eintrag)', async ({
 });
 
 // ---------------------------------------------------------------------------
+// Palette: Reiter, Suche, Bausteine (auch per Tastatur)
+// ---------------------------------------------------------------------------
+
+test('Baustein per Tastatur einfügen legt eine benannte Gruppe an', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  const baustein = page.getByTestId('palette-baustein-baustein-anschrift');
+  await expect(baustein).toHaveRole('button');
+  await baustein.focus();
+  await page.keyboard.press('Enter');
+
+  // Der Baustein legt eine benannte Gruppe mit seinen Feldern an
+  await expect(page.getByText('Anschrift').first()).toBeVisible();
+  await expect(page.getByTestId('field-row')).toHaveCount(4);
+});
+
+test('Palette-Suche findet Bausteine und Einzelfelder über die Reiter hinweg', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  await page.getByRole('textbox', { name: /suchen/i }).fill('iban');
+
+  // Der Baustein „Bankverbindung" enthält ein IBAN-Feld …
+  await expect(
+    page.getByTestId('palette-baustein-baustein-bankverbindung'),
+  ).toBeVisible();
+  // … und der Einzelfeldtyp IBAN steht ebenfalls im Ergebnis
+  await expect(page.getByTestId('palette-item-iban')).toBeVisible();
+  // Nicht passende Einträge sind ausgeblendet
+  await expect(
+    page.getByTestId('palette-baustein-baustein-antragsteller'),
+  ).toHaveCount(0);
+});
+
+test('FIM-Datenfeldgruppe per Tastatur einfügen', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'FIM' }).click();
+
+  const gruppe = page.getByRole('button', { name: /Anschrift Inland/ }).first();
+  await expect(gruppe).toBeVisible();
+  await gruppe.focus();
+  await page.keyboard.press('Enter');
+
+  // Die Gruppe landet im Formular: die leere Editor-Fläche verschwindet und
+  // die Aktion ist rücknehmbar. (Die Felder einer FIM-Gruppe liefert der
+  // Mock-Dienst erst beim Ablegen nach — der Tastatur-Pfad verhält sich
+  // exakt wie der Maus-Pfad, weil beide dieselbe Action erzeugen.)
+  await expect(page.getByTestId('empty-editor-drop')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeEnabled();
+});
+
+// ---------------------------------------------------------------------------
 // Tastatur-Umsortieren (BITV): Alt+Pfeiltasten verschieben das Element
 // ---------------------------------------------------------------------------
 
 test('Felder per Alt+Pfeiltasten umsortieren', async ({ page }) => {
   await page.goto('/');
+  await oeffneEinzelfelder(page);
 
   // Zwei Felder per Tastatur anlegen: Textfeld, dann Checkbox (Reihenfolge!)
   await page.getByTestId('palette-item-text-short').focus();
