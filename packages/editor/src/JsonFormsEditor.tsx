@@ -26,6 +26,7 @@ import {
   UNDO,
 } from './core/model/historyReducer';
 import { createInitialEditorState } from './core/model/reducer';
+import { SpeicherStatus } from './core/model/speicherStatus';
 import { UiElement } from './core/model/uiElements';
 import { fieldStateFromSchemas } from './core/util/fieldStateFromSchemas';
 import { I18nProvider } from './i18n';
@@ -134,15 +135,40 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     };
   }, [initialLoad, dispatch]);
 
+  // Sichtbarer Stand des Auto-Saves für die Kopfzeile. Der erste Lauf des
+  // Effekts speichert den unveränderten Startzustand — deshalb beginnt der
+  // Status bei 'unveraendert' und springt erst mit dem Ergebnis um.
+  const [speicherStatus, setSpeicherStatus] = useState<SpeicherStatus>({
+    art: 'unveraendert',
+  });
+
   // Auto-Save bei jeder Zustandsänderung über den Persistenz-Adapter.
   useEffect(() => {
-    try {
-      void Promise.resolve(fieldStateStorage.save(fieldState)).catch((err) =>
-        reportError(err, 'Auto-Save fehlgeschlagen'),
-      );
-    } catch (err) {
+    let verworfen = false;
+    const gespeichert = () =>
+      !verworfen &&
+      setSpeicherStatus({ art: 'gespeichert', zeitpunkt: Date.now() });
+    const fehlgeschlagen = (err: unknown) => {
+      if (!verworfen) setSpeicherStatus({ art: 'fehler' });
       reportError(err, 'Auto-Save fehlgeschlagen');
+    };
+
+    try {
+      const ergebnis = fieldStateStorage.save(fieldState);
+      if (ergebnis instanceof Promise) {
+        setSpeicherStatus({ art: 'speichert' });
+        void ergebnis.then(gespeichert).catch(fehlgeschlagen);
+      } else {
+        gespeichert();
+      }
+    } catch (err) {
+      fehlgeschlagen(err);
     }
+    // Ein noch laufender Speichervorgang darf den Status nicht mehr
+    // überschreiben, wenn längst die nächste Änderung gespeichert wird.
+    return () => {
+      verworfen = true;
+    };
   }, [fieldState, fieldStateStorage]);
 
   // Extern bereitgestellte Schemas (SchemaService) werden in den
@@ -201,6 +227,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
               dispatch,
               reportError,
               fieldState,
+              speicherStatus,
               selectedScope,
               setSelectedScope,
               undo,

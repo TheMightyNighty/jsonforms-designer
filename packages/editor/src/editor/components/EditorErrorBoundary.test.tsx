@@ -17,6 +17,7 @@ function contextWith(reportError: EditorContext['reportError']): EditorContext {
   return {
     dispatch: vi.fn(),
     reportError,
+    speicherStatus: { art: 'unveraendert' } as const,
     fieldState: emptyFieldState,
     selectedScope: null,
     setSelectedScope: vi.fn(),

@@ -17,6 +17,7 @@ function renderItem(fieldTypeId = 'text-short') {
   const context: EditorContext = {
     dispatch,
     reportError: vi.fn(),
+    speicherStatus: { art: 'unveraendert' } as const,
     fieldState: { ...emptyFieldState, tabs: [{ label: 'Seite 1' }] },
     selectedScope: null,
     setSelectedScope: vi.fn(),

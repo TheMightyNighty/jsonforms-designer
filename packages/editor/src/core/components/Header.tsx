@@ -1,3 +1,13 @@
+/**
+ * Kopfzeile des Editors.
+ *
+ * Aufteilung nach ADR 0002: links steht, woran gearbeitet wird (Produktname,
+ * Formularname, Speicherstatus), rechts stehen die Aktionen — beschriftet, mit
+ * „Ausprobieren" als Hauptaktion. Alles Seltene liegt im Menü „Weitere".
+ *
+ * Vorher waren es acht unbeschriftete Symbole nebeneinander; die
+ * Formularredakteurin musste jedes einzeln überfahren, um es zu verstehen.
+ */
 import { JsonSchema7 } from '@jsonforms/core';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CodeIcon from '@mui/icons-material/Code';
@@ -7,18 +17,24 @@ import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LanguageIcon from '@mui/icons-material/Language';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import RedoIcon from '@mui/icons-material/Redo';
 import UndoIcon from '@mui/icons-material/Undo';
 import TestModeIcon from '@mui/icons-material/Visibility';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { useEditorConfig } from '../../config/EditorConfigContext';
 import { EditorMode } from '../../editor/editorMode';
 import { FormTemplate } from '../../field-types/formTemplates';
 import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
@@ -31,6 +47,11 @@ import {
   createSetFormMetadataAction,
   createToggleLineNumbersAction,
 } from '../model/addFieldActions';
+import {
+  formatiereSpeicherStatus,
+  istSpeicherFehler,
+  STATUS_AKTUALISIERUNG_MS,
+} from '../model/speicherStatus';
 import { copyToClipBoard } from '../util/clipboard';
 import { ImportExportDialog } from './ImportExportDialog';
 import { MetadataDialog } from './MetadataDialog';
@@ -42,6 +63,40 @@ interface HeaderProps {
   onTestModeChange: (testMode: boolean) => void;
 }
 
+/**
+ * Statuszeile unter dem Formularnamen. Der relative Zeitpunkt wird im
+ * Takt von STATUS_AKTUALISIERUNG_MS neu gerechnet, damit aus „gerade eben"
+ * ohne Zutun „vor 2 min" wird.
+ */
+function SpeicherStatusZeile() {
+  const { speicherStatus } = useEditorContext();
+  const { t } = useI18n();
+  const [jetzt, setJetzt] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(
+      () => setJetzt(Date.now()),
+      STATUS_AKTUALISIERUNG_MS,
+    );
+    return () => clearInterval(id);
+  }, []);
+
+  const fehler = istSpeicherFehler(speicherStatus);
+
+  return (
+    <Typography
+      variant="caption"
+      noWrap
+      // aria-live: Der Wechsel auf „Speichern fehlgeschlagen" muss auch
+      // ohne Blick auf die Kopfzeile ankommen.
+      aria-live="polite"
+      sx={{ color: fehler ? 'error.main' : 'text.secondary' }}
+    >
+      {formatiereSpeicherStatus(speicherStatus, t.header.status, jetzt)}
+    </Typography>
+  );
+}
+
 export const Header: React.FC<HeaderProps> = ({
   mode,
   onModeChange,
@@ -51,9 +106,11 @@ export const Header: React.FC<HeaderProps> = ({
   const { dispatch, fieldState } = useEditorContext();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const { t, locale, setLocale } = useI18n();
+  const config = useEditorConfig();
   const [exportOpen, setExportOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [metaOpen, setMetaOpen] = useState(false);
+  const [weitereAnker, setWeitereAnker] = useState<null | HTMLElement>(null);
 
   const handleTemplateSelect = (tpl: FormTemplate) => {
     dispatch(createLoadTemplateAction(tpl.state));
@@ -69,177 +126,195 @@ export const Header: React.FC<HeaderProps> = ({
     );
   };
 
+  const schliesseWeitere = () => setWeitereAnker(null);
+  /** Menüpunkt ausführen und Menü schließen — sonst bleibt es offen stehen. */
+  const ausMenue = (aktion: () => void) => () => {
+    aktion();
+    schliesseWeitere();
+  };
+
   const lineNumbers = fieldState.lineNumbersEnabled;
   const isCode = mode === 'code';
+  const formularName = (fieldState.schema as JsonSchema7).title;
+  const produktName = config.produktName ?? t.header.title;
 
   return (
     <AppBar position="static" elevation={0}>
       <Toolbar>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'baseline',
-            gap: 1,
-            flexGrow: 1,
-            minWidth: 0,
-          }}
-        >
-          <Typography
-            variant="h6"
-            noWrap
-            sx={{
-              fontWeight: 700,
-              color: 'primary.dark',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            {t.header.title}
-          </Typography>
-          {(fieldState.schema as JsonSchema7).title && (
+        {/* Links: woran wird gearbeitet? */}
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
             <Typography
-              variant="body2"
+              variant="h6"
               noWrap
-              sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+              sx={{
+                fontWeight: 700,
+                color: 'primary.dark',
+                letterSpacing: '-0.02em',
+              }}
             >
-              — {(fieldState.schema as JsonSchema7).title}
+              {produktName}
             </Typography>
-          )}
-          <Typography
-            variant="caption"
-            aria-label="Editor-Version"
-            sx={{ color: 'text.disabled', fontSize: '0.65rem', flexShrink: 0 }}
-          >
-            v{EDITOR_VERSION}
-          </Typography>
+            {formularName && (
+              <Typography
+                variant="body2"
+                noWrap
+                sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+              >
+                — {formularName}
+              </Typography>
+            )}
+            <Typography
+              variant="caption"
+              aria-label="Editor-Version"
+              sx={{
+                color: 'text.secondary',
+                fontSize: '0.65rem',
+                flexShrink: 0,
+              }}
+            >
+              v{EDITOR_VERSION}
+            </Typography>
+          </Box>
+          <SpeicherStatusZeile />
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-          <Tooltip title={locale === 'de' ? 'English' : 'Deutsch'}>
-            <IconButton
-              color="inherit"
-              onClick={() => setLocale(locale === 'de' ? 'en' : 'de')}
-              aria-label="Sprache wechseln"
-            >
-              <LanguageIcon />
-              <Typography
-                variant="caption"
-                sx={{ ml: 0.25, fontSize: '0.65rem' }}
-              >
-                {locale.toUpperCase()}
-              </Typography>
-            </IconButton>
-          </Tooltip>
-
+        {/* Rechts: Aktionen, beschriftet */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Tooltip title={t.header.undo}>
             <span>
-              <IconButton
+              <Button
                 color="inherit"
+                size="small"
                 onClick={undo}
                 disabled={!canUndo}
-                aria-label="Rückgängig"
+                startIcon={<UndoIcon />}
+                sx={{ color: 'text.secondary' }}
               >
-                <UndoIcon />
-              </IconButton>
+                {t.header.undo}
+              </Button>
             </span>
           </Tooltip>
           <Tooltip title={t.header.redo}>
             <span>
-              <IconButton
+              <Button
                 color="inherit"
+                size="small"
                 onClick={redo}
                 disabled={!canRedo}
-                aria-label="Wiederholen"
+                startIcon={<RedoIcon />}
+                sx={{ color: 'text.secondary' }}
               >
-                <RedoIcon />
-              </IconButton>
+                {t.header.redo}
+              </Button>
             </span>
           </Tooltip>
 
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-
-          <Tooltip title={t.header.template}>
-            <IconButton
-              color="inherit"
-              onClick={() => setTemplateOpen(true)}
-              aria-label="Vorlage laden"
-            >
-              <LibraryBooksIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title={t.header.copySchema}>
-            <IconButton
-              color="inherit"
-              onClick={handleCopySchema}
-              aria-label="Schema kopieren"
-            >
-              <ContentCopyIcon />
-            </IconButton>
-          </Tooltip>
+          {/*
+            Platz für die Qualitäts-Ampel aus Arbeitspaket 6 und — sobald es
+            einen Freigabe-Workflow gibt — für „Zur Freigabe". Beides wird
+            hier eingehängt, damit die Hauptaktion rechts außen stehen bleibt.
+          */}
+          <Box
+            data-testid="header-slot-qualitaet"
+            sx={{ display: 'flex', alignItems: 'center' }}
+          />
 
           <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
-          <Tooltip title={isCode ? t.header.codeModeOff : t.header.codeModeOn}>
-            <IconButton
-              color="inherit"
-              onClick={() => onModeChange(isCode ? 'visual' : 'code')}
-              aria-label={isCode ? 'Visueller Modus' : 'Code-Modus'}
-              sx={{ color: isCode ? 'primary.main' : 'text.secondary' }}
-            >
-              <CodeIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip
-            title={testMode ? t.header.testModeOff : t.header.testModeOn}
+          {/* Hauptaktion */}
+          <Button
+            variant="contained"
+            size="small"
+            disableElevation
+            onClick={() => onTestModeChange(!testMode)}
+            startIcon={testMode ? <EditIcon /> : <TestModeIcon />}
           >
-            <IconButton
-              color="inherit"
-              onClick={() => onTestModeChange(!testMode)}
-              aria-label={
-                testMode ? 'Bearbeitung fortsetzen' : 'Formular testen'
-              }
-              sx={{ color: testMode ? 'primary.main' : 'text.secondary' }}
-            >
-              {testMode ? <EditIcon /> : <TestModeIcon />}
-            </IconButton>
-          </Tooltip>
+            {testMode ? t.header.bearbeiten : t.header.ausprobieren}
+          </Button>
 
-          <Tooltip
-            title={
-              lineNumbers
-                ? 'Zeilennummern ausblenden'
-                : 'Zeilennummern einblenden'
-            }
+          <Button
+            color="inherit"
+            size="small"
+            onClick={(e) => setWeitereAnker(e.currentTarget)}
+            startIcon={<MoreHorizIcon />}
+            aria-haspopup="menu"
+            aria-expanded={weitereAnker ? true : undefined}
+            sx={{ color: 'text.secondary' }}
           >
-            <IconButton
-              color="inherit"
-              onClick={() => dispatch(createToggleLineNumbersAction())}
-              aria-label="Zeilennummern umschalten"
-              sx={{ color: lineNumbers ? 'primary.main' : 'text.secondary' }}
-            >
-              <FormatListNumberedIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Formular-Metadaten">
-            <IconButton
-              onClick={() => setMetaOpen(true)}
-              aria-label="Formular-Metadaten bearbeiten"
-            >
-              <InfoOutlinedIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title={t.header.exportImport}>
-            <IconButton
-              onClick={() => setExportOpen(true)}
-              aria-label="Export / Import"
-            >
-              <CloudDownloadIcon />
-            </IconButton>
-          </Tooltip>
+            {t.header.weitere}
+          </Button>
         </Box>
+
+        <Menu
+          anchorEl={weitereAnker}
+          open={Boolean(weitereAnker)}
+          onClose={schliesseWeitere}
+        >
+          <MenuItem
+            onClick={ausMenue(() => onModeChange(isCode ? 'visual' : 'code'))}
+          >
+            <ListItemIcon>
+              <CodeIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>
+              {isCode ? t.header.codeModeOff : t.header.codeModeOn}
+            </ListItemText>
+          </MenuItem>
+
+          <MenuItem onClick={ausMenue(handleCopySchema)}>
+            <ListItemIcon>
+              <ContentCopyIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.copySchema}</ListItemText>
+          </MenuItem>
+
+          <MenuItem onClick={ausMenue(() => setExportOpen(true))}>
+            <ListItemIcon>
+              <CloudDownloadIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.exportImport}</ListItemText>
+          </MenuItem>
+
+          <MenuItem onClick={ausMenue(() => setTemplateOpen(true))}>
+            <ListItemIcon>
+              <LibraryBooksIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.template}</ListItemText>
+          </MenuItem>
+
+          <MenuItem onClick={ausMenue(() => setMetaOpen(true))}>
+            <ListItemIcon>
+              <InfoOutlinedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.metadaten}</ListItemText>
+          </MenuItem>
+
+          <Divider />
+
+          <MenuItem
+            onClick={ausMenue(() => dispatch(createToggleLineNumbersAction()))}
+          >
+            <ListItemIcon>
+              <FormatListNumberedIcon
+                fontSize="small"
+                color={lineNumbers ? 'primary' : 'inherit'}
+              />
+            </ListItemIcon>
+            <ListItemText>{t.header.zeilennummern}</ListItemText>
+          </MenuItem>
+
+          <MenuItem
+            onClick={ausMenue(() => setLocale(locale === 'de' ? 'en' : 'de'))}
+          >
+            <ListItemIcon>
+              <LanguageIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>
+              {t.header.sprache}: {locale.toUpperCase()}
+            </ListItemText>
+          </MenuItem>
+        </Menu>
       </Toolbar>
 
       <ImportExportDialog

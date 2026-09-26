@@ -12,6 +12,22 @@ export const en: EditorTranslations = {
     testModeOn: 'Fill in form for testing',
     testModeOff: 'Continue editing',
     exportImport: 'Export / Import',
+    metadaten: 'Form metadata',
+    zeilennummern: 'Line numbers',
+    sprache: 'Interface language',
+    weitere: 'More',
+    ausprobieren: 'Try it out',
+    bearbeiten: 'Back to editing',
+    status: {
+      entwurf: 'Draft',
+      speichert: 'saving …',
+      geradeEben: 'just now',
+      gespeichertVor: 'saved {zeit} ago',
+      fehler: 'Saving failed',
+      sekunden: 's',
+      minuten: 'min',
+      stunden: 'h',
+    },
   },
   palette: {
     groups: {

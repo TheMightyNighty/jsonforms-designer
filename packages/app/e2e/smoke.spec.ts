@@ -12,6 +12,16 @@ const STORAGE_KEY = 'jfd_fieldState_v1';
  * daher werden die DragEvents mit geteiltem DataTransfer direkt dispatcht
  * (react-dnd prüft `isTrusted` nicht).
  */
+/**
+ * Seltene Aktionen liegen seit dem Kopfzeilen-Umbau im Menü „Weitere"
+ * (Code-Modus, Schema kopieren, Import/Export, Vorlagen, Metadaten,
+ * Editorsprache).
+ */
+async function ausMenueWeitere(page: Page, eintrag: string) {
+  await page.getByRole('button', { name: 'Weitere' }).click();
+  await page.getByRole('menuitem', { name: eintrag }).click();
+}
+
 async function dragAndDrop(page: Page, source: Locator, target: Locator) {
   const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
   await source.dispatchEvent('dragstart', { dataTransfer });
@@ -167,7 +177,7 @@ test('Label im Eigenschaften-Panel ändern aktualisiert das Formular', async ({
 test('Testmodus macht das Formular ausfüllbar', async ({ page }) => {
   await gotoSeeded(page);
 
-  await page.getByRole('button', { name: 'Formular testen' }).click();
+  await page.getByRole('button', { name: 'Ausprobieren' }).click();
   const input = page.getByRole('textbox', { name: /Nachname/ });
   await expect(input).toBeVisible();
   await input.fill('Mustermann');
@@ -185,7 +195,7 @@ test('Code-Modus lädt Monaco lokal — keine CDN-Requests', async ({ page }) =>
   });
 
   await gotoSeeded(page);
-  await page.getByRole('button', { name: 'Code-Modus' }).click();
+  await ausMenueWeitere(page, 'Code-Modus');
 
   // Monaco gerendert und mit dem Schema befüllt
   await expect(page.locator('.monaco-editor').first()).toBeVisible({
@@ -197,13 +207,47 @@ test('Code-Modus lädt Monaco lokal — keine CDN-Requests', async ({ page }) =>
 });
 
 // ---------------------------------------------------------------------------
+// Kopfzeile
+// ---------------------------------------------------------------------------
+
+test('Kopfzeile zeigt Formularname, Speicherstatus und das Menü „Weitere"', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+
+  const kopfzeile = page.getByRole('banner').first();
+  // Speicherstatus: Der Editor speichert beim Start automatisch.
+  await expect(kopfzeile).toContainText('Entwurf');
+  await expect(kopfzeile).toContainText('gespeichert vor');
+
+  // Hauptaktion und Rückgängig/Wiederholen sind beschriftet, nicht nur Symbol
+  await expect(
+    page.getByRole('button', { name: 'Ausprobieren' }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
+
+  // Seltene Aktionen liegen im Menü
+  await page.getByRole('button', { name: 'Weitere' }).click();
+  const menu = page.getByRole('menu');
+  for (const eintrag of [
+    'Code-Modus',
+    'Schema kopieren',
+    'Export / Import',
+    'Vorlage laden',
+    'Formular-Metadaten',
+  ]) {
+    await expect(menu.getByRole('menuitem', { name: eintrag })).toBeVisible();
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Export
 // ---------------------------------------------------------------------------
 
 test('Export-Dialog öffnet mit Schema- und XDF-Tab', async ({ page }) => {
   await gotoSeeded(page);
 
-  await page.getByRole('button', { name: 'Export / Import' }).click();
+  await ausMenueWeitere(page, 'Export / Import');
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('tab', { name: 'XDF 2.0' })).toBeVisible();

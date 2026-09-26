@@ -20,6 +20,16 @@ export interface PaletteConfig {
 }
 
 export interface EditorConfig {
+  /**
+   * Produktname in der Kopfzeile. Default: der Wert aus `i18n`
+   * („JSONForms Designer").
+   *
+   * [RÜCKFRAGE AN FABLE: endgültiger Produktname. Bis zur Entscheidung
+   * bleibt der bisherige Name der Default; Hosts können ihn schon jetzt
+   * überschreiben, ohne dass eine Namensentscheidung im Code festgeschrieben
+   * wird.]
+   */
+  produktName?: string;
   modules?: {
     fim?: FimModuleConfig;
     openCode?: OpenCodeModuleConfig;
@@ -41,6 +51,7 @@ export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
 /** Merged eine partielle Nutzer-Config mit den Defaults. */
 export function mergeEditorConfig(partial?: EditorConfig): EditorConfig {
   return {
+    produktName: partial?.produktName,
     modules: {
       fim: {
         enabled: true,

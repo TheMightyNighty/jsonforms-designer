@@ -11,6 +11,22 @@ export interface EditorTranslations {
     testModeOn: string;
     testModeOff: string;
     exportImport: string;
+    metadaten: string;
+    zeilennummern: string;
+    sprache: string;
+    weitere: string;
+    ausprobieren: string;
+    bearbeiten: string;
+    status: {
+      entwurf: string;
+      speichert: string;
+      geradeEben: string;
+      gespeichertVor: string;
+      fehler: string;
+      sekunden: string;
+      minuten: string;
+      stunden: string;
+    };
   };
   palette: {
     groups: {
