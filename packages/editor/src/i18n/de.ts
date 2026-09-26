@@ -16,6 +16,13 @@ export const de: EditorTranslations = {
     zeilennummern: 'Zeilennummern',
     sprache: 'Sprache der Oberfläche',
     weitere: 'Weitere',
+    qualitaet: {
+      titel: 'Qualität des Formulars',
+      alsButton: 'Qualität prüfen',
+      ohneBefund: 'Keine offenen Punkte.',
+      fehler: 'Fehler',
+      hinweise: 'Hinweise',
+    },
     ausprobieren: 'Ausprobieren',
     bearbeiten: 'Weiter bearbeiten',
     status: {
@@ -70,6 +77,11 @@ export const de: EditorTranslations = {
     mehrstufig: 'Mehrstufiges Formular anlegen',
     seite: 'Seite',
     neuerTab: 'Neuer Tab',
+    geraet: {
+      desktop: 'Desktop',
+      handy: 'Handy',
+      hinweis: 'Ansicht — ändert das Formular nicht',
+    },
   },
   properties: {
     emptyHint: 'Feld auswählen,\num Eigenschaften zu bearbeiten',
@@ -86,6 +98,13 @@ export const de: EditorTranslations = {
       uebersetzung: 'Übersetzung',
     },
     feldtypWechseln: 'Art des Feldes ändern',
+    vorschlag: {
+      text: 'Wegen „{ausloeser}" im Namen passt hier vermutlich {vorschlag}.',
+      uebernehmen: 'Übernehmen',
+      ignorieren: 'Ignorieren',
+      nichtMoeglich:
+        'Der Wechsel ist nicht ohne Weiteres möglich — bereits erfasste Antworten würden nicht mehr passen.',
+    },
     feldtypWechselHinweis:
       'Nur Arten mit derselben Art von Antwort stehen zur Auswahl.',
     bedingung: {

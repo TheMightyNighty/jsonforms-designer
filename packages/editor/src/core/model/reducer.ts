@@ -13,6 +13,7 @@ import {
   ADD_TAB,
   COLUMN_DROP,
   EditorAction,
+  IGNORIERE_TYPVORSCHLAG,
   LOAD_TEMPLATE,
   MOVE_ELEMENT,
   REMOVE_FIELD,
@@ -59,6 +60,7 @@ export const emptyFieldState: FieldAwareState = {
   activeTabIndex: 0,
   tabAssignments: {},
   lineNumbersEnabled: false,
+  typvorschlagIgnoriert: {},
   sectionColors: {},
   manifestMeta: { ...emptyManifestMeta },
 };
@@ -116,6 +118,17 @@ export const editorReducer = (
         ...state.fieldState,
         lineNumbersEnabled: !state.fieldState.lineNumbersEnabled,
       },
+    };
+  }
+  // IGNORIERE_TYPVORSCHLAG — Redaktionsgedächtnis, kein Exportinhalt.
+  if (action.type === IGNORIERE_TYPVORSCHLAG) {
+    const { scope, ignoriert } = action.payload;
+    const naechste = { ...state.fieldState.typvorschlagIgnoriert };
+    if (ignoriert) naechste[scope] = true;
+    else delete naechste[scope];
+    return {
+      ...state,
+      fieldState: { ...state.fieldState, typvorschlagIgnoriert: naechste },
     };
   }
   // SET_SECTION_COLOR

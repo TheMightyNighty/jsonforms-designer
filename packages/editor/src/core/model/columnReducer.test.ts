@@ -40,6 +40,7 @@ function stateWithColumn(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
   };
@@ -69,6 +70,7 @@ function stateWithFilledColumn(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
   };
@@ -168,6 +170,7 @@ describe('columnDropReducer()', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
       manifestMeta: { ...emptyManifestMeta },
     };
@@ -217,6 +220,7 @@ describe('columnDropReducer()', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
       manifestMeta: { ...emptyManifestMeta },
     };
@@ -272,6 +276,7 @@ describe('reorderInColumnReducer()', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
       manifestMeta: { ...emptyManifestMeta },
     };
@@ -347,6 +352,7 @@ function stateMitRootFeld(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
   };

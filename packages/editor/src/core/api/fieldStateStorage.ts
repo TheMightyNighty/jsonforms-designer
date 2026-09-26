@@ -49,6 +49,7 @@ export const normalizeFieldState = (
     activeTabIndex: parsed.activeTabIndex ?? 0,
     tabAssignments: parsed.tabAssignments ?? {},
     lineNumbersEnabled: parsed.lineNumbersEnabled ?? false,
+    typvorschlagIgnoriert: parsed.typvorschlagIgnoriert ?? {},
     sectionColors: parsed.sectionColors ?? {},
     manifestMeta: parsed.manifestMeta ?? { ...emptyManifestMeta },
   }).state;

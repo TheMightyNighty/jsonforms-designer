@@ -144,6 +144,7 @@ export function ImportExportDialog({
             activeTabIndex: parsed.activeTabIndex ?? 0,
             tabAssignments: parsed.tabAssignments ?? {},
             lineNumbersEnabled: false,
+            typvorschlagIgnoriert: {},
             sectionColors: parsed.sectionColors ?? {},
             manifestMeta: parsed.manifestMeta ?? { ...emptyManifestMeta },
           });

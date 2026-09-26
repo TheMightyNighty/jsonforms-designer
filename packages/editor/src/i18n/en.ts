@@ -16,6 +16,13 @@ export const en: EditorTranslations = {
     zeilennummern: 'Line numbers',
     sprache: 'Interface language',
     weitere: 'More',
+    qualitaet: {
+      titel: 'Form quality',
+      alsButton: 'Check quality',
+      ohneBefund: 'Nothing open.',
+      fehler: 'Errors',
+      hinweise: 'Notices',
+    },
     ausprobieren: 'Try it out',
     bearbeiten: 'Back to editing',
     status: {
@@ -69,6 +76,11 @@ export const en: EditorTranslations = {
     mehrstufig: 'Create multi-step form',
     seite: 'Page',
     neuerTab: 'New tab',
+    geraet: {
+      desktop: 'Desktop',
+      handy: 'Phone',
+      hinweis: 'View only — does not change the form',
+    },
   },
   properties: {
     emptyHint: 'Select a field\nto edit its properties',
@@ -85,6 +97,13 @@ export const en: EditorTranslations = {
       uebersetzung: 'Translation',
     },
     feldtypWechseln: 'Change kind of field',
+    vorschlag: {
+      text: 'Because of "{ausloeser}" in the name, {vorschlag} probably fits here.',
+      uebernehmen: 'Apply',
+      ignorieren: 'Ignore',
+      nichtMoeglich:
+        'This change is not straightforward — answers already collected would no longer fit.',
+    },
     feldtypWechselHinweis:
       'Only kinds expecting the same kind of answer are offered.',
     bedingung: {

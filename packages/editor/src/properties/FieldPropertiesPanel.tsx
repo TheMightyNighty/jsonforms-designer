@@ -18,7 +18,9 @@
 
 import { JsonSchema7 } from '@jsonforms/core';
 import {
+  Alert,
   Box,
+  Button,
   Checkbox,
   Divider,
   FormControlLabel,
@@ -32,6 +34,7 @@ import { Dispatch, useEffect, useState } from 'react';
 
 import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
+import { createIgnoriereTypvorschlagAction } from '../core/model/addFieldActions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { UiElement } from '../core/model/uiElements';
 import {
@@ -40,6 +43,7 @@ import {
   feldtypLabel,
   kompatibleFeldtypen,
 } from '../field-types/feldtypErkennung';
+import { vorschlagWeichtAb } from '../field-types/feldtypVorschlag';
 import { useI18n } from '../i18n';
 import { ConditionEditor } from './ConditionEditor';
 import { EnumEditor } from './EnumEditor';
@@ -201,6 +205,91 @@ function FeldtypAuswahl({
 }
 
 // ---------------------------------------------------------------------------
+// Typvorschlag aus der Bezeichnung
+// ---------------------------------------------------------------------------
+
+interface TypvorschlagHinweisProps {
+  selectedScope: string;
+  label: string;
+  feldtypId: string | undefined;
+  dispatch: Dispatch<EditorAction>;
+}
+
+/**
+ * Nicht blockierender Hinweis, wenn die Bezeichnung einen anderen Feldtyp
+ * nahelegt als den gewählten („Geburtsdatum" als Textfeld). „Übernehmen"
+ * wechselt den Typ, „Ignorieren" merkt die Entscheidung für dieses Feld.
+ *
+ * Führt der Vorschlag über eine Basistypgrenze (Text → Ganzzahl), wird er
+ * erklärt, aber nicht angeboten — derselbe vorsichtige Default wie beim
+ * Typwechsel im Reiter „Inhalt" (siehe kompatibleFeldtypen).
+ */
+function TypvorschlagHinweis({
+  selectedScope,
+  label,
+  feldtypId,
+  dispatch,
+}: TypvorschlagHinweisProps) {
+  const { t } = useI18n();
+  const { fieldState } = useEditorContext();
+
+  if (fieldState.typvorschlagIgnoriert[selectedScope]) return null;
+  const vorschlag = vorschlagWeichtAb(label, feldtypId);
+  if (!vorschlag) return null;
+
+  const wechselMoeglich =
+    feldtypId !== undefined &&
+    kompatibleFeldtypen(feldtypId).some((f) => f.id === vorschlag.feldtypId);
+
+  return (
+    <Alert
+      severity="info"
+      variant="outlined"
+      data-testid="typvorschlag-hinweis"
+      action={
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          {wechselMoeglich && (
+            <Button
+              size="small"
+              onClick={() =>
+                dispatch(
+                  createChangeFieldTypeAction(
+                    selectedScope,
+                    vorschlag.feldtypId,
+                  ),
+                )
+              }
+            >
+              {t.properties.vorschlag.uebernehmen}
+            </Button>
+          )}
+          <Button
+            size="small"
+            color="inherit"
+            onClick={() =>
+              dispatch(createIgnoriereTypvorschlagAction(selectedScope, true))
+            }
+          >
+            {t.properties.vorschlag.ignorieren}
+          </Button>
+        </Box>
+      }
+    >
+      <Typography variant="body2">
+        {t.properties.vorschlag.text
+          .replace('{ausloeser}', vorschlag.ausloeser)
+          .replace('{vorschlag}', vorschlag.feldtypName)}
+      </Typography>
+      {!wechselMoeglich && (
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {t.properties.vorschlag.nichtMoeglich}
+        </Typography>
+      )}
+    </Alert>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Haupt-Komponente
 // ---------------------------------------------------------------------------
 
@@ -217,7 +306,6 @@ export function FieldPropertiesPanel({
   uiSchema,
   dispatch,
 }: FieldPropertiesPanelProps) {
-  const { fieldState } = useEditorContext();
   const { t } = useI18n();
   const [tab, setTab] = useState(0);
 
@@ -302,6 +390,13 @@ export function FieldPropertiesPanel({
               dispatch={dispatch}
             />
 
+            <TypvorschlagHinweis
+              selectedScope={selectedScope}
+              label={values.label}
+              feldtypId={values.feldtypId}
+              dispatch={dispatch}
+            />
+
             <TextField
               label="Label"
               value={values.label}
@@ -352,10 +447,6 @@ export function FieldPropertiesPanel({
               <EnumEditor
                 selectedScope={selectedScope}
                 schema={schema}
-                uiSchema={uiSchema}
-                tabs={fieldState.tabs}
-                activeTabIndex={fieldState.activeTabIndex}
-                tabAssignments={fieldState.tabAssignments}
                 dispatch={dispatch}
               />
             )}

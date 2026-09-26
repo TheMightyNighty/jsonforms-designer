@@ -20,6 +20,7 @@ function leererZustand(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
   };

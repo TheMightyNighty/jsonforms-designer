@@ -57,14 +57,23 @@ Voraussetzungen:
       #11 wegen Peer-Konflikt geschlossen, kommt nach dem Upgrade wieder)
 - [ ] **MUI 9** (material + icons-material gemeinsam — Dependabot-PR #9
       wegen Peer-Konflikt geschlossen)
-- [ ] **Tastatur-Hinzufügen auch für FIM-/OpenCode-Paletteneinträge**
-      (der Enter/Leertaste-Pfad deckt bisher die Katalog-Feldtypen ab)
+- [x] ~~**Tastatur-Hinzufügen auch für FIM-Paletteneinträge**~~ (umgesetzt:
+      Enter/Leertaste auf FIM-Gruppen, FIM-Einzelfeldern und Bausteinen,
+      über dieselbe Action wie der Drop-Pfad). **OpenCode-Einträge bleiben
+      offen:** Für ihren DnD-Typ existiert im Editor gar keine Drop-Zone —
+      auch der Maus-Pfad bewirkt nichts. Was das Ablegen bewirken soll, ist
+      erst zu klären (Rückfrage im Modulkopf von `OpenCodePaletteSection`)
 - [ ] **Async-Hydration ohne History-Schritt:** nach dem Laden über einen
       Server-Adapter ist aktuell ein Undo zum leeren Formular möglich
       (dokumentierte Einschränkung in JsonFormsEditor)
 - [ ] **Komponenten-Testabdeckung ausbauen** (FieldFormPreview,
       PreviewPanel) und Coverage-Schwellwerte entsprechend anheben
       (Nur-anheben-Politik, siehe vitest.config)
+- [ ] **Gemeinsames Renderer-Paket in der Arbeitsfläche** (ADR 0003, Entwurf):
+      Der Canvas rendert bereits mit den Material-Renderern und legt die
+      Bearbeitung als Overlay darüber; der Wechsel auf das gemeinsame Paket
+      steht aus, solange es dieses nicht gibt. Prototyp der Geräte-Ansicht
+      liegt hinter `features.canvasGeraeteAnsicht` (Default aus)
 - [ ] **WebKit als dritter E2E-Browser** evaluieren
 
 ## Langfristig / zu bewerten

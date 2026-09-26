@@ -55,6 +55,7 @@ import {
 import { copyToClipBoard } from '../util/clipboard';
 import { ImportExportDialog } from './ImportExportDialog';
 import { MetadataDialog } from './MetadataDialog';
+import { QualitaetsAmpel } from './QualitaetsAmpel';
 
 interface HeaderProps {
   mode: EditorMode;
@@ -214,14 +215,16 @@ export const Header: React.FC<HeaderProps> = ({
           </Tooltip>
 
           {/*
-            Platz für die Qualitäts-Ampel aus Arbeitspaket 6 und — sobald es
-            einen Freigabe-Workflow gibt — für „Zur Freigabe". Beides wird
-            hier eingehängt, damit die Hauptaktion rechts außen stehen bleibt.
+            Qualitäts-Ampel und — sobald es einen Freigabe-Workflow gibt —
+            „Zur Freigabe". Beides hängt hier, damit die Hauptaktion rechts
+            außen stehen bleibt.
           */}
           <Box
             data-testid="header-slot-qualitaet"
             sx={{ display: 'flex', alignItems: 'center' }}
-          />
+          >
+            <QualitaetsAmpel />
+          </Box>
 
           <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 

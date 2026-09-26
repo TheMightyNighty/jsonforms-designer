@@ -15,6 +15,13 @@ export interface EditorTranslations {
     zeilennummern: string;
     sprache: string;
     weitere: string;
+    qualitaet: {
+      titel: string;
+      alsButton: string;
+      ohneBefund: string;
+      fehler: string;
+      hinweise: string;
+    };
     ausprobieren: string;
     bearbeiten: string;
     status: {
@@ -67,6 +74,11 @@ export interface EditorTranslations {
     mehrstufig: string;
     seite: string;
     neuerTab: string;
+    geraet: {
+      desktop: string;
+      handy: string;
+      hinweis: string;
+    };
   };
   properties: {
     emptyHint: string;
@@ -83,6 +95,12 @@ export interface EditorTranslations {
       uebersetzung: string;
     };
     feldtypWechseln: string;
+    vorschlag: {
+      text: string;
+      uebernehmen: string;
+      ignorieren: string;
+      nichtMoeglich: string;
+    };
     feldtypWechselHinweis: string;
     bedingung: {
       titel: string;

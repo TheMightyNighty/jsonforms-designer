@@ -60,6 +60,14 @@ export interface FieldAwareState {
   sectionColors: Record<string, string>;
   /** Formular-Metadaten für das Manifest (OFM-R-205/OFM-R-304). */
   manifestMeta: FormManifestMeta;
+  /**
+   * Scopes, für die der Typvorschlag bewusst ignoriert wurde
+   * (ADR 0002, Arbeitspaket 5). Optionaler, rückwärtskompatibler Zuwachs am
+   * Persistenzformat: Alt-Stände ohne dieses Feld laden als leeres Objekt
+   * (ADR 0002/V2). Bewusst kein Eintrag im Schema oder UI-Schema — die
+   * Angabe ist Redaktionsgedächtnis und gehört nicht in den Export (V3).
+   */
+  typvorschlagIgnoriert: Record<string, boolean>;
 }
 
 /**
@@ -240,6 +248,7 @@ export function loadTemplateReducer<S extends FieldAwareState>(
     activeTabIndex: incoming.activeTabIndex ?? 0,
     tabAssignments: incoming.tabAssignments ?? {},
     lineNumbersEnabled: incoming.lineNumbersEnabled ?? false,
+    typvorschlagIgnoriert: incoming.typvorschlagIgnoriert ?? {},
     sectionColors: incoming.sectionColors ?? {},
     manifestMeta: incoming.manifestMeta ?? { ...emptyManifestMeta },
   };

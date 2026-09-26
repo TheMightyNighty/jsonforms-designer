@@ -32,6 +32,7 @@ function makeFieldState(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
   };
@@ -174,6 +175,7 @@ describe('FieldFormPreview — echtes Rendering im Bau-Modus', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
       manifestMeta: { ...emptyManifestMeta },
     };
