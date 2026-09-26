@@ -1,19 +1,16 @@
-import { createTheme } from '@mui/material/styles';
-
 /**
- * KERN-Stil (Design-Demonstration, keine zertifizierte Umsetzung):
- * reduzierte, dichte Typografie-Hierarchie, großzügige vertikale Abstände,
- * gedeckte Farbtoken statt kräftiger Primärfarben.
+ * Theme der KERN-Vorschau-Variante.
+ *
+ * Seit ADR 0004 stammen die Werte nicht mehr aus von Hand geschätzten
+ * Farben, sondern aus den vendorten KERN-Design-Token — derselben Quelle,
+ * aus der auch die Editor-Oberfläche gebaut wird. Die Vorschau zeigt damit,
+ * was das Formular im Bürger-Portal tatsächlich für Farben und Schrift
+ * bekommt.
+ *
+ * Der Hinweis in `index.tsx` bleibt bestehen: Token und Schrift sind echt,
+ * eine zertifizierte KERN-Umsetzung ist die Vorschau damit nicht — dafür
+ * müssten auch die Komponenten aus KERN kommen.
  */
-export const kernTheme = createTheme({
-  palette: {
-    primary: { main: '#2C5F4F' },
-    background: { default: '#FDFCFA', paper: '#FFFFFF' },
-    text: { primary: '#22261F' },
-  },
-  shape: { borderRadius: 2 },
-  typography: {
-    fontFamily: '"Source Sans Pro", "Helvetica Neue", Arial, sans-serif',
-    body2: { fontSize: '0.9rem', lineHeight: 1.6 },
-  },
-});
+import { erstelleKernVorschauTheme } from '../../theme/kernTheme';
+
+export const kernTheme = erstelleKernVorschauTheme();

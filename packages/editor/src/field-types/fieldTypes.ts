@@ -1,5 +1,7 @@
 import { JsonSchema7 } from '@jsonforms/core';
 
+import { KERN_FARBEN } from '../theme/kernTokens';
+
 export type FieldGroup = 'eingabe' | 'auswahl' | 'struktur' | 'layout';
 
 export type FieldSchemaFragment = JsonSchema7 & {
@@ -491,7 +493,7 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
       label: 'Abschnittstitel',
       options: {
         variant: 'section-header',
-        bgColor: '#004A99',
+        bgColor: KERN_FARBEN.aktion,
         textColor: '#ffffff',
       },
     },

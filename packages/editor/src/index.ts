@@ -19,4 +19,5 @@ export * from './opencode';
 export * from './palette-panel';
 export * from './preview-variants';
 export * from './properties';
+export * from './theme';
 export * from './version';

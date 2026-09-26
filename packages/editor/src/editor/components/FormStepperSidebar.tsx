@@ -2,6 +2,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { Box, Typography } from '@mui/material';
 
 import { FormTab } from '../../core/model/addFieldReducer';
+import { KERN_FARBEN } from '../../theme/kernTokens';
 
 interface FormStepperSidebarProps {
   steps: FormTab[];
@@ -26,7 +27,7 @@ export function FormStepperSidebar({
       sx={{
         width: 240,
         flexShrink: 0,
-        backgroundColor: '#003366',
+        backgroundColor: KERN_FARBEN.text,
         py: 4,
         px: 3,
       }}
@@ -69,11 +70,15 @@ export function FormStepperSidebar({
                 fontWeight: 700,
                 fontSize: '0.8rem',
                 backgroundColor: isActive
-                  ? '#009EE0'
+                  ? KERN_FARBEN.aktion
                   : isDone
-                    ? '#FFFFFF'
+                    ? KERN_FARBEN.hintergrund
                     : 'transparent',
-                color: isActive ? '#FFFFFF' : isDone ? '#003366' : '#FFFFFF',
+                color: isActive
+                  ? KERN_FARBEN.aufAktion
+                  : isDone
+                    ? KERN_FARBEN.text
+                    : KERN_FARBEN.textInvers,
                 border:
                   isActive || isDone
                     ? 'none'

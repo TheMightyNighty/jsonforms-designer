@@ -8,16 +8,31 @@ import { FieldAwareState } from '../core/model/addFieldReducer';
 import { UiElement } from '../core/model/uiElements';
 import { stripHtml } from '../core/util/plainText';
 import { useI18n } from '../i18n';
+import { KERN_FARBEN } from '../theme/kernTokens';
 import { SectionColorPicker } from './SectionColorPicker';
 
+/**
+ * Hintergrundfarben für Abschnittsköpfe. Seit ADR 0004 aus den
+ * KERN-Token statt aus einer eigenen Markenpalette. Gespeicherte
+ * Alt-Farben bleiben gültig — sie werden beim Laden über
+ * `legacyColorToToken` migriert (ADR 0002/V2).
+ */
 const HEADER_COLORS = [
-  { bg: '#004A99', text: '#ffffff', label: 'Dunkelblau' },
-  { bg: '#009EE0', text: '#ffffff', label: 'Hellblau' },
-  { bg: '#003366', text: '#ffffff', label: 'Dunkelblau (tief)' },
-  { bg: '#1A7A3C', text: '#ffffff', label: 'Grün' },
-  { bg: '#5A6478', text: '#ffffff', label: 'Grau' },
-  { bg: '#C8D8F0', text: '#1A2033', label: 'Hellblau' },
-  { bg: '#F5F5F5', text: '#1A2033', label: 'Hellgrau' },
+  { bg: KERN_FARBEN.aktion, text: KERN_FARBEN.aufAktion, label: 'Blau' },
+  { bg: KERN_FARBEN.info, text: KERN_FARBEN.aufAktion, label: 'Hellblau' },
+  { bg: KERN_FARBEN.text, text: KERN_FARBEN.aufAktion, label: 'Anthrazit' },
+  { bg: KERN_FARBEN.erfolg, text: KERN_FARBEN.aufAktion, label: 'Grün' },
+  {
+    bg: KERN_FARBEN.textGedaempft,
+    text: KERN_FARBEN.aufAktion,
+    label: 'Grau',
+  },
+  {
+    bg: KERN_FARBEN.infoHintergrund,
+    text: KERN_FARBEN.text,
+    label: 'Hellblau (hell)',
+  },
+  { bg: KERN_FARBEN.flaeche, text: KERN_FARBEN.text, label: 'Hellgrau' },
 ];
 
 interface StructuralPropertiesPanelProps {
@@ -199,7 +214,8 @@ export function StructuralPropertiesPanel({
                 px: 1.5,
                 py: 0.75,
                 borderRadius: 1,
-                backgroundColor: (el.options?.bgColor as string) ?? '#004A99',
+                backgroundColor:
+                  (el.options?.bgColor as string) ?? KERN_FARBEN.aktion,
               }}
             >
               <Typography

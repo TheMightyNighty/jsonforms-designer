@@ -22,6 +22,7 @@ import { sectionColorDisplay } from '../../core/model/sectionColorTokens';
 import { toJsonForms, UiElement } from '../../core/model/uiElements';
 import { buildOfmSchema, buildOfmUiSchema } from '../../core/util/ofmExport';
 import { PREVIEW_VARIANTS, PreviewVariant } from '../../preview-variants';
+import { KERN_FARBEN } from '../../theme/kernTokens';
 import { FormStepperSidebar } from './FormStepperSidebar';
 
 const PREVIEW_VARIANT_STORAGE_KEY = 'jfd_previewVariant_v1';
@@ -204,7 +205,7 @@ function PreviewWrapper({
           el.type === 'Label' && el.options?.variant === 'annotation';
 
         if (isHeader) {
-          const hBg = (el.options?.bgColor as string) ?? '#004A99';
+          const hBg = (el.options?.bgColor as string) ?? KERN_FARBEN.aktion;
           const hText = (el.options?.textColor as string) ?? '#ffffff';
           return (
             <Box
