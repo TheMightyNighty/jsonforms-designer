@@ -38,6 +38,15 @@ export interface EditorTranslations {
     };
     validators: string;
     uiBausteine: string;
+    suche: string;
+    suchergebnisse: string;
+    weitereFeldtypen: string;
+    fimSucheHinweis: string;
+    tabs: {
+      bausteine: string;
+      fim: string;
+      einzelfelder: string;
+    };
     fim: {
       title: string;
       datenfeldgruppen: string;

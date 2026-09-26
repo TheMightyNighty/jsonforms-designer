@@ -9,10 +9,12 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDrag } from 'react-dnd';
 
+import { useDispatch, useFieldState } from '../core/context';
 import { useI18n } from '../i18n';
+import { createFimPaletteAction } from '../palette-panel/useFieldDrop';
 import { FimDatenfeld, FimDatenfeldgruppe, FimService } from './fimService';
 import { defaultMockFimService } from './mockFimService';
 
@@ -63,6 +65,33 @@ function IdentifierChip({ identifier }: { identifier: string }) {
 }
 
 // ---------------------------------------------------------------------------
+// Tastatur-Alternativpfad zum Drag & Drop (BITV)
+// ---------------------------------------------------------------------------
+
+/**
+ * Macht einen FIM-Eintrag per Tastatur bedienbar: Enter/Leertaste fügt ihn
+ * am Ende des aktiven Tabs ein — über dieselbe Action wie der Drop-Pfad.
+ * Liefert die Props, die auf das äußere Element gehören.
+ */
+function useFimTastatur(item: FimDragItem, bezeichnung: string) {
+  const dispatch = useDispatch();
+  const fieldState = useFieldState();
+
+  return {
+    role: 'button' as const,
+    tabIndex: 0,
+    'aria-label': `${bezeichnung} hinzufügen`,
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      const tabIndex =
+        fieldState.tabs.length > 0 ? fieldState.activeTabIndex : undefined;
+      dispatch(createFimPaletteAction(item, undefined, tabIndex));
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Gruppen-Karte (Browse-Modus)
 // ---------------------------------------------------------------------------
 
@@ -84,6 +113,15 @@ function FimGruppeCard({ gruppe }: { gruppe: FimDatenfeldgruppe }) {
     }),
     [gruppe],
   );
+  const tastatur = useFimTastatur(
+    {
+      dndType: FIM_DND_TYPE,
+      type: 'datenfeldgruppe',
+      identifier: gruppe.identifier,
+      gruppe,
+    },
+    gruppe.name,
+  );
 
   const MAX_PREVIEW = 3;
   const preview = gruppe.felder
@@ -100,6 +138,7 @@ function FimGruppeCard({ gruppe }: { gruppe: FimDatenfeldgruppe }) {
     >
       <Box
         ref={dragRef as unknown as React.Ref<HTMLDivElement>}
+        {...tastatur}
         sx={{
           mx: 1,
           mb: 0.75,
@@ -201,6 +240,15 @@ function FimFeldItem({
     }),
     [feld],
   );
+  const tastatur = useFimTastatur(
+    {
+      dndType: FIM_DND_TYPE,
+      type: 'datenfeld',
+      identifier: feld.identifier,
+      feld,
+    },
+    feld.name,
+  );
 
   return (
     <Tooltip
@@ -226,6 +274,7 @@ function FimFeldItem({
     >
       <Box
         ref={dragRef as unknown as React.Ref<HTMLDivElement>}
+        {...tastatur}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -277,10 +326,20 @@ function FimGruppeRow({ gruppe }: { gruppe: FimDatenfeldgruppe }) {
     }),
     [gruppe],
   );
+  const tastatur = useFimTastatur(
+    {
+      dndType: FIM_DND_TYPE,
+      type: 'datenfeldgruppe',
+      identifier: gruppe.identifier,
+      gruppe,
+    },
+    gruppe.name,
+  );
 
   return (
     <Box
       ref={dragRef as unknown as React.Ref<HTMLDivElement>}
+      {...tastatur}
       sx={{
         display: 'flex',
         alignItems: 'center',

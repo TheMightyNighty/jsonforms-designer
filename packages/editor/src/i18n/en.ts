@@ -39,6 +39,16 @@ export const en: EditorTranslations = {
     },
     validators: 'Validators',
     uiBausteine: 'UI components',
+    suche: 'Search components and fields …',
+    suchergebnisse: 'Search results',
+    weitereFeldtypen: 'More field types',
+    fimSucheHinweis:
+      'FIM components are loaded from the FIM portal — open the "FIM" tab for those.',
+    tabs: {
+      bausteine: 'Components',
+      fim: 'FIM',
+      einzelfelder: 'Single fields',
+    },
     fim: {
       title: 'FIM building blocks',
       datenfeldgruppen: 'Field groups',

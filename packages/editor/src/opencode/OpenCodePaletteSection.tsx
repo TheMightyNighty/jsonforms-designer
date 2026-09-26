@@ -4,6 +4,14 @@
  * UI-Baustein-Items sind drag-fähig (werden als Custom-Renderer-Referenz ins fieldState eingefügt).
  *
  * DnD-Typ: 'OPENCODE_BAUSTEIN' — getrennt von 'FIELD_TYPE'.
+ *
+ * Kein Tastatur-Alternativpfad: Die Einträge sind zwar ziehbar, aber es gibt
+ * im Editor keine Drop-Zone, die 'OPENCODE_BAUSTEIN' annimmt — auch der
+ * Maus-Pfad führt also zu nichts. Ein Enter/Leertaste-Pfad bräuchte zuerst
+ * eine Festlegung, was beim Einfügen passieren soll.
+ * [RÜCKFRAGE AN FABLE: Was soll das Ablegen eines OpenCode-UI-Bausteins im
+ * Formular bewirken, und wohin gehören die Validatoren jetzt, wo sie im
+ * Reiter „Prüfung" der Eigenschaften kontextsensitiv angeboten werden?]
  */
 import {
   Box,

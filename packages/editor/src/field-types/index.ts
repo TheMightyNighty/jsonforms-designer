@@ -1,3 +1,4 @@
+export * from './bausteine';
 export * from './feldtypErkennung';
 export * from './fieldTypes';
 export * from './formTemplates';
