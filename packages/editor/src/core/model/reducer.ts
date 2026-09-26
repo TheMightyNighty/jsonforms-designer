@@ -1,7 +1,10 @@
 /**
  * Editor-Reducer für den Form-First-Zustand (FieldAwareState).
  */
-import { SET_FIELD_RULE } from '../../properties/fieldPropertiesActions';
+import {
+  CHANGE_FIELD_TYPE,
+  SET_FIELD_RULE,
+} from '../../properties/fieldPropertiesActions';
 import { fieldPropertiesReducer } from '../../properties/fieldPropertiesReducer';
 import { stripHtml } from '../util/plainText';
 import {
@@ -193,8 +196,12 @@ export const editorReducer = (
     };
   }
 
-  // SET_FIELD_RULE + UPDATE_FIELD_PROPERTY
-  if (action.type === SET_FIELD_RULE || action.type === UPDATE_FIELD_PROPERTY) {
+  // SET_FIELD_RULE + UPDATE_FIELD_PROPERTY + CHANGE_FIELD_TYPE
+  if (
+    action.type === SET_FIELD_RULE ||
+    action.type === UPDATE_FIELD_PROPERTY ||
+    action.type === CHANGE_FIELD_TYPE
+  ) {
     return {
       ...state,
       fieldState: fieldPropertiesReducer(state.fieldState, action),

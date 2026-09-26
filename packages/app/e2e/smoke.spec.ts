@@ -241,6 +241,40 @@ test('Label im Eigenschaften-Panel ändern aktualisiert das Formular', async ({
   await expect(page.getByTestId('field-row')).toContainText('Familienname');
 });
 
+test('Eigenschaften stehen in den Reitern Inhalt, Prüfung, Bedingungen, Übersetzung', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+  await page.getByTestId('field-row').click();
+
+  const panel = page.getByRole('form', { name: 'Feldeigenschaften' });
+  for (const reiter of ['Inhalt', 'Prüfung', 'Bedingungen', 'Übersetzung']) {
+    await expect(panel.getByRole('tab', { name: reiter })).toBeVisible();
+  }
+
+  // Reiter „Inhalt": Art des Feldes ist sichtbar und wechselbar
+  await expect(panel.getByLabel('Art des Feldes ändern')).toBeVisible();
+
+  // Reiter „Prüfung": am Textfeld bleibt die Steuer-ID-Prüfung übrig,
+  // die E-Mail-Prüfung nicht.
+  await panel.getByRole('tab', { name: 'Prüfung' }).click();
+  await expect(panel.getByText('Steuer-ID')).toBeVisible();
+  await expect(panel.getByText('E-Mail validieren')).toHaveCount(0);
+});
+
+test('Art des Feldes wechseln ändert das gerenderte Feld', async ({ page }) => {
+  await gotoSeeded(page);
+  await page.getByTestId('field-row').click();
+
+  const panel = page.getByRole('form', { name: 'Feldeigenschaften' });
+  await panel.getByLabel('Art des Feldes ändern').click();
+  await page.getByRole('option', { name: 'Datum', exact: true }).click();
+
+  // Das Feld wird jetzt als Datumsfeld gerendert, die Bezeichnung bleibt
+  await expect(panel.getByLabel('Label des Feldes')).toHaveValue('Nachname');
+  await expect(page.getByTestId('field-row')).toContainText('Nachname');
+});
+
 // ---------------------------------------------------------------------------
 // Testmodus (JSONForms-Rendering)
 // ---------------------------------------------------------------------------

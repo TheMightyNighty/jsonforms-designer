@@ -17,7 +17,11 @@
  */
 import { JsonSchema7 } from '@jsonforms/core';
 
-import { FieldTypeDefinition, getFieldType } from './fieldTypes';
+import {
+  FIELD_TYPE_CATALOG,
+  FieldTypeDefinition,
+  getFieldType,
+} from './fieldTypes';
 
 /** Anzeigetext, wenn kein Katalog-Feldtyp passt — fachsprachlich, nie „string". */
 export const FELDTYP_FALLBACK_LABEL = 'Feld';
@@ -141,5 +145,22 @@ export function feldtypLabel(
 ): string {
   return (
     ermittleFeldtyp(schema, uiOptionen)?.displayName ?? FELDTYP_FALLBACK_LABEL
+  );
+}
+
+/**
+ * Feldtypen, in die ein Feld ohne Datenverlust gewechselt werden kann:
+ * gleicher JSON-Basistyp wie der Ausgangstyp (Text ↔ E-Mail ↔ Datum, aber
+ * nicht Text → Ja/Nein).
+ *
+ * [RÜCKFRAGE AN FABLE: Verhalten bei einem Wechsel über Basistypgrenzen
+ * hinweg (z. B. Text → Ja/Nein). Bereits erfasste Antworten passen dann
+ * nicht mehr zum Schema. Bis zur Entscheidung bietet der Editor solche
+ * Wechsel gar nicht erst an — der vorsichtigste Default.]
+ */
+export function kompatibleFeldtypen(feldtypId: string): FieldTypeDefinition[] {
+  const basis = getFieldType(feldtypId).schema.type;
+  return FIELD_TYPE_CATALOG.filter(
+    (ft) => !ft.isStructural && ft.schema.type === basis,
   );
 }

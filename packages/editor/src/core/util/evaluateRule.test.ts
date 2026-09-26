@@ -104,3 +104,49 @@ describe('evaluateFieldVisibility', () => {
     ).toEqual({ visible: true, enabled: true });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Operator „ist nicht gleich" (not.const) — Satz-Editor der Bedingungen
+// ---------------------------------------------------------------------------
+
+describe('evaluateFieldVisibility — ist nicht gleich', () => {
+  const regel = (effect: 'SHOW' | 'HIDE' | 'DISABLE') => ({
+    effect,
+    condition: {
+      scope: '#/properties/land',
+      schema: { not: { const: 'DE' } },
+    },
+  });
+
+  it('zeigt ein Feld nur bei abweichendem Wert', () => {
+    expect(evaluateFieldVisibility(regel('SHOW'), { land: 'AT' })).toEqual({
+      visible: true,
+      enabled: true,
+    });
+    expect(evaluateFieldVisibility(regel('SHOW'), { land: 'DE' })).toEqual({
+      visible: false,
+      enabled: true,
+    });
+  });
+
+  it('blendet ein Feld bei abweichendem Wert aus', () => {
+    expect(evaluateFieldVisibility(regel('HIDE'), { land: 'AT' })).toEqual({
+      visible: false,
+      enabled: true,
+    });
+  });
+
+  it('sperrt ein Feld bei abweichendem Wert', () => {
+    expect(evaluateFieldVisibility(regel('DISABLE'), { land: 'AT' })).toEqual({
+      visible: true,
+      enabled: false,
+    });
+  });
+
+  it('behandelt einen fehlenden Wert als abweichend', () => {
+    expect(evaluateFieldVisibility(regel('SHOW'), {})).toEqual({
+      visible: true,
+      enabled: true,
+    });
+  });
+});

@@ -76,6 +76,26 @@ export interface EditorTranslations {
     required: string;
     options: string;
     validatoren: string;
+    tabs: {
+      inhalt: string;
+      pruefung: string;
+      bedingungen: string;
+      uebersetzung: string;
+    };
+    feldtypWechseln: string;
+    feldtypWechselHinweis: string;
+    bedingung: {
+      titel: string;
+      aktivieren: string;
+      keineFelder: string;
+      nurAnzeigen: string;
+      ausblenden: string;
+      sperren: string;
+      wenn: string;
+      istGleich: string;
+      istNichtGleich: string;
+      wert: string;
+    };
     keineValidatoren: string;
     keinePassendenValidatoren: string;
     feldtyp: string;

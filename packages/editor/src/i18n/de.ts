@@ -79,6 +79,27 @@ export const de: EditorTranslations = {
     required: 'Pflichtfeld',
     options: 'Auswahloptionen',
     validatoren: 'OpenCode-Validatoren',
+    tabs: {
+      inhalt: 'Inhalt',
+      pruefung: 'Prüfung',
+      bedingungen: 'Bedingungen',
+      uebersetzung: 'Übersetzung',
+    },
+    feldtypWechseln: 'Art des Feldes ändern',
+    feldtypWechselHinweis:
+      'Nur Arten mit derselben Art von Antwort stehen zur Auswahl.',
+    bedingung: {
+      titel: 'Bedingte Anzeige',
+      aktivieren: 'Bedingung aktivieren',
+      keineFelder: 'Erst weitere Felder hinzufügen, um Bedingungen zu setzen.',
+      nurAnzeigen: 'Nur anzeigen',
+      ausblenden: 'Ausblenden',
+      sperren: 'Sperren',
+      wenn: 'wenn',
+      istGleich: 'ist gleich',
+      istNichtGleich: 'ist nicht gleich',
+      wert: 'Wert',
+    },
     keineValidatoren: 'Keine Prüfungen verfügbar.',
     keinePassendenValidatoren:
       'Für diese Art von Feld gibt es keine passende Prüfung.',
