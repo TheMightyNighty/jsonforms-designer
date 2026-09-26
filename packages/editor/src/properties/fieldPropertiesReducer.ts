@@ -12,6 +12,7 @@ import { JsonSchema7 } from '@jsonforms/core';
 
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { FlatElement } from '../core/model/uiElements';
+import { stripHtml } from '../core/util/plainText';
 import {
   propertyKeyFromScope,
   SET_FIELD_RULE,
@@ -76,11 +77,16 @@ export function fieldPropertiesReducer<S extends FieldAwareState>(
   const key = propertyKeyFromScope(scope);
 
   switch (property) {
+    // Anzeigetexte ohne Markup speichern (OFM-R-404, Plain-Text-Garantie).
     case 'label':
-      return updateSchemaProperty(state, key, { title: value as string });
+      return updateSchemaProperty(state, key, {
+        title: stripHtml(value as string),
+      });
 
     case 'description':
-      return updateSchemaProperty(state, key, { description: value as string });
+      return updateSchemaProperty(state, key, {
+        description: stripHtml(value as string),
+      });
 
     case 'placeholder':
       return updateControlOptions(state, scope, {

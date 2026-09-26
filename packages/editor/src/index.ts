@@ -17,5 +17,6 @@ export * from './JsonFormsEditor';
 export * from './JsonFormsEditorUi';
 export * from './opencode';
 export * from './palette-panel';
+export * from './preview-variants';
 export * from './properties';
 export * from './version';

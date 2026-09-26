@@ -8,7 +8,6 @@ import {
   Box,
   Checkbox,
   CircularProgress,
-  Divider,
   FormControlLabel,
   Typography,
 } from '@mui/material';
@@ -76,6 +75,7 @@ export function ValidatorSection({
         tabAssignments: fieldState.tabAssignments,
         lineNumbersEnabled: fieldState.lineNumbersEnabled,
         sectionColors: fieldState.sectionColors,
+        manifestMeta: fieldState.manifestMeta,
       }),
     );
   };
@@ -87,11 +87,16 @@ export function ValidatorSection({
       </Box>
     );
   }
-  if (validators.length === 0) return null;
+  if (validators.length === 0) {
+    return (
+      <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+        Keine OpenCode-Validatoren verfügbar.
+      </Typography>
+    );
+  }
 
   return (
     <Box>
-      <Divider sx={{ my: 1 }} />
       <Typography
         variant="caption"
         sx={{

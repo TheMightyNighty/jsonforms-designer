@@ -9,8 +9,8 @@ export const de: EditorTranslations = {
     copySchema: 'Schema kopieren',
     codeModeOn: 'Code-Modus',
     codeModeOff: 'Visueller Modus',
-    previewOn: 'Vorschau',
-    previewOff: 'Bearbeiten',
+    testModeOn: 'Formular testweise ausfüllen',
+    testModeOff: 'Bearbeitung fortsetzen',
     exportImport: 'Export / Import',
   },
   palette: {

@@ -20,7 +20,6 @@ import { useDispatch, useFieldState, useSelectedScope } from './core/context';
 import { createSetFieldStateAction } from './core/model/addFieldActions';
 import { FieldAwareState } from './core/model/addFieldReducer';
 import { EditorPanel } from './editor';
-import { PreviewPanel } from './editor/components/PreviewPanel';
 import { EditorMode } from './editor/editorMode';
 import { useI18n } from './i18n';
 import { FieldPalettePanel } from './palette-panel/FieldPalettePanel';
@@ -85,8 +84,20 @@ interface JsonFormsEditorUiProps {
   footer?: React.ComponentType;
 }
 
+interface MobileLayoutProps {
+  mode: EditorMode;
+  testMode: boolean;
+  testData: Record<string, unknown>;
+  onTestDataChange: (data: Record<string, unknown>) => void;
+}
+
 /** Mobile/Tablet-Layout mit Tabs */
-function MobileLayout({ mode }: { mode: EditorMode }) {
+function MobileLayout({
+  mode,
+  testMode,
+  testData,
+  onTestDataChange,
+}: MobileLayoutProps) {
   const [mobileTab, setMobileTab] = useState(1);
   const { t } = useI18n(); // 0=Palette 1=Editor 2=Properties
   const dispatch = useDispatch();
@@ -143,10 +154,12 @@ function MobileLayout({ mode }: { mode: EditorMode }) {
                 onPreviewDataChange={() => {}}
               />
             </Suspense>
-          ) : mode === 'preview' ? (
-            <PreviewPanel fieldState={fieldState} />
           ) : (
-            <EditorPanel />
+            <EditorPanel
+              testMode={testMode}
+              testData={testData}
+              onTestDataChange={onTestDataChange}
+            />
           ))}
         {mobileTab === 2 && (
           <FieldPropertiesPanel
@@ -174,24 +187,31 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
   const fieldState = useFieldState();
   const [selectedScope] = useSelectedScope();
   const [mode, setMode] = useState<EditorMode>('visual');
+  const [testMode, setTestMode] = useState(false);
   const [previewData, setPreviewData] = useState<Record<string, unknown>>({});
 
   const handleFieldStateChange = (next: FieldAwareState) => {
     dispatch(createSetFieldStateAction(next));
   };
 
-  const HeaderWithMode = () => <Header mode={mode} onModeChange={setMode} />;
-
-  const isPreview = mode === 'preview';
+  const HeaderWithMode = () => (
+    <Header
+      mode={mode}
+      onModeChange={setMode}
+      testMode={testMode}
+      onTestModeChange={setTestMode}
+    />
+  );
 
   return (
     <Layout HeaderComponent={HeaderWithMode} FooterComponent={footer}>
-      {isPreview ? (
-        <Box sx={{ height: '100%', overflow: 'auto' }}>
-          <PreviewPanel fieldState={fieldState} initialData={previewData} />
-        </Box>
-      ) : isMobile ? (
-        <MobileLayout mode={mode} />
+      {isMobile ? (
+        <MobileLayout
+          mode={mode}
+          testMode={testMode}
+          testData={previewData}
+          onTestDataChange={setPreviewData}
+        />
       ) : (
         <Group
           defaultLayout={defaultLayout}
@@ -218,7 +238,11 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
                   />
                 </Suspense>
               ) : (
-                <EditorPanel />
+                <EditorPanel
+                  testMode={testMode}
+                  testData={previewData}
+                  onTestDataChange={setPreviewData}
+                />
               )}
             </Box>
           </Panel>

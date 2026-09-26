@@ -281,10 +281,13 @@ export const SET_FORM_METADATA = 'SET_FORM_METADATA' as const;
 export interface FormMetadata {
   title?: string;
   description?: string;
-  publisher?: string; // x-publisher
-  legalBasis?: string; // x-legal-basis
-  version?: string; // x-version
-  validFrom?: string; // x-valid-from (ISO date)
+  /** Formular-ID als URN — Manifest form.id (OFM-R-202). */
+  id?: string;
+  publisher?: string;
+  legalBasis?: string;
+  version?: string;
+  validFrom?: string; // ISO date
+  language?: string;
   /** Beliebige weitere x-*-Felder (z. B. x-translations) werden durchgereicht. */
   [key: string]: unknown;
 }

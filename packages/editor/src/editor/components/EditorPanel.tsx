@@ -8,7 +8,17 @@ import React from 'react';
 
 import { Editor } from './Editor';
 
-export const EditorPanel: React.FC = () => {
+interface EditorPanelProps {
+  testMode: boolean;
+  testData: Record<string, unknown>;
+  onTestDataChange: (data: Record<string, unknown>) => void;
+}
+
+export const EditorPanel: React.FC<EditorPanelProps> = ({
+  testMode,
+  testData,
+  onTestDataChange,
+}) => {
   return (
     <Box
       sx={{
@@ -19,7 +29,11 @@ export const EditorPanel: React.FC = () => {
         overflow: 'auto',
       }}
     >
-      <Editor />
+      <Editor
+        testMode={testMode}
+        testData={testData}
+        onTestDataChange={onTestDataChange}
+      />
     </Box>
   );
 };

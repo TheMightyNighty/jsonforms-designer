@@ -71,6 +71,7 @@ export function EnumEditor({
         tabAssignments,
         lineNumbersEnabled: ctx.lineNumbersEnabled,
         sectionColors: ctx.sectionColors,
+        manifestMeta: ctx.manifestMeta,
       }),
     );
   };

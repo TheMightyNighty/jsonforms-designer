@@ -1,0 +1,195 @@
+{
+  "schema": {
+    "type": "object",
+    "title": "Fragebogen zur Meldung einer Umweltbeobachtung",
+    "description": "Bitte füllen Sie den Fragebogen vollständig aus. Ihre Angaben werden zur fachlichen Bewertung der gemeldeten Beobachtung herangezogen.",
+    "properties": {
+      "vorname": {
+        "type": "string",
+        "title": "Vorname",
+        "minLength": 1
+      },
+      "nachname": {
+        "type": "string",
+        "title": "Nachname",
+        "minLength": 1
+      },
+      "email": {
+        "type": "string",
+        "title": "E-Mail-Adresse",
+        "format": "email"
+      },
+      "institution": {
+        "type": "string",
+        "title": "Institution / Behörde",
+        "description": "Sofern die Meldung im dienstlichen Auftrag erfolgt"
+      },
+      "beobachtungsdatum": {
+        "type": "string",
+        "title": "Datum der Beobachtung",
+        "format": "date"
+      },
+      "ort": {
+        "type": "string",
+        "title": "Ort der Beobachtung",
+        "minLength": 1
+      },
+      "kategorie": {
+        "type": "string",
+        "title": "Kategorie",
+        "oneOf": [
+          { "const": "luft", "title": "Luftqualität" },
+          { "const": "wasser", "title": "Gewässer" },
+          { "const": "boden", "title": "Boden" },
+          { "const": "laerm", "title": "Lärm" },
+          { "const": "sonstiges", "title": "Sonstiges" }
+        ]
+      },
+      "beschreibung": {
+        "type": "string",
+        "title": "Beschreibung der Beobachtung",
+        "minLength": 1
+      },
+      "schweregrad": {
+        "type": "string",
+        "title": "Einschätzung des Schweregrads",
+        "oneOf": [
+          { "const": "gering", "title": "Gering" },
+          { "const": "mittel", "title": "Mittel" },
+          { "const": "hoch", "title": "Hoch" }
+        ]
+      },
+      "einverstaendnis": {
+        "type": "boolean",
+        "title": "Ich bin mit der Verarbeitung meiner Angaben gemäß Datenschutzhinweis einverstanden.",
+        "default": false
+      }
+    },
+    "required": [
+      "vorname",
+      "nachname",
+      "email",
+      "beobachtungsdatum",
+      "ort",
+      "kategorie",
+      "beschreibung"
+    ]
+  },
+  "uiSchema": {
+    "type": "VerticalLayout",
+    "elements": [
+      {
+        "id": "grp_person",
+        "type": "GroupContainer",
+        "label": "Angaben zur meldenden Person",
+        "children": [
+          {
+            "id": "col_name",
+            "type": "ColumnContainer",
+            "widths": [1, 1],
+            "columns": [
+              [
+                {
+                  "id": "ctrl_vorname",
+                  "type": "Control",
+                  "scope": "#/properties/vorname"
+                }
+              ],
+              [
+                {
+                  "id": "ctrl_nachname",
+                  "type": "Control",
+                  "scope": "#/properties/nachname"
+                }
+              ]
+            ]
+          },
+          {
+            "id": "ctrl_email",
+            "type": "Control",
+            "scope": "#/properties/email"
+          },
+          {
+            "id": "ctrl_institution",
+            "type": "Control",
+            "scope": "#/properties/institution"
+          }
+        ]
+      },
+      {
+        "id": "grp_beobachtung",
+        "type": "GroupContainer",
+        "label": "Angaben zur Beobachtung",
+        "children": [
+          {
+            "id": "col_datum_ort",
+            "type": "ColumnContainer",
+            "widths": [1, 2],
+            "columns": [
+              [
+                {
+                  "id": "ctrl_datum",
+                  "type": "Control",
+                  "scope": "#/properties/beobachtungsdatum"
+                }
+              ],
+              [
+                {
+                  "id": "ctrl_ort",
+                  "type": "Control",
+                  "scope": "#/properties/ort"
+                }
+              ]
+            ]
+          },
+          {
+            "id": "ctrl_kategorie",
+            "type": "Control",
+            "scope": "#/properties/kategorie"
+          },
+          {
+            "id": "ctrl_beschreibung",
+            "type": "Control",
+            "scope": "#/properties/beschreibung",
+            "options": { "multi": true }
+          }
+        ]
+      },
+      {
+        "id": "grp_einschaetzung",
+        "type": "GroupContainer",
+        "label": "Einschätzung und Einverständnis",
+        "children": [
+          {
+            "id": "ctrl_schweregrad",
+            "type": "Control",
+            "scope": "#/properties/schweregrad",
+            "options": { "format": "radio" }
+          },
+          {
+            "id": "ctrl_einverstaendnis",
+            "type": "Control",
+            "scope": "#/properties/einverstaendnis"
+          }
+        ]
+      }
+    ]
+  },
+  "tabs": [],
+  "activeTabIndex": 0,
+  "tabAssignments": {},
+  "lineNumbersEnabled": false,
+  "sectionColors": {
+    "grp_person": "blue",
+    "grp_beobachtung": "green",
+    "grp_einschaetzung": "yellow"
+  },
+  "manifestMeta": {
+    "id": "urn:de:umweltbundesamt:formular:umweltbeobachtung",
+    "version": "1.0.0",
+    "publisher": "Umweltbundesamt",
+    "legalBasis": "§ 3 UBAG (Meldewesen Umweltbeobachtungen)",
+    "validFrom": "2026-01-01",
+    "language": "de"
+  }
+}

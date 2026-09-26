@@ -9,7 +9,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import RedoIcon from '@mui/icons-material/Redo';
 import UndoIcon from '@mui/icons-material/Undo';
-import PreviewIcon from '@mui/icons-material/Visibility';
+import TestModeIcon from '@mui/icons-material/Visibility';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Divider from '@mui/material/Divider';
@@ -38,9 +38,16 @@ import { MetadataDialog } from './MetadataDialog';
 interface HeaderProps {
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
+  testMode: boolean;
+  onTestModeChange: (testMode: boolean) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
+export const Header: React.FC<HeaderProps> = ({
+  mode,
+  onModeChange,
+  testMode,
+  onTestModeChange,
+}) => {
   const { dispatch, fieldState } = useEditorContext();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const { t, locale, setLocale } = useI18n();
@@ -64,7 +71,6 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
 
   const lineNumbers = fieldState.lineNumbersEnabled;
   const isCode = mode === 'code';
-  const isPreview = mode === 'preview';
 
   return (
     <AppBar position="static" elevation={0}>
@@ -184,14 +190,18 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={isPreview ? t.header.previewOff : t.header.previewOn}>
+          <Tooltip
+            title={testMode ? t.header.testModeOff : t.header.testModeOn}
+          >
             <IconButton
               color="inherit"
-              onClick={() => onModeChange(isPreview ? 'visual' : 'preview')}
-              aria-label={isPreview ? 'Bearbeiten' : 'Vorschau'}
-              sx={{ color: isPreview ? 'primary.main' : 'text.secondary' }}
+              onClick={() => onTestModeChange(!testMode)}
+              aria-label={
+                testMode ? 'Bearbeitung fortsetzen' : 'Formular testen'
+              }
+              sx={{ color: testMode ? 'primary.main' : 'text.secondary' }}
             >
-              {isPreview ? <EditIcon /> : <PreviewIcon />}
+              {testMode ? <EditIcon /> : <TestModeIcon />}
             </IconButton>
           </Tooltip>
 
@@ -252,6 +262,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
         open={metaOpen}
         onClose={() => setMetaOpen(false)}
         schema={fieldState.schema}
+        manifestMeta={fieldState.manifestMeta}
         onSave={(meta) => dispatch(createSetFormMetadataAction(meta))}
       />
     </AppBar>

@@ -205,6 +205,14 @@ Unterstützte Effekte: `SHOW` · `HIDE` · `DISABLE`
 
 ---
 
+## Design-Varianten
+
+Die Vorschau kann zwischen drei vollständig eigenständigen JSONForms-Renderer-Sets umschalten (Tastaturkürzel `1`/`2`/`3`, Dropdown in der Vorschau-Toolbar): **Standard (Material)**, **Bundesportal-Stil** und **KERN-Stil**. Der Wechsel tauscht Renderer und Zellen vollständig aus — kein Stylesheet-Overlay. Eingegebene Formulardaten und die exportierten Artefakte (`schema.json`, `uischema.json`) bleiben dabei unverändert; die Vorschau zeigt dazu den SHA-256-Hash beider Dateien in der Fußzeile, der beim Variantenwechsel gleich bleibt.
+
+**Claim-Hygiene:** Design-Demonstration auf Basis der jeweiligen Gestaltungsprinzipien — keine zertifizierte Umsetzung des Design-Systems. Nirgends wird „BITV-konform" oder „offizielles Bundesportal-Design" behauptet.
+
+---
+
 ## XDatenfelder-Export
 
 Formulare werden über den Export-Dialog (Tab **XDF 2.0**) als XDatenfelder-2.0-konforme XML-Datei exportiert. Die generierte Datei enthält:
