@@ -50,6 +50,7 @@ function renderPreview(
     dispatch,
     reportError: () => {},
     fieldState,
+    speicherStatus: { art: 'unveraendert' },
     selectedScope: null,
     setSelectedScope: () => {},
     undo: () => {},

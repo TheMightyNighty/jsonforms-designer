@@ -7,6 +7,10 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert (Editor-UX)
+- **Kopfzeile mit klarer Aufgabe:** Links stehen Produktname, Formularname und der **Speicherstatus** („Entwurf · gespeichert vor 5 s", bei Fehlern „Speichern fehlgeschlagen" in Rot mit `aria-live`), gespeist aus dem Auto-Save des `FieldStateStorageService`. Rechts stehen beschriftete Aktionen — Rückgängig/Wiederholen und **„Ausprobieren"** als Hauptaktion — statt acht unbeschrifteter Symbole. Code-Modus, Schema kopieren, Import/Export, Vorlagen, Metadaten und Editorsprache liegen im Menü **„Weitere"**. Der Platz für die Qualitäts-Ampel ist im Layout vorgesehen (`data-testid="header-slot-qualitaet"`).
+- **Produktname konfigurierbar:** neue optionale `EditorConfig.produktName`. Default bleibt unverändert „JSONForms Designer".
+
 ### Behoben (Editor-UX)
 - **Typ-Angabe in Fachsprache statt JSON-Basistyp:** Der Eigenschaften-Bereich zeigt jetzt „Art des Feldes: Datum" statt des JSON-Typs. Die Ableitung liegt in einer gemeinsamen, getesteten Funktion (`ermittleFeldtyp`/`feldtypLabel`), die den Feldtyp über eine geordnete Regelliste aus `FIELD_TYPE_CATALOG` zurückgewinnt — ein Rundlauftest sichert, dass jeder Katalog-Feldtyp wieder als genau dieser erkannt wird. Fallback ist „Feld", nie „string".
 - **Prüfungen sind kontextsensitiv:** `ValidatorSection` bietet nur noch die Validatoren an, die zur Art des Feldes passen (Zuordnungstabelle `VALIDATOR_FELDTYPEN`) — die Steuer-ID-Prüfung erscheint nicht mehr am Geburtsdatum. Bereits gesetzte Prüfungen bleiben sichtbar, Validatoren ohne Tabelleneintrag werden weiterhin überall angeboten.

@@ -4,6 +4,7 @@ import { UpdateFieldPropertyAction } from '../../properties/fieldPropertiesActio
 import { EditorAction } from '../model/actions';
 import { AddFieldAction } from '../model/addFieldActions';
 import { FieldAwareState } from '../model/addFieldReducer';
+import { SpeicherStatus } from '../model/speicherStatus';
 
 export type FieldAction = AddFieldAction | UpdateFieldPropertyAction;
 
@@ -12,6 +13,8 @@ export interface EditorContext {
   /** Zentraler Fehlerkanal — Host-konfigurierbar über die onError-Prop. */
   reportError: (error: unknown, context: string) => void;
   fieldState: FieldAwareState;
+  /** Stand des Auto-Saves — speist die Statuszeile der Kopfzeile. */
+  speicherStatus: SpeicherStatus;
   selectedScope: string | null;
   setSelectedScope: (scope: string | null) => void;
   /** Undo letzte Aktion */
@@ -50,6 +53,11 @@ export const useSelectedScope = (): [
 export const useUndoRedo = () => {
   const { undo, redo, canUndo, canRedo } = useEditorContext();
   return { undo, redo, canUndo, canRedo };
+};
+
+export const useSpeicherStatus = (): SpeicherStatus => {
+  const { speicherStatus } = useEditorContext();
+  return speicherStatus;
 };
 
 export const useReportError = (): EditorContext['reportError'] => {
