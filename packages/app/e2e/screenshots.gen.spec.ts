@@ -133,12 +133,26 @@ test('screenshot: Code-Modus', async ({ page }) => {
 
 test('screenshot: FIM-Bausteine', async ({ page }) => {
   await gotoDemo(page);
+
+  // Die FIM-Sektion steht am Ende der Palette und liegt bei 1600x900 unter
+  // dem sichtbaren Bereich. Das Bild zeigte deshalb keine FIM-Bausteine,
+  // obwohl der Test grün war: Er prüfte nur die Sichtbarkeit im DOM.
   // FIM-Sektion aufklappen, falls sie nicht schon offen ist
   const fimItem = page.getByText('Anschrift Inland').first();
   if (!(await fimItem.isVisible().catch(() => false))) {
     await page.getByText('FIM-Bausteine', { exact: false }).first().click();
   }
   await expect(fimItem).toBeVisible({ timeout: 10_000 });
+  await fimItem.scrollIntoViewIfNeeded();
+
+  // Sichtbarkeit im Viewport prüfen, nicht nur im DOM — genau diese Lücke
+  // hat den kaputten Screenshot durchgelassen.
+  const viewport = page.viewportSize();
+  const box = await fimItem.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
+
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${DOCS}/screenshot-fim.png` });
 });

@@ -7,8 +7,18 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Behoben (Editor-UX)
+- **Typ-Angabe in Fachsprache statt JSON-Basistyp:** Der Eigenschaften-Bereich zeigt jetzt „Art des Feldes: Datum" statt des JSON-Typs. Die Ableitung liegt in einer gemeinsamen, getesteten Funktion (`ermittleFeldtyp`/`feldtypLabel`), die den Feldtyp über eine geordnete Regelliste aus `FIELD_TYPE_CATALOG` zurückgewinnt — ein Rundlauftest sichert, dass jeder Katalog-Feldtyp wieder als genau dieser erkannt wird. Fallback ist „Feld", nie „string".
+- **Prüfungen sind kontextsensitiv:** `ValidatorSection` bietet nur noch die Validatoren an, die zur Art des Feldes passen (Zuordnungstabelle `VALIDATOR_FELDTYPEN`) — die Steuer-ID-Prüfung erscheint nicht mehr am Geburtsdatum. Bereits gesetzte Prüfungen bleiben sichtbar, Validatoren ohne Tabelleneintrag werden weiterhin überall angeboten.
+- **Fehlendes Symbol bei „Mehrfachauswahl":** Der Katalog verwies auf `ti-checkboxes`, das die vendorte Tabler-Schrift nicht enthält — jetzt `ti-list-check`. Ein Test in der App prüft alle Katalog-Symbole gegen das vendorte CSS.
+- **Kontrast der Palette-Überschriften** („EINGABE", „OPENCODE", „FIM-BAUSTEINE" …) von 2,4:1 auf 6,9:1 angehoben (`text.disabled` → `text.secondary`).
+- **FIM-Screenshot zeigte keine FIM-Bausteine:** Der Generator prüfte nur die Sichtbarkeit im DOM; bei 1600x900 lag die Sektion unterhalb des Bildausschnitts. Sie wird jetzt in den Sichtbereich gescrollt, und der Generator prüft die Lage im Viewport. Screenshots neu erzeugt.
+
 ### Dokumentation
 - **ADR 0002 „Fachsprachliche Editor-UX"**: hält die Richtung für die Editor-Oberfläche fest (Zielgruppe Formularredakteurin im Fachbereich, Fachsprache statt Technik) samt der sechs verbindlichen Randbedingungen — Repo-Konventionen, stabiles Persistenzformat `jfd_fieldState_v1`, unverändertes Ausgabeformat, keine Verschlechterung der Barrierefreiheit, keine neuen Laufzeit-Abhängigkeiten, Fachsprache aus `i18n`.
+
+### Qualität
+- **Coverage-Gate wieder grün** (Branches 69,8 % → 74,1 %): neue Unit-Tests für `sectionColorTokens`, `manifestMeta`, `layoutWidth` sowie elf zusätzliche Fälle für `columnReducer` (Container-Ziele, Einfügeposition, Nicht-Treffer). Der E2E-Smoke „Vorschau" war nach dem Umbau auf den Testmodus tot und prüft jetzt den Testmodus.
 
 ### Sicherheit (Supply Chain)
 - **Vertrauensaudit aller 44 Direktabhängigkeiten** (Provenance, Maintainer, Aktivität): 4 verwaiste Runtime-Dependencies entfernt (lodash, json-schema-traverse, uuid, @mui/x-tree-view); `react-dnd` (seit 2022 ungepflegt) als Migrationsziel in der ROADMAP bewertet — Empfehlung `@atlaskit/pragmatic-drag-and-drop`.
