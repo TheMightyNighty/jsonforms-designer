@@ -22,6 +22,7 @@ import {
   Checkbox,
   Divider,
   FormControlLabel,
+  MenuItem,
   Tab,
   Tabs,
   TextField,
@@ -33,11 +34,17 @@ import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { UiElement } from '../core/model/uiElements';
-import { FeldSchema, feldtypLabel } from '../field-types/feldtypErkennung';
+import {
+  ermittleFeldtyp,
+  FeldSchema,
+  feldtypLabel,
+  kompatibleFeldtypen,
+} from '../field-types/feldtypErkennung';
 import { useI18n } from '../i18n';
 import { ConditionEditor } from './ConditionEditor';
 import { EnumEditor } from './EnumEditor';
 import {
+  createChangeFieldTypeAction,
   createUpdateFieldPropertyAction,
   propertyKeyFromScope,
   UpdateFieldPropertyAction,
@@ -70,6 +77,8 @@ interface FieldValues {
   hasEnum: boolean;
   /** Fachsprachliche Art des Feldes für die Anzeige, z. B. „Datum". */
   feldtyp: string;
+  /** Katalog-id der erkannten Art, falls eine Regel gegriffen hat. */
+  feldtypId: string | undefined;
 }
 
 function readFieldValues(
@@ -96,6 +105,7 @@ function readFieldValues(
     // Fachsprachliche Art des Feldes (Datum, IBAN, Ja/Nein …) statt des
     // JSON-Basistyps — siehe feldtypErkennung.
     feldtyp: feldtypLabel(fieldSchema as FeldSchema, control?.options),
+    feldtypId: ermittleFeldtyp(fieldSchema as FeldSchema, control?.options)?.id,
   };
 }
 
@@ -128,10 +138,78 @@ function EmptyState() {
 }
 
 // ---------------------------------------------------------------------------
+// Art des Feldes (anzeigen und wechseln)
+// ---------------------------------------------------------------------------
+
+interface FeldtypAuswahlProps {
+  selectedScope: string;
+  feldtypId: string | undefined;
+  feldtypLabel: string;
+  dispatch: Dispatch<EditorAction>;
+}
+
+/**
+ * Zeigt die Art des Feldes in Fachsprache und erlaubt den Wechsel innerhalb
+ * derselben Art von Antwort (Text ↔ E-Mail ↔ Telefonnummer). Gibt es keine
+ * Alternative oder ist die Art nicht erkennbar (Fremdimport), steht hier nur
+ * der Text.
+ */
+function FeldtypAuswahl({
+  selectedScope,
+  feldtypId,
+  feldtypLabel: label,
+  dispatch,
+}: FeldtypAuswahlProps) {
+  const { t } = useI18n();
+  const alternativen = feldtypId ? kompatibleFeldtypen(feldtypId) : [];
+
+  if (!feldtypId || alternativen.length < 2) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {t.properties.feldtyp}:
+        </Typography>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          {label}
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <TextField
+      select
+      size="small"
+      fullWidth
+      label={t.properties.feldtyp}
+      value={feldtypId}
+      onChange={(e) =>
+        dispatch(createChangeFieldTypeAction(selectedScope, e.target.value))
+      }
+      helperText={t.properties.feldtypWechselHinweis}
+      // aria-label gehört an das Select selbst (role="combobox"); über
+      // inputProps landete es am versteckten nativen Input.
+      SelectProps={{ 'aria-label': t.properties.feldtypWechseln }}
+    >
+      {alternativen.map((ft) => (
+        <MenuItem key={ft.id} value={ft.id}>
+          {ft.displayName}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Haupt-Komponente
 // ---------------------------------------------------------------------------
 
-const TAB_LABELS = ['Allgemein', 'Validierung', 'Sichtbarkeit', 'Übersetzung'];
+/**
+ * Reiter-Reihenfolge nach ADR 0002. Die Beschriftungen kommen aus i18n; die
+ * Reihenfolge folgt dem Arbeitsablauf: erst schreiben, dann prüfen lassen,
+ * dann Sonderfälle, zuletzt übersetzen.
+ */
+const TAB_KEYS = ['inhalt', 'pruefung', 'bedingungen', 'uebersetzung'] as const;
 
 export function FieldPropertiesPanel({
   selectedScope,
@@ -205,28 +283,24 @@ export function FieldPropertiesPanel({
         scrollButtons="auto"
         sx={{ px: 1, minHeight: 36 }}
       >
-        {TAB_LABELS.map((label) => (
-          <Tab key={label} label={label} sx={{ minHeight: 36, py: 0.5 }} />
+        {TAB_KEYS.map((key) => (
+          <Tab
+            key={key}
+            label={t.properties.tabs[key]}
+            sx={{ minHeight: 36, py: 0.5 }}
+          />
         ))}
       </Tabs>
 
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {tab === 0 && (
           <>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: 1,
-              }}
-            >
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {t.properties.feldtyp}:
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {values.feldtyp}
-              </Typography>
-            </Box>
+            <FeldtypAuswahl
+              selectedScope={selectedScope}
+              feldtypId={values.feldtypId}
+              feldtypLabel={values.feldtyp}
+              dispatch={dispatch}
+            />
 
             <TextField
               label="Label"

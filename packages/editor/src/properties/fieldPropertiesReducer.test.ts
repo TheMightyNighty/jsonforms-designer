@@ -2,11 +2,14 @@
  * F-4: Tests für fieldPropertiesReducer und fieldPropertiesActions
  */
 
+import { JsonSchema7 } from '@jsonforms/core';
 import { describe, expect, it } from 'vitest';
 
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { emptyManifestMeta } from '../core/model/manifestMeta';
+import { kompatibleFeldtypen } from '../field-types/feldtypErkennung';
 import {
+  createChangeFieldTypeAction,
   createUpdateFieldPropertyAction,
   propertyKeyFromScope,
 } from './fieldPropertiesActions';
@@ -233,5 +236,106 @@ describe('fieldPropertiesReducer() — Robustheit', () => {
     const next = fieldPropertiesReducer(state, rawAction);
     // kein Crash, Properties unverändert
     expect(next.schema.properties).toEqual(state.schema.properties);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CHANGE_FIELD_TYPE — Wechsel der Art des Feldes
+// ---------------------------------------------------------------------------
+
+describe('fieldPropertiesReducer — CHANGE_FIELD_TYPE', () => {
+  const scope = '#/properties/vorname';
+
+  function feldSchema(state: FieldAwareState) {
+    return state.schema.properties?.['vorname'] as JsonSchema7 & {
+      title?: string;
+      description?: string;
+    };
+  }
+  function controlOptionen(state: FieldAwareState) {
+    return state.uiSchema.elements[0].options ?? {};
+  }
+
+  it('wechselt Text zu E-Mail und behält die Bezeichnung', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'email'),
+    );
+    expect(feldSchema(next).format).toBe('email');
+    expect(feldSchema(next).title).toBe('Vorname');
+  });
+
+  it('übernimmt die UI-Optionen des neuen Feldtyps', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'email'),
+    );
+    expect(controlOptionen(next).placeholder).toBe('name@behoerde.de');
+  });
+
+  it('behält einen selbst gesetzten Platzhalter', () => {
+    const start = stateWithField();
+    start.uiSchema.elements[0].options = { placeholder: 'Bitte eintragen' };
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'email'),
+    );
+    expect(controlOptionen(next).placeholder).toBe('Bitte eintragen');
+  });
+
+  it('behält den Hilfetext', () => {
+    const start = stateWithField();
+    start.schema.properties!['vorname'].description = 'Bitte ausfüllen';
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'tel'),
+    );
+    expect(feldSchema(next).description).toBe('Bitte ausfüllen');
+  });
+
+  it('lässt scope und Property-Schlüssel unberührt', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'date'),
+    );
+    expect(Object.keys(next.schema.properties ?? {})).toEqual(['vorname']);
+    const control = next.uiSchema.elements[0];
+    expect('scope' in control && control.scope).toBe(scope);
+  });
+
+  it('lehnt einen Wechsel über Basistypgrenzen hinweg ab', () => {
+    const start = stateWithField();
+    // Text → Ja/Nein: unterschiedlicher JSON-Basistyp
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'checkbox'),
+    );
+    expect(next).toBe(start);
+  });
+
+  it('lehnt einen Wechsel auf ein Strukturelement ab', () => {
+    const start = stateWithField();
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'label-heading'),
+    );
+    expect(next).toBe(start);
+  });
+
+  it('lässt den Zustand unverändert, wenn das Feld nicht existiert', () => {
+    const start = stateWithField();
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction('#/properties/gibtesnicht', 'email'),
+    );
+    expect(next).toBe(start);
+  });
+
+  it('bietet als Alternativen nur Feldtypen mit gleichem Basistyp an', () => {
+    const ids = kompatibleFeldtypen('email').map((f) => f.id);
+    expect(ids).toContain('text-short');
+    expect(ids).toContain('date');
+    expect(ids).not.toContain('checkbox');
+    expect(ids).not.toContain('integer');
   });
 });

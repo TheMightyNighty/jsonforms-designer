@@ -3,6 +3,7 @@
  * über `fieldStateFromSchemas()` + SET_FIELD_STATE.
  */
 import type {
+  ChangeFieldTypeAction,
   SetFieldRuleAction,
   UpdateFieldPropertyAction,
 } from '../../properties/fieldPropertiesActions';
@@ -37,10 +38,14 @@ export type EditorAction =
   | AddFimGruppeAction
   | SetFormMetadataAction
   | UpdateFieldPropertyAction
-  | SetFieldRuleAction;
+  | SetFieldRuleAction
+  | ChangeFieldTypeAction;
 
 // Re-exports für bequemen Import aus ./actions
-export { UPDATE_FIELD_PROPERTY } from '../../properties/fieldPropertiesActions';
+export {
+  CHANGE_FIELD_TYPE,
+  UPDATE_FIELD_PROPERTY,
+} from '../../properties/fieldPropertiesActions';
 export { ADD_FIELD } from './addFieldActions';
 export { REMOVE_FIELD } from './addFieldActions';
 export { LOAD_TEMPLATE } from './addFieldActions';

@@ -79,6 +79,63 @@ describe('normalizeFieldState()', () => {
     });
   });
 
+  /**
+   * Persistenzformat-Garantie (ADR 0002/V2): Ein Stand, der vor den
+   * UX-Arbeitspaketen gespeichert wurde, muss unverändert laden — ohne
+   * manifestMeta, mit einer const-Bedingung und ohne die neuen Felder.
+   */
+  it('lädt einen Stand aus der Zeit vor den UX-Arbeitspaketen', () => {
+    const alterStand = {
+      schema: {
+        type: 'object',
+        title: 'Antrag',
+        properties: {
+          land: { type: 'string', title: 'Land' },
+          grund: { type: 'string', title: 'Begründung' },
+        },
+        required: ['land'],
+      },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [
+          { type: 'Control', scope: '#/properties/land' },
+          {
+            type: 'Control',
+            scope: '#/properties/grund',
+            rule: {
+              effect: 'SHOW',
+              condition: {
+                scope: '#/properties/land',
+                schema: { const: 'DE' },
+              },
+            },
+          },
+        ],
+      },
+      tabs: [],
+      activeTabIndex: 0,
+      tabAssignments: {},
+      lineNumbersEnabled: false,
+      sectionColors: {},
+    };
+
+    const result = normalizeFieldState(alterStand);
+
+    expect(result).toBeDefined();
+    expect(result!.schema.required).toEqual(['land']);
+    expect(Object.keys(result!.schema.properties ?? {})).toEqual([
+      'land',
+      'grund',
+    ]);
+    // Die Bedingung überlebt unverändert
+    expect(result!.uiSchema.elements[1].rule).toEqual({
+      effect: 'SHOW',
+      condition: { scope: '#/properties/land', schema: { const: 'DE' } },
+    });
+    // Neue Felder werden ergänzt, nicht verlangt
+    expect(result!.manifestMeta).toEqual({ ...emptyManifestMeta });
+  });
+
   it('entfernt Prototype-Pollution-Schlüssel rekursiv', () => {
     const raw = JSON.parse(
       '{"schema":{"type":"object","properties":{"a":{"type":"string","__proto__":{"polluted":true}}}},' +
