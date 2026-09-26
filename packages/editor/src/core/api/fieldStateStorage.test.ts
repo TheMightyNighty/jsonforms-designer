@@ -36,6 +36,7 @@ function sampleState(): FieldAwareState {
     lineNumbersEnabled: true,
     sectionColors: { col_1: 'blue' },
     manifestMeta: { ...emptyManifestMeta },
+    typvorschlagIgnoriert: {},
   };
 }
 
@@ -74,6 +75,7 @@ describe('normalizeFieldState()', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
       manifestMeta: { ...emptyManifestMeta },
     });
@@ -116,6 +118,7 @@ describe('normalizeFieldState()', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
     };
 

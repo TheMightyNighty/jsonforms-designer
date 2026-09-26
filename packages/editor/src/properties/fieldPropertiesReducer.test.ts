@@ -43,6 +43,7 @@ function stateWithField(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
   };
@@ -155,6 +156,7 @@ describe('UPDATE_FIELD_PROPERTY placeholder', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
       manifestMeta: { ...emptyManifestMeta },
     };

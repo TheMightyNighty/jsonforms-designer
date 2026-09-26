@@ -341,6 +341,23 @@ export function createToggleLineNumbersAction(): ToggleLineNumbersAction {
   return { type: TOGGLE_LINE_NUMBERS };
 }
 
+/**
+ * Typvorschlag für ein Feld ignorieren oder die Entscheidung zurücknehmen
+ * (ADR 0002, Arbeitspaket 5). Landet in FieldAwareState.typvorschlagIgnoriert
+ * und damit im gespeicherten Stand, nicht im Export.
+ */
+export const IGNORIERE_TYPVORSCHLAG = 'IGNORIERE_TYPVORSCHLAG' as const;
+export interface IgnoriereTypvorschlagAction {
+  type: typeof IGNORIERE_TYPVORSCHLAG;
+  payload: { scope: string; ignoriert: boolean };
+}
+export function createIgnoriereTypvorschlagAction(
+  scope: string,
+  ignoriert: boolean,
+): IgnoriereTypvorschlagAction {
+  return { type: IGNORIERE_TYPVORSCHLAG, payload: { scope, ignoriert } };
+}
+
 export const SET_SECTION_COLOR = 'SET_SECTION_COLOR' as const;
 export interface SetSectionColorAction {
   type: typeof SET_SECTION_COLOR;

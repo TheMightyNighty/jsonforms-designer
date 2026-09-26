@@ -20,6 +20,7 @@ function stateWith(partial: Partial<FieldAwareState>): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
     ...partial,

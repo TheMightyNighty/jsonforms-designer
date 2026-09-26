@@ -19,6 +19,7 @@ function stateWith(
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
     manifestMeta: { ...emptyManifestMeta },
   } as FieldAwareState;

@@ -346,6 +346,114 @@ test('Kopfzeile zeigt Formularname, Speicherstatus und das Menü „Weitere"', a
 });
 
 // ---------------------------------------------------------------------------
+// Qualitäts-Ampel
+// ---------------------------------------------------------------------------
+
+test('Qualitäts-Ampel zählt Befunde und führt zum betroffenen Feld', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+
+  // Das vorbereitete Formular hat keinen Titel und keine Rechtsgrundlage.
+  const ampel = page.getByTestId('qualitaets-ampel');
+  await expect(ampel).toBeVisible();
+  await ampel.click();
+
+  const liste = page.getByRole('dialog').or(page.getByRole('presentation'));
+  await expect(liste.getByText('Das Formular hat keinen Titel.')).toBeVisible();
+
+  // Ein Feld ohne Bezeichnung erzeugt einen Eintrag, der zum Feld führt
+  await page.keyboard.press('Escape');
+  await page.getByTestId('field-row').click();
+  const panel = page.getByRole('form', { name: 'Feldeigenschaften' });
+  await panel.getByLabel('Label des Feldes').fill('');
+
+  await ampel.click();
+  const eintrag = page.getByText('hat keine Bezeichnung');
+  await expect(eintrag).toBeVisible();
+  await eintrag.click();
+  await expect(panel.getByLabel('Label des Feldes')).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------
+// Typvorschlag
+// ---------------------------------------------------------------------------
+
+test('Typvorschlag erscheint bei abweichender Bezeichnung und lässt sich übernehmen', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+  await page.getByTestId('field-row').click();
+
+  const panel = page.getByRole('form', { name: 'Feldeigenschaften' });
+  await panel.getByLabel('Label des Feldes').fill('Geburtsdatum');
+
+  const hinweis = page.getByTestId('typvorschlag-hinweis');
+  await expect(hinweis).toContainText('Datum');
+
+  await hinweis.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(panel.getByLabel('Art des Feldes ändern')).toContainText(
+    'Datum',
+  );
+  await expect(page.getByTestId('typvorschlag-hinweis')).toHaveCount(0);
+});
+
+test('Typvorschlag lässt sich ignorieren und bleibt nach Reload weg', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+  await page.getByTestId('field-row').click();
+
+  const panel = page.getByRole('form', { name: 'Feldeigenschaften' });
+  await panel.getByLabel('Label des Feldes').fill('Geburtsdatum');
+  await page
+    .getByTestId('typvorschlag-hinweis')
+    .getByRole('button', { name: 'Ignorieren' })
+    .click();
+  await expect(page.getByTestId('typvorschlag-hinweis')).toHaveCount(0);
+
+  // Die Entscheidung liegt im gespeicherten Stand, nicht nur im Speicher
+  await page.reload();
+  await page.getByTestId('field-row').click();
+  await expect(page.getByTestId('typvorschlag-hinweis')).toHaveCount(0);
+});
+
+// ---------------------------------------------------------------------------
+// Geräte-Ansicht (Prototyp hinter Feature-Flag, ADR 0003)
+// ---------------------------------------------------------------------------
+
+test('Geräte-Ansicht ist ohne Flag nicht vorhanden', async ({ page }) => {
+  await gotoSeeded(page);
+  await expect(page.getByTestId('canvas-geraet')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Handy' })).toHaveCount(0);
+});
+
+test('Geräte-Ansicht mit Flag: Umschalten verengt die Fläche, Auswahl bleibt', async ({
+  page,
+}) => {
+  await page.addInitScript(([key, state]) => localStorage.setItem(key, state), [
+    STORAGE_KEY,
+    JSON.stringify(SEEDED_STATE),
+  ] as const);
+  await page.goto('/?geraeteansicht=1');
+
+  const canvas = page.getByTestId('canvas-geraet');
+  await expect(canvas).toHaveAttribute('data-geraet', 'desktop');
+  const breiteDesktop = (await canvas.boundingBox())!.width;
+
+  await page.getByRole('button', { name: 'Handy' }).click();
+  await expect(canvas).toHaveAttribute('data-geraet', 'handy');
+  const breiteHandy = (await canvas.boundingBox())!.width;
+  expect(breiteHandy).toBeLessThan(breiteDesktop);
+
+  // Auswahl per Overlay funktioniert auch in der schmalen Ansicht
+  await page.getByTestId('field-row').click();
+  await expect(
+    page.getByRole('form', { name: 'Feldeigenschaften' }),
+  ).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------
 // Export
 // ---------------------------------------------------------------------------
 

@@ -87,17 +87,10 @@ export function ValidatorSection({
         [key]: { ...fieldDef, 'x-opencode-validators': next },
       },
     };
+    // Bestehenden Zustand übernehmen und nur das Geänderte überschreiben —
+    // eine Aufzählung der Felder verlöre bei jedem neuen State-Feld etwas.
     dispatch(
-      createSetFieldStateAction({
-        schema: updatedSchema,
-        uiSchema,
-        tabs: fieldState.tabs,
-        activeTabIndex: fieldState.activeTabIndex,
-        tabAssignments: fieldState.tabAssignments,
-        lineNumbersEnabled: fieldState.lineNumbersEnabled,
-        sectionColors: fieldState.sectionColors,
-        manifestMeta: fieldState.manifestMeta,
-      }),
+      createSetFieldStateAction({ ...fieldState, schema: updatedSchema }),
     );
   };
 
