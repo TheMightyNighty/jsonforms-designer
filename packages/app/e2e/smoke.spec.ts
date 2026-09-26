@@ -1,7 +1,7 @@
 /**
  * E2E-Smoke-Tests: sichern die Kernpfade des Editors gegen den
  * Produktions-Build ab — Laden, Drag & Drop (Kernfeature), Auto-Save,
- * Eigenschaften, Vorschau, Code-Modus (self-hosted Monaco) und Export.
+ * Eigenschaften, Testmodus, Code-Modus (self-hosted Monaco) und Export.
  */
 import { expect, type Locator, type Page, test } from '@playwright/test';
 
@@ -22,7 +22,7 @@ async function dragAndDrop(page: Page, source: Locator, target: Locator) {
 }
 
 /** Vorbereiteter Zustand: ein Textfeld „Nachname" — macht die Tests für
- * Eigenschaften/Vorschau/Code/Export unabhängig vom DnD-Test. */
+ * Eigenschaften/Testmodus/Code/Export unabhängig vom DnD-Test. */
 const SEEDED_STATE = {
   schema: {
     type: 'object',
@@ -161,15 +161,13 @@ test('Label im Eigenschaften-Panel ändern aktualisiert das Formular', async ({
 });
 
 // ---------------------------------------------------------------------------
-// Vorschau (JSONForms-Rendering)
+// Testmodus (JSONForms-Rendering)
 // ---------------------------------------------------------------------------
 
-test('Vorschau rendert das Formular als ausfüllbares JSONForms', async ({
-  page,
-}) => {
+test('Testmodus macht das Formular ausfüllbar', async ({ page }) => {
   await gotoSeeded(page);
 
-  await page.getByRole('button', { name: 'Vorschau' }).click();
+  await page.getByRole('button', { name: 'Formular testen' }).click();
   const input = page.getByRole('textbox', { name: /Nachname/ });
   await expect(input).toBeVisible();
   await input.fill('Mustermann');

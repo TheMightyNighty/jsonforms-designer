@@ -313,3 +313,235 @@ describe('moveElementReducer()', () => {
     expect(rootElements.some((el) => el.id === 'ctrl_001')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Weitere Pfade: Container-Ziele, Einfügeposition, Nicht-Treffer
+// ---------------------------------------------------------------------------
+
+/** Ein Feld in der root-Liste, eine leere Spalte und eine leere Gruppe. */
+function stateMitRootFeld(): FieldAwareState {
+  return {
+    schema: {
+      type: 'object',
+      properties: { name: { type: 'string', title: 'Name' } },
+    },
+    uiSchema: {
+      type: 'VerticalLayout',
+      elements: [
+        { id: 'ctrl_001', type: 'Control', scope: '#/properties/name' },
+        {
+          id: 'col_001',
+          type: 'ColumnContainer',
+          widths: [1, 1],
+          columns: [[], []],
+        },
+        {
+          id: 'grp_001',
+          type: 'GroupContainer',
+          label: 'Gruppe',
+          children: [],
+        },
+      ] as UiElement[],
+    },
+    tabs: [],
+    activeTabIndex: 0,
+    tabAssignments: {},
+    lineNumbersEnabled: false,
+    sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
+  };
+}
+
+describe('columnDropReducer() — weitere Element-Arten', () => {
+  it('legt einen Spalten-Container in einer Spalte ab', () => {
+    const next = columnDropReducer(
+      stateWithColumn(),
+      createColumnDropAction({
+        containerId: 'col_001',
+        columnIndex: 0,
+        fieldTypeId: 'col-2',
+        propertyKey: '_spalten',
+      }),
+    );
+    const innen = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns[0][0] as Extract<UiElement, { columns: unknown }>;
+    expect(innen.type).toBe('ColumnContainer');
+    expect(innen.columns).toHaveLength(2);
+    expect(next.schema.properties).toEqual({});
+  });
+
+  it('legt eine benannte Gruppe in einer Spalte ab', () => {
+    const next = columnDropReducer(
+      stateWithColumn(),
+      createColumnDropAction({
+        containerId: 'col_001',
+        columnIndex: 1,
+        fieldTypeId: 'group',
+        propertyKey: '_gruppe',
+      }),
+    );
+    const innen = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns[1][0] as Extract<UiElement, { children: unknown }>;
+    expect(innen.type).toBe('GroupContainer');
+    expect(innen.children).toEqual([]);
+  });
+
+  it('übernimmt Schema und Optionen eines FIM-Datenfeldes', () => {
+    const next = columnDropReducer(
+      stateWithColumn(),
+      createColumnDropAction({
+        containerId: 'col_001',
+        columnIndex: 0,
+        fieldTypeId: 'fim:F60000227',
+        propertyKey: 'familienname',
+        fimSchema: { type: 'string', title: 'Familienname' },
+        fimUiOptions: { 'x-fim-id': 'F60000227' },
+      }),
+    );
+    expect(next.schema.properties?.['familienname']).toMatchObject({
+      type: 'string',
+      title: 'Familienname',
+    });
+    const col = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns[0];
+    expect(col[0].options).toMatchObject({ 'x-fim-id': 'F60000227' });
+  });
+
+  it('lässt den Zustand unverändert, wenn der Container nicht existiert', () => {
+    const state = stateWithColumn();
+    const next = columnDropReducer(
+      state,
+      createColumnDropAction({
+        containerId: 'col_gibt_es_nicht',
+        columnIndex: 0,
+        fieldTypeId: 'text-short',
+        propertyKey: 'textfeld',
+      }),
+    );
+    expect(next.uiSchema.elements).toEqual(state.uiSchema.elements);
+  });
+});
+
+describe('moveElementReducer() — Ziel-Container', () => {
+  it('verschiebt ein Feld aus der root-Liste in eine Spalte', () => {
+    const next = moveElementReducer(
+      stateMitRootFeld(),
+      createMoveElementAction({
+        elementId: 'ctrl_001',
+        targetContainerId: 'col_001',
+        targetColumnIndex: 1,
+      }),
+    );
+    const container = next.uiSchema.elements.find(
+      (el) => el.id === 'col_001',
+    ) as Extract<UiElement, { columns: unknown }>;
+    expect(container.columns[0]).toHaveLength(0);
+    expect(container.columns[1].map((el) => el.id)).toEqual(['ctrl_001']);
+    expect(next.uiSchema.elements.some((el) => el.id === 'ctrl_001')).toBe(
+      false,
+    );
+  });
+
+  it('verschiebt ein Feld aus der root-Liste in eine Gruppe', () => {
+    const next = moveElementReducer(
+      stateMitRootFeld(),
+      createMoveElementAction({
+        elementId: 'ctrl_001',
+        targetContainerId: 'grp_001',
+      }),
+    );
+    const gruppe = next.uiSchema.elements.find(
+      (el) => el.id === 'grp_001',
+    ) as Extract<UiElement, { children: unknown }>;
+    expect(gruppe.children.map((el) => el.id)).toEqual(['ctrl_001']);
+  });
+
+  it('setzt ein Element hinter das angegebene Geschwisterelement', () => {
+    const state = stateMitRootFeld();
+    const mitZweitemFeld: FieldAwareState = {
+      ...state,
+      uiSchema: {
+        ...state.uiSchema,
+        elements: [
+          ...state.uiSchema.elements,
+          { id: 'ctrl_002', type: 'Control', scope: '#/properties/zweit' },
+        ] as UiElement[],
+      },
+    };
+    const next = moveElementReducer(
+      mitZweitemFeld,
+      createMoveElementAction({
+        elementId: 'ctrl_001',
+        targetContainerId: 'root',
+        insertAfterId: 'grp_001',
+      }),
+    );
+    expect(next.uiSchema.elements.map((el) => el.id)).toEqual([
+      'col_001',
+      'grp_001',
+      'ctrl_001',
+      'ctrl_002',
+    ]);
+  });
+
+  it('lässt den Zustand unverändert, wenn das Element nicht existiert', () => {
+    const state = stateMitRootFeld();
+    const next = moveElementReducer(
+      state,
+      createMoveElementAction({
+        elementId: 'gibt_es_nicht',
+        targetContainerId: 'root',
+      }),
+    );
+    expect(next).toBe(state);
+  });
+
+  // Festgehaltenes Ist-Verhalten, kein Wunschverhalten: Zeigt das Ziel auf
+  // einen Container, den es nicht (mehr) gibt, wird das Element aus seiner
+  // alten Position entfernt und nirgends wieder eingefügt — es geht
+  // verloren. Über die Oberfläche ist das derzeit nicht auslösbar (Ziele
+  // kommen aus gerenderten Drop-Zonen).
+  // [RÜCKFRAGE AN FABLE: Soll moveElementReducer bei unbekanntem Ziel den
+  // Zustand unverändert lassen? Das wäre eine Verhaltensänderung und damit
+  // keine reine UX-Arbeit — deshalb hier nur dokumentiert.]
+  it('verliert das Element, wenn der Ziel-Container nicht existiert', () => {
+    const state = stateMitRootFeld();
+    const next = moveElementReducer(
+      state,
+      createMoveElementAction({
+        elementId: 'ctrl_001',
+        targetContainerId: 'gibt_es_nicht',
+      }),
+    );
+    expect(next.uiSchema.elements.some((el) => el.id === 'ctrl_001')).toBe(
+      false,
+    );
+  });
+});
+
+describe('reorderInColumnReducer() — Randfälle', () => {
+  it('lässt den Zustand unverändert, wenn der Container nicht existiert', () => {
+    const state = stateWithFilledColumn();
+    const next = reorderInColumnReducer(
+      state,
+      createReorderInColumnAction('gibt_es_nicht', 0, 'ctrl_001'),
+    );
+    expect(next.uiSchema.elements).toEqual(state.uiSchema.elements);
+  });
+
+  it('lässt den Zustand unverändert, wenn das Element nicht in der Spalte liegt', () => {
+    const state = stateWithFilledColumn();
+    const next = reorderInColumnReducer(
+      state,
+      createReorderInColumnAction('col_001', 1, 'ctrl_001'),
+    );
+    const col = (
+      next.uiSchema.elements[0] as Extract<UiElement, { columns: unknown }>
+    ).columns;
+    expect(col[0].map((el) => el.id)).toEqual(['ctrl_001']);
+    expect(col[1]).toHaveLength(0);
+  });
+});
