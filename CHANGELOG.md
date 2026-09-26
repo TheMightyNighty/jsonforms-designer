@@ -7,6 +7,9 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Dokumentation
+- **ADR 0002 „Fachsprachliche Editor-UX"**: hält die Richtung für die Editor-Oberfläche fest (Zielgruppe Formularredakteurin im Fachbereich, Fachsprache statt Technik) samt der sechs verbindlichen Randbedingungen — Repo-Konventionen, stabiles Persistenzformat `jfd_fieldState_v1`, unverändertes Ausgabeformat, keine Verschlechterung der Barrierefreiheit, keine neuen Laufzeit-Abhängigkeiten, Fachsprache aus `i18n`.
+
 ### Sicherheit (Supply Chain)
 - **Vertrauensaudit aller 44 Direktabhängigkeiten** (Provenance, Maintainer, Aktivität): 4 verwaiste Runtime-Dependencies entfernt (lodash, json-schema-traverse, uuid, @mui/x-tree-view); `react-dnd` (seit 2022 ungepflegt) als Migrationsziel in der ROADMAP bewertet — Empfehlung `@atlaskit/pragmatic-drag-and-drop`.
 - **Tabler-Icon-Font vendored** (nur woff2 + getrimmtes CSS, MIT-Lizenz beigelegt): entfernt `@tabler/icons-webfont` samt transitiver nativer Build-Kette (`svgtofont`/`ttf2woff2` mit Install-Script); der App-Build enthält statt drei Font-Formaten (~4 MB) nur noch das woff2 (457 KB).
