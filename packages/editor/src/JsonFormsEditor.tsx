@@ -2,6 +2,7 @@ import React, {
   ComponentType,
   useCallback,
   useEffect,
+  useMemo,
   useReducer,
   useState,
 } from 'react';
@@ -13,10 +14,17 @@ import {
   FieldStateStorageService,
   LocalStorageFieldStateService,
 } from './core/api/fieldStateStorage';
+import {
+  FormularEintrag,
+  UNBENANNTES_FORMULAR,
+} from './core/api/formularAblage';
 import { EmptySchemaService, SchemaService } from './core/api/schemaService';
-import { EditorContextInstance } from './core/context';
+import { EditorContextInstance, FormularVerwaltung } from './core/context';
 import { EditorAction } from './core/model/actions';
-import { createSetFieldStateAction } from './core/model/addFieldActions';
+import {
+  createSetFieldStateAction,
+  createSetFormMetadataAction,
+} from './core/model/addFieldActions';
 import { matchesElementKey } from './core/model/addFieldReducer';
 import {
   HISTORY_WRAP,
@@ -25,7 +33,10 @@ import {
   REDO,
   UNDO,
 } from './core/model/historyReducer';
-import { createInitialEditorState } from './core/model/reducer';
+import {
+  createInitialEditorState,
+  emptyFieldState,
+} from './core/model/reducer';
 import { SpeicherStatus } from './core/model/speicherStatus';
 import { UiElement } from './core/model/uiElements';
 import { fieldStateFromSchemas } from './core/util/fieldStateFromSchemas';
@@ -114,6 +125,105 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   const canRedo = historyState.future.length > 0;
 
   const [selectedScope, setSelectedScope] = useState<string | null>(null);
+
+  // ── Formular-Ablage (ADR 0006) ────────────────────────────────────────
+  // Nur vorhanden, wenn der Persistenz-Adapter eine mitbringt. Die Liste
+  // liegt im State, damit die Oberfläche nach jeder Ablage-Änderung neu
+  // rendert — die Ablage selbst ist keine React-Quelle.
+  const ablage = fieldStateStorage.ablage;
+  const [ablageListe, setAblageListe] = useState<FormularEintrag[]>([]);
+  const [aktuelleFormularId, setAktuelleFormularId] = useState<
+    string | undefined
+  >(() => ablage?.aktuelleId());
+
+  const ablageAuffrischen = useCallback(async () => {
+    if (!ablage) return;
+    try {
+      setAblageListe(await ablage.liste());
+      setAktuelleFormularId(ablage.aktuelleId());
+    } catch (err) {
+      reportError(err, 'Formular-Ablage konnte nicht gelesen werden');
+    }
+  }, [ablage, reportError]);
+
+  useEffect(() => {
+    void ablageAuffrischen();
+  }, [ablageAuffrischen, fieldState]);
+
+  const formularAblage: FormularVerwaltung | undefined = useMemo(() => {
+    if (!ablage) return undefined;
+    return {
+      liste: ablageListe,
+      aktuelles: ablageListe.find((e) => e.id === aktuelleFormularId),
+      neu: () => {
+        void (async () => {
+          try {
+            const leer = { ...emptyFieldState };
+            const eintrag = await ablage.speichernAls(
+              UNBENANNTES_FORMULAR,
+              leer,
+            );
+            setAktuelleFormularId(eintrag.id);
+            dispatch(createSetFieldStateAction(leer));
+            setSelectedScope(null);
+          } catch (err) {
+            reportError(err, 'Neues Formular konnte nicht angelegt werden');
+          }
+        })();
+      },
+      oeffnen: (id) => {
+        void (async () => {
+          try {
+            const geladen = await ablage.oeffnen(id);
+            if (!geladen) return;
+            // Erst die Ablage umstellen, dann den Zustand: Der Auto-Save
+            // läuft nach dem Render und schreibt dann bereits ins neue
+            // Formular statt das alte zu überschreiben.
+            ablage.setzeAktuelleId(id);
+            setAktuelleFormularId(id);
+            dispatch(createSetFieldStateAction(geladen));
+            setSelectedScope(null);
+          } catch (err) {
+            reportError(err, 'Formular konnte nicht geöffnet werden');
+          }
+        })();
+      },
+      speichernAls: (name) => {
+        void (async () => {
+          try {
+            const eintrag = await ablage.speichernAls(name, fieldState);
+            setAktuelleFormularId(eintrag.id);
+            // Der Name ist der Formulartitel — beides auseinanderlaufen zu
+            // lassen wäre die Quelle ewiger Verwirrung.
+            dispatch(createSetFormMetadataAction({ title: name }));
+          } catch (err) {
+            reportError(err, 'Formular konnte nicht abgelegt werden');
+          }
+        })();
+      },
+      umbenennen: (name) => {
+        dispatch(createSetFormMetadataAction({ title: name }));
+      },
+      loeschen: (id) => {
+        void (async () => {
+          try {
+            await ablage.loeschen(id);
+            await ablageAuffrischen();
+          } catch (err) {
+            reportError(err, 'Formular konnte nicht gelöscht werden');
+          }
+        })();
+      },
+    };
+  }, [
+    ablage,
+    ablageListe,
+    aktuelleFormularId,
+    dispatch,
+    fieldState,
+    reportError,
+    ablageAuffrischen,
+  ]);
 
   // Asynchrone Hydration (Server-Adapter). Hinweis: läuft als regulärer
   // History-Schritt — direkt nach der Hydration ist ein Undo zum leeren
@@ -228,6 +338,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
               reportError,
               fieldState,
               speicherStatus,
+              formularAblage,
               selectedScope,
               setSelectedScope,
               undo,

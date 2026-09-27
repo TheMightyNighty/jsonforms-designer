@@ -16,6 +16,22 @@ export const en: EditorTranslations = {
     zeilennummern: 'Line numbers',
     sprache: 'Interface language',
     weitere: 'More',
+    ablage: {
+      menue: 'Form',
+      neu: 'New form',
+      oeffnen: 'Open form …',
+      oeffnenTitel: 'Open form',
+      speichernAls: 'Save as …',
+      umbenennen: 'Rename …',
+      loeschen: 'Delete',
+      loeschenTitel: 'Delete form?',
+      loeschenFrage:
+        '"{name}" will be deleted permanently. This cannot be undone.',
+      leer: 'No form stored yet.',
+      name: 'Form name',
+      uebernehmen: 'Apply',
+      unbenannt: 'Untitled form',
+    },
     qualitaet: {
       titel: 'Form quality',
       alsButton: 'Check quality',
@@ -83,6 +99,12 @@ export const en: EditorTranslations = {
     mehrstufig: 'Create multi-step form',
     seite: 'Page',
     neuerTab: 'New tab',
+    leer: {
+      bereich: 'Drop area for the first field',
+      titel: 'This form is still empty',
+      tastatur:
+        'Without a mouse: focus an entry in the palette and press Enter.',
+    },
     geraet: {
       desktop: 'Desktop',
       handy: 'Phone',

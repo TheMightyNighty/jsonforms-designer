@@ -255,7 +255,13 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
           onLayoutChange={onLayoutChange}
           style={{ height: '100%' }}
         >
-          <Panel minSize="15%">
+          {/*
+            Startaufteilung: Das Formular ist der Gegenstand der Arbeit und
+            bekommt die Hauptfläche. Zu dritteln hieße, der Palette so viel
+            Platz zu geben wie dem Formular — sie braucht ihn nicht. Per
+            Griff bleibt alles verstellbar, die Wahl wird gespeichert.
+          */}
+          <Panel minSize="15%" defaultSize="20%">
             <Box
               component="section"
               aria-labelledby="bereich-palette"
@@ -270,7 +276,7 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
           <Separator>
             <Box sx={handleSx} />
           </Separator>
-          <Panel minSize="20%">
+          <Panel minSize="20%" defaultSize="52%">
             <Box
               component="section"
               aria-labelledby="bereich-arbeitsflaeche"
@@ -300,7 +306,7 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
           <Separator>
             <Box sx={handleSx} />
           </Separator>
-          <Panel minSize="15%">
+          <Panel minSize="15%" defaultSize="28%">
             <Box
               component="section"
               aria-labelledby="bereich-eigenschaften"

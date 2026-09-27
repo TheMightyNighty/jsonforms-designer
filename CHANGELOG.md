@@ -7,6 +7,16 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Hinzugefügt (Formular-Verwaltung)
+- **Mehrere benannte Formulare** (ADR 0006): „Neues Formular", „Formular öffnen …", „Umbenennen …" und „Speichern unter …" — erreichbar über den Formularnamen in der Kopfzeile, der damit zugleich der Ort ist, an dem der Titel geändert wird. Vorher kannte der Editor genau ein Formular; wer ein zweites wollte, musste das erste exportieren und überschreiben. Löschen fragt nach, weil es nicht über Rückgängig zurückzuholen ist.
+- **`FormularAblage`** als **optionale** Erweiterung von `FieldStateStorageService` (`readonly ablage?`). Fehlt sie im Adapter des Hosts, arbeitet der Editor unverändert im Ein-Dokument-Betrieb und blendet die Menüpunkte nicht ein — bestehende Einbettungen brechen nicht. Der Name eines Formulars ist sein Titel (`schema.title`), kein zweiter davon unabhängiger Name.
+- **`LocalStorageFormularAblage`** als Default: ein Index plus je Formular ein eigener Schlüssel. Ein vorhandener Stand unter dem alten Ein-Dokument-Schlüssel wird beim ersten Laden einmalig übernommen; der alte Schlüssel wird weiter mitgeschrieben.
+
+### Geändert (Oberfläche)
+- **Leerer Zustand:** statt eines Satzes oben links in einer leeren Fläche eine sichtbare, mittig gesetzte Ablagefläche mit Überschrift, erstem Schritt und dem Hinweis auf den Tastaturweg. Die Drop-Fläche war vorher unsichtbar (`borderColor: transparent`).
+- **Startaufteilung der Spalten** von 1 : 1 : 1 auf 20 / 52 / 28 — das Formular ist der Gegenstand der Arbeit und bekommt die Hauptfläche. Per Griff verstellbar, die Wahl wird gespeichert.
+- **Qualitäts-Ampel schweigt am leeren Formular:** Titel und Rechtsgrundlage fehlen dort zwangsläufig; ein frisches Formular mit zwei roten Fehlern zu begrüßen ist entmutigend statt hilfreich. Sobald es Inhalt hat, zählen sie wieder.
+
 ### Behoben (Barrierefreiheit)
 - **Aufklappbare Palette-Überschriften waren nicht per Tastatur bedienbar** („Eingabe", „OPENCODE", „FIM-Bausteine"): klickbare `div`s ohne Rolle und ohne Fokus. Jetzt echte Schaltflächen mit `aria-expanded` (WCAG 2.1.1).
 - **Zwei ineinander verschachtelte `banner`-Landmarks** (ein `<header>` um die AppBar, die selbst eines rendert) — die äußere entfällt. `main` hat einen Namen und trägt das Sprungziel des Skip-Links.

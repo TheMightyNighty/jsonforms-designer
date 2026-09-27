@@ -46,6 +46,7 @@ function fakeStorage(initial?: Record<string, string>) {
   return {
     getItem: (key: string) => map.get(key) ?? null,
     setItem: (key: string, value: string) => void map.set(key, value),
+    removeItem: (key: string) => void map.delete(key),
     dump: () => Object.fromEntries(map),
   };
 }
@@ -172,7 +173,7 @@ describe('LocalStorageFieldStateService', () => {
     const storage = fakeStorage();
     const service = new LocalStorageFieldStateService(undefined, storage);
     service.save(sampleState());
-    expect(Object.keys(storage.dump())).toEqual([FIELD_STATE_STORAGE_KEY]);
+    expect(Object.keys(storage.dump())).toContain(FIELD_STATE_STORAGE_KEY);
   });
 
   it('load() liefert undefined wenn nichts gespeichert ist', () => {
@@ -200,6 +201,9 @@ describe('LocalStorageFieldStateService', () => {
       setItem: () => {
         throw new Error('QuotaExceededError');
       },
+      removeItem: () => {
+        throw new Error('QuotaExceededError');
+      },
     });
     expect(() => service.save(sampleState())).not.toThrow();
   });
@@ -214,7 +218,10 @@ describe('LocalStorageFieldStateService', () => {
     const storage = fakeStorage();
     const service = new LocalStorageFieldStateService('mein_key', storage);
     service.save(sampleState());
-    expect(Object.keys(storage.dump())).toEqual(['mein_key']);
+    // Neben dem eigenen Schlüssel legt der Adapter die Ablage an
+    // (ADR 0006); der Ein-Dokument-Schlüssel wird weiter mitgeschrieben,
+    // damit Hosts, die direkt darauf zugreifen, nichts verlieren.
+    expect(Object.keys(storage.dump())).toContain('mein_key');
     expect(service.load()).toBeDefined();
   });
 });

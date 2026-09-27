@@ -202,19 +202,25 @@ export function pruefeFormular(state: FieldAwareState): Hinweis[] {
   }
 
   // ── Formular-Metadaten ──────────────────────────────────────────────────
-  if (!(state.schema.title ?? '').trim()) {
-    fehler.push({
-      id: 'formular-ohne-titel',
-      schwere: 'fehler',
-      text: 'Das Formular hat keinen Titel.',
-    });
-  }
-  if (!state.manifestMeta.legalBasis.trim()) {
-    fehler.push({
-      id: 'formular-ohne-rechtsgrundlage',
-      schwere: 'fehler',
-      text: 'In den Metadaten fehlt die Rechtsgrundlage.',
-    });
+  // Am ganz leeren Formular werden die Metadaten nicht angemahnt: Titel und
+  // Rechtsgrundlage fehlen dort zwangsläufig, und ein frisches Formular mit
+  // zwei roten Fehlern zu begrüßen ist entmutigend statt hilfreich. Sobald
+  // das Formular Inhalt hat, zählen sie wieder.
+  if (controls.length > 0 || state.uiSchema.elements.length > 0) {
+    if (!(state.schema.title ?? '').trim()) {
+      fehler.push({
+        id: 'formular-ohne-titel',
+        schwere: 'fehler',
+        text: 'Das Formular hat keinen Titel.',
+      });
+    }
+    if (!state.manifestMeta.legalBasis.trim()) {
+      fehler.push({
+        id: 'formular-ohne-rechtsgrundlage',
+        schwere: 'fehler',
+        text: 'In den Metadaten fehlt die Rechtsgrundlage.',
+      });
+    }
   }
 
   return [...fehler, ...hinweise];

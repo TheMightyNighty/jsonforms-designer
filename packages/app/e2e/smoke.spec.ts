@@ -346,6 +346,91 @@ test('Kopfzeile zeigt Formularname, Speicherstatus und das Menü „Weitere"', a
 });
 
 // ---------------------------------------------------------------------------
+// Formular-Verwaltung (ADR 0006)
+// ---------------------------------------------------------------------------
+
+test('Neues Formular legt ein zweites an, ohne das erste zu verlieren', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+  await expect(page.getByTestId('field-row')).toHaveCount(1);
+
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Neues Formular' }).click();
+
+  // Das neue Formular ist leer …
+  await expect(page.getByTestId('field-row')).toHaveCount(0);
+  await expect(page.getByTestId('empty-editor-drop')).toBeVisible();
+
+  // … und das alte liegt weiterhin in der Ablage.
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Formular öffnen' }).click();
+  const dialog = page.getByTestId('ablage-dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText('Unbenanntes Formular')).toHaveCount(2);
+});
+
+test('Formular speichern unter, wechseln und wieder öffnen', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+
+  // Aktuellen Stand unter einem Namen ablegen
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Speichern unter' }).click();
+  await page.getByLabel('Name des Formulars').fill('Wohngeld');
+  await page.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByTestId('formular-menue')).toContainText('Wohngeld');
+
+  // Neues Formular anlegen und ihm ein eigenes Feld geben
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Neues Formular' }).click();
+  await expect(page.getByTestId('field-row')).toHaveCount(0);
+
+  // Zurück zum ersten Formular — der Inhalt ist noch da
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Formular öffnen' }).click();
+  await page
+    .getByTestId('ablage-dialog')
+    .getByRole('button', { name: /^Wohngeld / })
+    .click();
+  await expect(page.getByTestId('field-row')).toHaveCount(1);
+  await expect(page.getByTestId('field-row')).toContainText('Nachname');
+});
+
+test('Formular umbenennen ändert Name und Titel', async ({ page }) => {
+  await gotoSeeded(page);
+
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Umbenennen' }).click();
+  await page.getByLabel('Name des Formulars').fill('Antrag auf Elterngeld');
+  await page.getByRole('button', { name: 'Übernehmen' }).click();
+
+  await expect(page.getByTestId('formular-menue')).toContainText(
+    'Antrag auf Elterngeld',
+  );
+});
+
+test('Formular löschen fragt vorher nach', async ({ page }) => {
+  await gotoSeeded(page);
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Speichern unter' }).click();
+  await page.getByLabel('Name des Formulars').fill('Weg damit');
+  await page.getByRole('button', { name: 'Übernehmen' }).click();
+
+  await page.getByTestId('formular-menue').click();
+  await page.getByRole('menuitem', { name: 'Formular öffnen' }).click();
+  await page.getByRole('button', { name: /Löschen: Weg damit/ }).click();
+
+  // Rückfrage, weil Löschen nicht über Rückgängig zurückzuholen ist
+  await expect(page.getByText('Formular löschen?')).toBeVisible();
+  await page.getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(
+    page.getByTestId('ablage-dialog').getByText('Weg damit'),
+  ).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------
 // Qualitäts-Ampel
 // ---------------------------------------------------------------------------
 
@@ -354,7 +439,8 @@ test('Qualitäts-Ampel zählt Befunde und führt zum betroffenen Feld', async ({
 }) => {
   await gotoSeeded(page);
 
-  // Das vorbereitete Formular hat keinen Titel und keine Rechtsgrundlage.
+  // Das vorbereitete Formular hat ein Feld, aber keinen Titel und keine
+  // Rechtsgrundlage — am ganz leeren Formular schweigt die Ampel.
   const ampel = page.getByTestId('qualitaets-ampel');
   await expect(ampel).toBeVisible();
   await ampel.click();
