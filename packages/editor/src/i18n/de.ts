@@ -36,6 +36,11 @@ export const de: EditorTranslations = {
       stunden: 'h',
     },
   },
+  bereiche: {
+    palette: 'Bausteine und Felder',
+    arbeitsflaeche: 'Formular',
+    eigenschaften: 'Eigenschaften',
+  },
   palette: {
     groups: {
       eingabe: 'Eingabe',

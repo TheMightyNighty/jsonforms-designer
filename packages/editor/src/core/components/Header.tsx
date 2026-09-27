@@ -29,9 +29,11 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { useTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import React, { useEffect, useState } from 'react';
 
 import { useEditorConfig } from '../../config/EditorConfigContext';
@@ -108,6 +110,12 @@ export const Header: React.FC<HeaderProps> = ({
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const { t, locale, setLocale } = useI18n();
   const config = useEditorConfig();
+  const theme = useTheme();
+  // Auf schmalen Bildschirmen tragen Rückgängig/Wiederholen nur noch ihr
+  // Symbol: Mit Text passte die Kopfzeile bei 320 px nicht mehr in die
+  // Breite und erzwang horizontales Scrollen (WCAG 1.4.10). Der
+  // zugängliche Name bleibt über aria-label erhalten.
+  const schmal = useMediaQuery(theme.breakpoints.down('sm'));
   const [exportOpen, setExportOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [metaOpen, setMetaOpen] = useState(false);
@@ -141,9 +149,9 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <AppBar position="static" elevation={0}>
-      <Toolbar>
+      <Toolbar sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
         {/* Links: woran wird gearbeitet? */}
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+        <Box sx={{ flexGrow: 1, minWidth: 0, mr: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
             <Typography
               variant="h6"
@@ -184,7 +192,16 @@ export const Header: React.FC<HeaderProps> = ({
         </Box>
 
         {/* Rechts: Aktionen, beschriftet */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            flexWrap: 'wrap',
+            rowGap: 0.5,
+            gap: 0.5,
+          }}
+        >
           <Tooltip title={t.header.undo}>
             <span>
               <Button
@@ -192,10 +209,11 @@ export const Header: React.FC<HeaderProps> = ({
                 size="small"
                 onClick={undo}
                 disabled={!canUndo}
-                startIcon={<UndoIcon />}
-                sx={{ color: 'text.secondary' }}
+                aria-label={t.header.undo}
+                startIcon={schmal ? undefined : <UndoIcon />}
+                sx={{ color: 'text.secondary', minWidth: 40 }}
               >
-                {t.header.undo}
+                {schmal ? <UndoIcon fontSize="small" /> : t.header.undo}
               </Button>
             </span>
           </Tooltip>
@@ -206,10 +224,11 @@ export const Header: React.FC<HeaderProps> = ({
                 size="small"
                 onClick={redo}
                 disabled={!canRedo}
-                startIcon={<RedoIcon />}
-                sx={{ color: 'text.secondary' }}
+                aria-label={t.header.redo}
+                startIcon={schmal ? undefined : <RedoIcon />}
+                sx={{ color: 'text.secondary', minWidth: 40 }}
               >
-                {t.header.redo}
+                {schmal ? <RedoIcon fontSize="small" /> : t.header.redo}
               </Button>
             </span>
           </Tooltip>
@@ -243,12 +262,13 @@ export const Header: React.FC<HeaderProps> = ({
             color="inherit"
             size="small"
             onClick={(e) => setWeitereAnker(e.currentTarget)}
-            startIcon={<MoreHorizIcon />}
+            startIcon={schmal ? undefined : <MoreHorizIcon />}
             aria-haspopup="menu"
             aria-expanded={weitereAnker ? true : undefined}
-            sx={{ color: 'text.secondary' }}
+            aria-label={t.header.weitere}
+            sx={{ color: 'text.secondary', minWidth: 40 }}
           >
-            {t.header.weitere}
+            {schmal ? <MoreHorizIcon fontSize="small" /> : t.header.weitere}
           </Button>
         </Box>
 

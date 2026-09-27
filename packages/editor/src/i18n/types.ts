@@ -35,6 +35,11 @@ export interface EditorTranslations {
       stunden: string;
     };
   };
+  bereiche: {
+    palette: string;
+    arbeitsflaeche: string;
+    eigenschaften: string;
+  };
   palette: {
     groups: {
       eingabe: string;

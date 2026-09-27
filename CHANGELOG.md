@@ -7,6 +7,12 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Behoben (Barrierefreiheit)
+- **Aufklappbare Palette-Überschriften waren nicht per Tastatur bedienbar** („Eingabe", „OPENCODE", „FIM-Bausteine"): klickbare `div`s ohne Rolle und ohne Fokus. Jetzt echte Schaltflächen mit `aria-expanded` (WCAG 2.1.1).
+- **Zwei ineinander verschachtelte `banner`-Landmarks** (ein `<header>` um die AppBar, die selbst eines rendert) — die äußere entfällt. `main` hat einen Namen und trägt das Sprungziel des Skip-Links.
+- **Die Seite hatte genau eine Überschrift** (den Produktnamen). Palette, Arbeitsfläche und Eigenschaften sind jetzt benannte Bereiche mit `h2`-Überschrift für die Screenreader-Navigation (visuell unverändert).
+- **Horizontales Scrollen bei 320 px Breite** (WCAG 1.4.10): Die Kopfzeile passte nicht. Rückgängig/Wiederholen/Weitere zeigen auf schmalen Bildschirmen nur ihr Symbol (zugänglicher Name bleibt), und die Aktionsgruppe darf umbrechen.
+
 ### Behoben
 - **Verschieben in einen Container verlor das Element:** `moveElementReducer` entfernte das Element aus seiner Position und fügte es nicht wieder ein, wenn der Zielcontainer nicht gefunden wurde — und gefunden wurde er nur eine Ebene tief, eine Gruppe innerhalb einer Spalte also nie. Beides behoben: Das Ziel wird vor dem Entfernen geprüft, und das Einfügen läuft über dieselbe rekursive Hilfsfunktion wie das Ablegen aus der Palette.
 

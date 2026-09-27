@@ -36,6 +36,11 @@ export const en: EditorTranslations = {
       stunden: 'h',
     },
   },
+  bereiche: {
+    palette: 'Components and fields',
+    arbeitsflaeche: 'Form',
+    eigenschaften: 'Properties',
+  },
   palette: {
     groups: {
       eingabe: 'Input',
