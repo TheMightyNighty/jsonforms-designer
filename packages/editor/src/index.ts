@@ -3,6 +3,7 @@
  *
  * Based on eclipsesource/jsonforms-editor (MIT, 2020 EclipseSource Munich).
  */
+export * from './bausteine';
 export * from './config';
 export * from './core/api';
 export * from './core/components';

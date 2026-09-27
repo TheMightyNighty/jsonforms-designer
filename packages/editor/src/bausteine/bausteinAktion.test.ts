@@ -6,11 +6,9 @@ import {
   fimGruppeReducer,
 } from '../core/model/addFieldReducer';
 import { emptyManifestMeta } from '../core/model/manifestMeta';
-import {
-  BAUSTEIN_KATALOG,
-  createBausteinAction,
-  getBaustein,
-} from './bausteine';
+import { createBausteinAction } from './bausteinAktion';
+import { Baustein } from './bausteinService';
+import { BEISPIEL_BAUSTEINE, MockBausteinService } from './mockBausteinService';
 
 function leererZustand(): FieldAwareState {
   return {
@@ -26,31 +24,32 @@ function leererZustand(): FieldAwareState {
   };
 }
 
-describe('BAUSTEIN_KATALOG', () => {
-  it('enthält die drei Beispiel-Bausteine', () => {
-    expect(BAUSTEIN_KATALOG.map((b) => b.name)).toEqual([
+const beispiel = (id: string): Baustein => {
+  const gefunden = BEISPIEL_BAUSTEINE.find((b) => b.id === id);
+  if (!gefunden) throw new Error(`Testfixture fehlt: ${id}`);
+  return gefunden;
+};
+
+describe('MockBausteinService', () => {
+  it('liefert die drei Beispiel-Bausteine', async () => {
+    const katalog = await new MockBausteinService().getBausteine();
+    expect(katalog.map((b) => b.name)).toEqual([
       'Antragsteller',
       'Anschrift',
       'Bankverbindung',
     ]);
   });
 
-  it('kennzeichnet alle Bausteine als noch nicht abgestimmt', () => {
-    // Fällt auf, sobald ein fachlich abgestimmter Baustein dazukommt oder
-    // die Kennzeichnung entfernt wird — dann gehört die Rückfrage im
-    // Modulkopf geschlossen.
-    expect(BAUSTEIN_KATALOG.every((b) => b.istBeispiel)).toBe(true);
+  it('kennzeichnet alle als noch nicht abgestimmt', () => {
+    // Fällt auf, sobald ein fachlich abgestimmter Baustein dazukommt — dann
+    // gehört die Rückfrage im Modulkopf geschlossen.
+    expect(BEISPIEL_BAUSTEINE.every((b) => b.istBeispiel)).toBe(true);
   });
 
-  it('hat je Baustein eindeutige Property-Schlüssel', () => {
-    for (const baustein of BAUSTEIN_KATALOG) {
+  it('hat je Baustein eindeutige Property-Schlüssel und beschriftete Felder', () => {
+    for (const baustein of BEISPIEL_BAUSTEINE) {
       const keys = baustein.felder.map((f) => f.propertyKey);
       expect(new Set(keys).size).toBe(keys.length);
-    }
-  });
-
-  it('beschriftet jedes Feld und gibt ihm ein Schema', () => {
-    for (const baustein of BAUSTEIN_KATALOG) {
       expect(baustein.felder.length).toBeGreaterThan(0);
       for (const feld of baustein.felder) {
         expect(feld.label).toBeTruthy();
@@ -58,21 +57,16 @@ describe('BAUSTEIN_KATALOG', () => {
       }
     }
   });
-});
 
-describe('getBaustein', () => {
-  it('findet einen Baustein über seine id', () => {
-    expect(getBaustein('baustein-anschrift').name).toBe('Anschrift');
-  });
-
-  it('wirft bei unbekannter id', () => {
-    expect(() => getBaustein('gibt-es-nicht')).toThrow(/Unbekannter Baustein/);
+  it('vergibt eindeutige ids', () => {
+    const ids = BEISPIEL_BAUSTEINE.map((b) => b.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
 
 describe('createBausteinAction', () => {
   it('nutzt dieselbe Action wie FIM-Datenfeldgruppen', () => {
-    const action = createBausteinAction(getBaustein('baustein-anschrift'));
+    const action = createBausteinAction(beispiel('baustein-anschrift'));
     expect(action.type).toBe(ADD_FIM_GRUPPE);
     expect(action.payload.gruppenName).toBe('Anschrift');
     expect(action.payload.felder.map((f) => f.propertyKey)).toEqual([
@@ -85,7 +79,7 @@ describe('createBausteinAction', () => {
 
   it('reicht Einfügeposition und Tab durch', () => {
     const action = createBausteinAction(
-      getBaustein('baustein-antragsteller'),
+      beispiel('baustein-antragsteller'),
       '#/properties/vorhanden',
       2,
     );
@@ -93,24 +87,43 @@ describe('createBausteinAction', () => {
     expect(action.payload.tabIndex).toBe(2);
   });
 
+  it('funktioniert mit einem Baustein aus einem fremden Katalog', () => {
+    // Der Einfügepfad kennt keinen festen Katalog mehr — er nimmt den
+    // Baustein entgegen, egal woher er stammt.
+    const fremd: Baustein = {
+      id: 'x-eigener',
+      name: 'Eigener Baustein',
+      beschreibung: '',
+      icon: 'components',
+      istBeispiel: false,
+      felder: [
+        {
+          propertyKey: 'aktenzeichen',
+          label: 'Aktenzeichen',
+          schemaFragment: { type: 'string', title: 'Aktenzeichen' },
+        },
+      ],
+    };
+    const next = fimGruppeReducer(leererZustand(), createBausteinAction(fremd));
+    expect(Object.keys(next.schema.properties ?? {})).toEqual(['aktenzeichen']);
+    expect(next.uiSchema.elements).toHaveLength(1);
+  });
+
   it('legt über den Reducer eine benannte Gruppe mit allen Feldern an', () => {
-    const baustein = getBaustein('baustein-bankverbindung');
     const next = fimGruppeReducer(
       leererZustand(),
-      createBausteinAction(baustein),
+      createBausteinAction(beispiel('baustein-bankverbindung')),
     );
-
     expect(Object.keys(next.schema.properties ?? {})).toEqual([
       'kontoinhaber',
       'iban',
     ]);
     expect(next.schema.properties?.['iban']?.title).toBe('IBAN');
-    // Ein Element im UI-Schema — die Gruppe
     expect(next.uiSchema.elements).toHaveLength(1);
   });
 
   it('löst Schlüsselkonflikte auf, wenn derselbe Baustein zweimal kommt', () => {
-    const baustein = getBaustein('baustein-anschrift');
+    const baustein = beispiel('baustein-anschrift');
     let zustand = fimGruppeReducer(
       leererZustand(),
       createBausteinAction(baustein),

@@ -9,7 +9,7 @@
  * Die Filterlogik liegt hier als reine Funktion, damit sie ohne Oberfläche
  * testbar ist.
  */
-import { Baustein } from '../field-types/bausteine';
+import { Baustein } from '../bausteine';
 import { FieldTypeDefinition } from '../field-types/fieldTypes';
 
 /** Mindestlänge, ab der gesucht wird — darunter bleibt die normale Ansicht. */

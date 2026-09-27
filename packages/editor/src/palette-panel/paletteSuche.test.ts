@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BAUSTEIN_KATALOG } from '../field-types/bausteine';
+import { BEISPIEL_BAUSTEINE } from '../bausteine';
 import { FIELD_TYPE_CATALOG } from '../field-types/fieldTypes';
 import { HAEUFIGE_FELDTYP_IDS } from './haeufigeFeldtypen';
 import {
@@ -52,30 +52,30 @@ describe('sucheFeldtypen', () => {
 describe('sucheBausteine', () => {
   it('findet einen Baustein über seinen Namen', () => {
     expect(
-      sucheBausteine(BAUSTEIN_KATALOG, 'anschrift').map((b) => b.id),
+      sucheBausteine(BEISPIEL_BAUSTEINE, 'anschrift').map((b) => b.id),
     ).toEqual(['baustein-anschrift']);
   });
 
   it('findet einen Baustein über ein enthaltenes Feld', () => {
-    expect(sucheBausteine(BAUSTEIN_KATALOG, 'iban').map((b) => b.id)).toEqual([
-      'baustein-bankverbindung',
-    ]);
+    expect(sucheBausteine(BEISPIEL_BAUSTEINE, 'iban').map((b) => b.id)).toEqual(
+      ['baustein-bankverbindung'],
+    );
   });
 
   it('findet einen Baustein über die Beschreibung', () => {
     expect(
-      sucheBausteine(BAUSTEIN_KATALOG, 'geburtsdatum').map((b) => b.id),
+      sucheBausteine(BEISPIEL_BAUSTEINE, 'geburtsdatum').map((b) => b.id),
     ).toEqual(['baustein-antragsteller']);
   });
 
   it('findet „Straße" auch bei der Eingabe „strasse"', () => {
     expect(
-      sucheBausteine(BAUSTEIN_KATALOG, 'strasse').map((b) => b.id),
+      sucheBausteine(BEISPIEL_BAUSTEINE, 'strasse').map((b) => b.id),
     ).toEqual(['baustein-anschrift']);
   });
 
   it('liefert ohne aktive Suche nichts', () => {
-    expect(sucheBausteine(BAUSTEIN_KATALOG, 'a')).toEqual([]);
+    expect(sucheBausteine(BEISPIEL_BAUSTEINE, 'a')).toEqual([]);
   });
 });
 

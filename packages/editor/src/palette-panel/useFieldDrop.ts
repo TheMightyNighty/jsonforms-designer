@@ -2,18 +2,17 @@ import { Dispatch } from 'react';
 import { useDrop } from 'react-dnd';
 
 import {
+  BAUSTEIN_DND_TYPE,
+  BausteinDragItem,
+  createBausteinAction,
+} from '../bausteine';
+import {
   AddFieldAction,
   AddFimGruppeAction,
   buildScope,
   createAddFieldAction,
   createAddFimGruppeAction,
 } from '../core/model/addFieldActions';
-import {
-  BAUSTEIN_DND_TYPE,
-  BausteinDragItem,
-  createBausteinAction,
-  getBaustein,
-} from '../field-types/bausteine';
 import { getFieldType } from '../field-types/fieldTypes';
 import { mapDatenfeld, mapDatenfeldgruppe } from '../fim/fimMapper';
 import { FIM_DND_TYPE, FimDragItem } from '../fim/FimPaletteSection';
@@ -138,11 +137,7 @@ export function useFieldDrop(
       drop: (item) => {
         if (item.dndType === BAUSTEIN_DND_TYPE) {
           dispatch(
-            createBausteinAction(
-              getBaustein(item.bausteinId),
-              insertAfterScope,
-              tabIndex,
-            ),
+            createBausteinAction(item.baustein, insertAfterScope, tabIndex),
           );
           return;
         }

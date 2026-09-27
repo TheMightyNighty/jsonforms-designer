@@ -8,6 +8,7 @@
  */
 import {
   Box,
+  CircularProgress,
   Collapse,
   Divider,
   InputAdornment,
@@ -16,10 +17,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { Baustein, defaultBausteinService } from '../bausteine';
+import { BausteinPaletteItem } from '../bausteine/BausteinPaletteItem';
 import { useEditorConfig } from '../config/EditorConfigContext';
-import { BAUSTEIN_KATALOG } from '../field-types/bausteine';
+import { useReportError } from '../core/context';
 import {
   FIELD_GROUPS,
   FIELD_TYPE_CATALOG,
@@ -30,10 +33,60 @@ import {
 import { FimPaletteSection } from '../fim/FimPaletteSection';
 import { useI18n } from '../i18n';
 import { OpenCodePaletteSection } from '../opencode/OpenCodePaletteSection';
-import { BausteinPaletteItem } from './BausteinPaletteItem';
 import { FieldPaletteItem } from './FieldPaletteItem';
 import { HAEUFIGE_FELDTYP_IDS } from './haeufigeFeldtypen';
 import { istSuchaktiv, sucheBausteine, sucheFeldtypen } from './paletteSuche';
+
+// ---------------------------------------------------------------------------
+// Katalog laden
+// ---------------------------------------------------------------------------
+
+type Ladezustand = 'laedt' | 'geladen' | 'fehler';
+
+/**
+ * Lädt den Baustein-Katalog einmalig über den konfigurierten Dienst
+ * (ADR 0005). Das Ergebnis liegt im Panel, nicht im Reiter: Die Suche über
+ * allen Reitern arbeitet auf demselben Stand.
+ */
+function useBausteinKatalog(): {
+  bausteine: Baustein[];
+  zustand: Ladezustand;
+} {
+  const config = useEditorConfig();
+  const reportError = useReportError();
+  const aktiv = config.modules?.bausteine?.enabled ?? false;
+  const service = config.modules?.bausteine?.service ?? defaultBausteinService;
+
+  const [bausteine, setBausteine] = useState<Baustein[]>([]);
+  const [zustand, setZustand] = useState<Ladezustand>('laedt');
+
+  useEffect(() => {
+    if (!aktiv) {
+      setBausteine([]);
+      setZustand('geladen');
+      return;
+    }
+    let verworfen = false;
+    setZustand('laedt');
+    service
+      .getBausteine()
+      .then((geladen) => {
+        if (verworfen) return;
+        setBausteine(geladen);
+        setZustand('geladen');
+      })
+      .catch((err) => {
+        if (verworfen) return;
+        setZustand('fehler');
+        reportError(err, 'Baustein-Katalog konnte nicht geladen werden');
+      });
+    return () => {
+      verworfen = true;
+    };
+  }, [aktiv, service, reportError]);
+
+  return { bausteine, zustand };
+}
 
 // ---------------------------------------------------------------------------
 // Bausteine für die Sichtbarkeit von Überschriften
@@ -152,13 +205,28 @@ function CollapsibleFieldGroup({
 // Reiter-Inhalte
 // ---------------------------------------------------------------------------
 
-function BausteineTab() {
+function BausteineTab({
+  bausteine,
+  zustand,
+}: {
+  bausteine: Baustein[];
+  zustand: Ladezustand;
+}) {
   const config = useEditorConfig();
   const { t } = useI18n();
 
   return (
     <Box role="list" aria-label={t.palette.tabs.bausteine}>
-      {BAUSTEIN_KATALOG.map((b) => (
+      {zustand === 'laedt' && (
+        <Box sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress size={18} />
+        </Box>
+      )}
+      {zustand === 'fehler' && <LeerHinweis text={t.palette.bausteineFehler} />}
+      {zustand === 'geladen' && bausteine.length === 0 && (
+        <LeerHinweis text={t.palette.bausteineLeer} />
+      )}
+      {bausteine.map((b) => (
         <Box key={b.id} role="listitem">
           <BausteinPaletteItem baustein={b} />
         </Box>
@@ -248,9 +316,15 @@ function EinzelfelderTab() {
 // Suchergebnisse (über alle Reiter)
 // ---------------------------------------------------------------------------
 
-function Suchergebnisse({ suchtext }: { suchtext: string }) {
+function Suchergebnisse({
+  suchtext,
+  katalog,
+}: {
+  suchtext: string;
+  katalog: Baustein[];
+}) {
   const { t } = useI18n();
-  const bausteine = sucheBausteine(BAUSTEIN_KATALOG, suchtext);
+  const bausteine = sucheBausteine(katalog, suchtext);
   const feldtypen = sucheFeldtypen(FIELD_TYPE_CATALOG, suchtext);
 
   return (
@@ -295,6 +369,7 @@ export function FieldPalettePanel() {
   const { t } = useI18n();
   const [reiter, setReiter] = useState<PaletteReiter>('bausteine');
   const [suchtext, setSuchtext] = useState('');
+  const { bausteine, zustand } = useBausteinKatalog();
 
   const fimAktiv = config.modules?.fim?.enabled ?? false;
   const sucht = istSuchaktiv(suchtext);
@@ -353,10 +428,12 @@ export function FieldPalettePanel() {
 
       <Box sx={{ flex: 1, overflowY: 'auto', pb: 2 }}>
         {sucht ? (
-          <Suchergebnisse suchtext={suchtext} />
+          <Suchergebnisse suchtext={suchtext} katalog={bausteine} />
         ) : (
           <>
-            {reiter === 'bausteine' && <BausteineTab />}
+            {reiter === 'bausteine' && (
+              <BausteineTab bausteine={bausteine} zustand={zustand} />
+            )}
             {reiter === 'fim' && fimAktiv && (
               <FimPaletteSection service={config.modules?.fim?.service} />
             )}

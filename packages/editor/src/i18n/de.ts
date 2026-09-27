@@ -49,6 +49,8 @@ export const de: EditorTranslations = {
     suche: 'Bausteine und Felder suchen …',
     suchergebnisse: 'Suchergebnisse',
     weitereFeldtypen: 'Weitere Feldtypen',
+    bausteineLeer: 'Der Baustein-Katalog ist leer.',
+    bausteineFehler: 'Der Baustein-Katalog konnte nicht geladen werden.',
     fimSucheHinweis:
       'FIM-Bausteine werden aus dem FIM-Portal geladen — dafür den Reiter „FIM" öffnen.',
     tabs: {

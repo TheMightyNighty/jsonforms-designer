@@ -1,4 +1,3 @@
-export * from './BausteinPaletteItem';
 export * from './FieldPaletteItem';
 export * from './FieldPalettePanel';
 export * from './haeufigeFeldtypen';
