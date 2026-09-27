@@ -11,49 +11,31 @@
  * werden nach dem Mount per SET_FIELD_STATE hydriert.
  */
 import { FieldAwareState } from '../model/addFieldReducer';
-import { emptyManifestMeta } from '../model/manifestMeta';
-import { FlatElement, fromLegacy } from '../model/uiElements';
-import { migrateLegacyFieldState } from '../util/legacyMetadataMigration';
-import { sanitizeParsedJson } from '../util/sanitizeJson';
+import {
+  FormularAblage,
+  LocalStorageFormularAblage,
+  nameAusZustand,
+} from './formularAblage';
+import { normalizeFieldState } from './normalizeFieldState';
+
+export { normalizeFieldState } from './normalizeFieldState';
 
 export interface FieldStateStorageService {
   /** Gespeicherten Zustand laden; `undefined`, wenn nichts vorhanden ist. */
   load(): FieldAwareState | undefined | Promise<FieldAwareState | undefined>;
   /** Aktuellen Zustand speichern. Wird bei jeder Änderung aufgerufen. */
   save(state: FieldAwareState): void | Promise<void>;
+  /**
+   * Optional: Verwaltung mehrerer benannter Formulare (ADR 0006). Fehlt
+   * sie, arbeitet der Editor wie bisher mit genau einem Formular — die
+   * Menüpunkte „Neu", „Öffnen" und „Speichern unter" erscheinen dann
+   * nicht. Bestehende Host-Adapter brechen dadurch nicht.
+   */
+  readonly ablage?: FormularAblage;
 }
 
 /** localStorage-Schlüssel der Default-Implementierung. */
 export const FIELD_STATE_STORAGE_KEY = 'jfd_fieldState_v1';
-
-/**
- * Formt unvertraute Rohdaten (Datei-Import, localStorage, API-Antwort) in
- * einen vollständigen FieldAwareState: entfernt Prototype-Pollution-Schlüssel
- * und füllt fehlende Felder mit Defaults. `undefined`, wenn die Pflichtteile
- * (schema + uiSchema) fehlen.
- */
-export const normalizeFieldState = (
-  raw: unknown,
-): FieldAwareState | undefined => {
-  const parsed = sanitizeParsedJson(raw) as Partial<FieldAwareState> | null;
-  if (!parsed?.schema || !parsed?.uiSchema) return undefined;
-  return migrateLegacyFieldState({
-    schema: parsed.schema,
-    uiSchema: {
-      type: parsed.uiSchema.type ?? 'VerticalLayout',
-      elements: ((parsed.uiSchema.elements ?? []) as FlatElement[]).map(
-        fromLegacy,
-      ),
-    },
-    tabs: parsed.tabs ?? [],
-    activeTabIndex: parsed.activeTabIndex ?? 0,
-    tabAssignments: parsed.tabAssignments ?? {},
-    lineNumbersEnabled: parsed.lineNumbersEnabled ?? false,
-    typvorschlagIgnoriert: parsed.typvorschlagIgnoriert ?? {},
-    sectionColors: parsed.sectionColors ?? {},
-    manifestMeta: parsed.manifestMeta ?? { ...emptyManifestMeta },
-  }).state;
-};
 
 export interface HttpFieldStateServiceOptions {
   /** Debounce für save() in Millisekunden. Default: 750 */
@@ -132,28 +114,60 @@ export class HttpFieldStateService implements FieldStateStorageService {
  * arbeitet ohne Auto-Save weiter.
  */
 export class LocalStorageFieldStateService implements FieldStateStorageService {
+  readonly ablage: LocalStorageFormularAblage;
+
   constructor(
     private readonly key: string = FIELD_STATE_STORAGE_KEY,
     private readonly storage:
-      | Pick<Storage, 'getItem' | 'setItem'>
+      | Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
       | undefined = typeof localStorage !== 'undefined'
       ? localStorage
       : undefined,
-  ) {}
+  ) {
+    this.ablage = new LocalStorageFormularAblage(this.storage);
+  }
 
+  /**
+   * Lädt das zuletzt bearbeitete Formular aus der Ablage. Gibt es noch
+   * keine Ablage, aber einen Stand unter dem alten Ein-Dokument-Schlüssel,
+   * wird dieser einmalig als erstes Formular übernommen — niemand verliert
+   * beim Update sein Formular (ADR 0002/V2).
+   */
   load(): FieldAwareState | undefined {
+    const aktuelle = this.ablage.aktuelleId();
+    if (aktuelle) {
+      const ausAblage = this.ablage.oeffnen(aktuelle);
+      if (ausAblage) return ausAblage;
+    }
+
+    let alt: FieldAwareState | undefined;
     try {
       const raw = this.storage?.getItem(this.key);
-      if (!raw) return undefined;
-      return normalizeFieldState(JSON.parse(raw));
+      alt = raw ? normalizeFieldState(JSON.parse(raw)) : undefined;
     } catch {
       /* korrupt oder Storage nicht verfügbar — frisch starten */
       return undefined;
     }
+    if (!alt) return undefined;
+
+    if (this.ablage.liste().length === 0) {
+      this.ablage.speichernAls(nameAusZustand(alt), alt);
+    }
+    return alt;
   }
 
   save(state: FieldAwareState): void {
+    const aktuelle = this.ablage.aktuelleId();
+    if (aktuelle) {
+      this.ablage.aktualisiere(aktuelle, state);
+    } else {
+      // Noch kein Formular in der Ablage (frischer Start): Das erste
+      // Speichern legt eines an, damit der Auto-Save ein Ziel hat.
+      this.ablage.speichernAls(nameAusZustand(state), state);
+    }
     try {
+      // Den alten Schlüssel weiterschreiben: Ein Host, der noch direkt
+      // darauf zugreift, sieht weiterhin den aktuellen Stand.
       this.storage?.setItem(this.key, JSON.stringify(state));
     } catch {
       /* Storage-Quota / Private-Mode — Auto-Save still deaktiviert */

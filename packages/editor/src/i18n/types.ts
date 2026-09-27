@@ -15,6 +15,21 @@ export interface EditorTranslations {
     zeilennummern: string;
     sprache: string;
     weitere: string;
+    ablage: {
+      menue: string;
+      neu: string;
+      oeffnen: string;
+      oeffnenTitel: string;
+      speichernAls: string;
+      umbenennen: string;
+      loeschen: string;
+      loeschenTitel: string;
+      loeschenFrage: string;
+      leer: string;
+      name: string;
+      uebernehmen: string;
+      unbenannt: string;
+    };
     qualitaet: {
       titel: string;
       alsButton: string;
@@ -81,6 +96,11 @@ export interface EditorTranslations {
     mehrstufig: string;
     seite: string;
     neuerTab: string;
+    leer: {
+      bereich: string;
+      titel: string;
+      tastatur: string;
+    };
     geraet: {
       desktop: string;
       handy: string;

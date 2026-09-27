@@ -16,6 +16,22 @@ export const de: EditorTranslations = {
     zeilennummern: 'Zeilennummern',
     sprache: 'Sprache der Oberfläche',
     weitere: 'Weitere',
+    ablage: {
+      menue: 'Formular',
+      neu: 'Neues Formular',
+      oeffnen: 'Formular öffnen …',
+      oeffnenTitel: 'Formular öffnen',
+      speichernAls: 'Speichern unter …',
+      umbenennen: 'Umbenennen …',
+      loeschen: 'Löschen',
+      loeschenTitel: 'Formular löschen?',
+      loeschenFrage:
+        '„{name}" wird endgültig gelöscht. Das lässt sich nicht rückgängig machen.',
+      leer: 'Noch kein Formular abgelegt.',
+      name: 'Name des Formulars',
+      uebernehmen: 'Übernehmen',
+      unbenannt: 'Unbenanntes Formular',
+    },
     qualitaet: {
       titel: 'Qualität des Formulars',
       alsButton: 'Qualität prüfen',
@@ -84,6 +100,12 @@ export const de: EditorTranslations = {
     mehrstufig: 'Mehrstufiges Formular anlegen',
     seite: 'Seite',
     neuerTab: 'Neuer Tab',
+    leer: {
+      bereich: 'Ablagefläche für das erste Feld',
+      titel: 'Dieses Formular ist noch leer',
+      tastatur:
+        'Ohne Maus: einen Eintrag in der Palette anwählen und Enter drücken.',
+    },
     geraet: {
       desktop: 'Desktop',
       handy: 'Handy',

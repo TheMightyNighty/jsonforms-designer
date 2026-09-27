@@ -9,16 +9,21 @@
  * Formularredakteurin musste jedes einzeln überfahren, um es zu verstehen.
  */
 import { JsonSchema7 } from '@jsonforms/core';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CodeIcon from '@mui/icons-material/Code';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import EditIcon from '@mui/icons-material/Edit';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LanguageIcon from '@mui/icons-material/Language';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import RedoIcon from '@mui/icons-material/Redo';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 import UndoIcon from '@mui/icons-material/Undo';
 import TestModeIcon from '@mui/icons-material/Visibility';
 import AppBar from '@mui/material/AppBar';
@@ -55,6 +60,10 @@ import {
   STATUS_AKTUALISIERUNG_MS,
 } from '../model/speicherStatus';
 import { copyToClipBoard } from '../util/clipboard';
+import {
+  FormularAblageDialog,
+  FormularNameDialog,
+} from './FormularAblageDialog';
 import { ImportExportDialog } from './ImportExportDialog';
 import { MetadataDialog } from './MetadataDialog';
 import { QualitaetsAmpel } from './QualitaetsAmpel';
@@ -106,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
   testMode,
   onTestModeChange,
 }) => {
-  const { dispatch, fieldState } = useEditorContext();
+  const { dispatch, fieldState, formularAblage } = useEditorContext();
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
   const { t, locale, setLocale } = useI18n();
   const config = useEditorConfig();
@@ -120,6 +129,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [templateOpen, setTemplateOpen] = useState(false);
   const [metaOpen, setMetaOpen] = useState(false);
   const [weitereAnker, setWeitereAnker] = useState<null | HTMLElement>(null);
+  const [formularAnker, setFormularAnker] = useState<null | HTMLElement>(null);
+  const [ablageOffen, setAblageOffen] = useState(false);
+  const [nameDialog, setNameDialog] = useState<
+    null | 'speichernAls' | 'umbenennen'
+  >(null);
 
   const handleTemplateSelect = (tpl: FormTemplate) => {
     dispatch(createLoadTemplateAction(tpl.state));
@@ -164,17 +178,51 @@ export const Header: React.FC<HeaderProps> = ({
             >
               {produktName}
             </Typography>
-            {formularName && (
-              <Typography
-                variant="body2"
-                noWrap
-                // Kein Kursiv: Von Fira Sans ist nur der aufrechte Schnitt
-                // vendored, ein kursiver würde vom Browser schräg gestellt
-                // und überlappt dabei den Folgetext.
-                sx={{ color: 'text.secondary' }}
+            {formularAblage ? (
+              // Der Formularname ist zugleich der Einstieg in die Ablage:
+              // Neu, Öffnen, Umbenennen, Speichern unter. Vorher war der
+              // Name nur Text und nur über die Metadaten änderbar.
+              <Button
+                size="small"
+                onClick={(e) => setFormularAnker(e.currentTarget)}
+                endIcon={<ArrowDropDownIcon />}
+                aria-haspopup="menu"
+                aria-expanded={formularAnker ? true : undefined}
+                aria-label={t.header.ablage.menue}
+                data-testid="formular-menue"
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 400,
+                  textTransform: 'none',
+                  minWidth: 0,
+                  maxWidth: 320,
+                  '& .MuiButton-endIcon': { ml: 0.25 },
+                }}
               >
-                — {formularName}
-              </Typography>
+                <Box
+                  component="span"
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {formularName || t.header.ablage.unbenannt}
+                </Box>
+              </Button>
+            ) : (
+              formularName && (
+                <Typography
+                  variant="body2"
+                  noWrap
+                  // Kein Kursiv: Von Fira Sans ist nur der aufrechte
+                  // Schnitt vendored, ein kursiver würde vom Browser
+                  // schräg gestellt und überlappt den Folgetext.
+                  sx={{ color: 'text.secondary' }}
+                >
+                  — {formularName}
+                </Typography>
+              )
             )}
             <Typography
               variant="caption"
@@ -342,6 +390,85 @@ export const Header: React.FC<HeaderProps> = ({
           </MenuItem>
         </Menu>
       </Toolbar>
+
+      {formularAblage && (
+        <Menu
+          anchorEl={formularAnker}
+          open={Boolean(formularAnker)}
+          onClose={() => setFormularAnker(null)}
+        >
+          <MenuItem
+            onClick={() => {
+              formularAblage.neu();
+              setFormularAnker(null);
+            }}
+          >
+            <ListItemIcon>
+              <NoteAddIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.ablage.neu}</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setAblageOffen(true);
+              setFormularAnker(null);
+            }}
+          >
+            <ListItemIcon>
+              <FolderOpenIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.ablage.oeffnen}</ListItemText>
+          </MenuItem>
+          <Divider />
+          <MenuItem
+            onClick={() => {
+              setNameDialog('umbenennen');
+              setFormularAnker(null);
+            }}
+          >
+            <ListItemIcon>
+              <DriveFileRenameOutlineIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.ablage.umbenennen}</ListItemText>
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setNameDialog('speichernAls');
+              setFormularAnker(null);
+            }}
+          >
+            <ListItemIcon>
+              <SaveAsIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t.header.ablage.speichernAls}</ListItemText>
+          </MenuItem>
+        </Menu>
+      )}
+
+      {formularAblage && (
+        <>
+          <FormularAblageDialog
+            open={ablageOffen}
+            onClose={() => setAblageOffen(false)}
+            ablage={formularAblage}
+          />
+          <FormularNameDialog
+            open={nameDialog !== null}
+            titel={
+              nameDialog === 'speichernAls'
+                ? t.header.ablage.speichernAls
+                : t.header.ablage.umbenennen
+            }
+            startwert={formularName ?? ''}
+            onClose={() => setNameDialog(null)}
+            onBestaetigen={(name) => {
+              if (nameDialog === 'speichernAls')
+                formularAblage.speichernAls(name);
+              else formularAblage.umbenennen(name);
+            }}
+          />
+        </>
+      )}
 
       <ImportExportDialog
         open={exportOpen}

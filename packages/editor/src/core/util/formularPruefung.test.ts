@@ -203,6 +203,41 @@ describe('pruefeFormular — Metadaten', () => {
   });
 });
 
+describe('pruefeFormular — leeres Formular', () => {
+  function ganzLeer(): FieldAwareState {
+    const state = sauberesFormular();
+    state.schema = { type: 'object', properties: {} };
+    state.uiSchema = { type: 'VerticalLayout', elements: [] };
+    state.manifestMeta = { ...emptyManifestMeta };
+    return state;
+  }
+
+  it('mahnt am ganz leeren Formular keine Metadaten an', () => {
+    // Ein frisches Formular mit zwei roten Fehlern zu begrüßen, ist
+    // entmutigend statt hilfreich.
+    expect(pruefeFormular(ganzLeer())).toEqual([]);
+  });
+
+  it('mahnt sie an, sobald das Formular ein Feld hat', () => {
+    const state = ganzLeer();
+    state.schema.properties = { a: { type: 'string', title: 'A' } };
+    state.uiSchema.elements = [
+      { id: 'c1', type: 'Control', scope: '#/properties/a' },
+    ] as UiElement[];
+    const befunde = ids(pruefeFormular(state));
+    expect(befunde).toContain('formular-ohne-titel');
+    expect(befunde).toContain('formular-ohne-rechtsgrundlage');
+  });
+
+  it('mahnt sie auch bei einem Formular aus reinen Strukturelementen an', () => {
+    const state = ganzLeer();
+    state.uiSchema.elements = [
+      { id: 'lbl', type: 'Label', label: 'Überschrift', variant: 'text' },
+    ] as UiElement[];
+    expect(ids(pruefeFormular(state))).toContain('formular-ohne-titel');
+  });
+});
+
 describe('pruefeFormular — offener Typvorschlag', () => {
   function geburtsdatumAlsText(): FieldAwareState {
     const state = sauberesFormular();
