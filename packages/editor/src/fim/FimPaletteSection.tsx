@@ -515,13 +515,21 @@ export function FimPaletteSection({
 
       {/* Einklappbarer Header */}
       <Box
+        component="button"
+        type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         sx={{
           display: 'flex',
           alignItems: 'center',
           gap: 0.5,
+          width: '100%',
           px: 1.5,
-          py: 0.5,
+          py: 0.75,
+          border: 'none',
+          background: 'none',
+          font: 'inherit',
+          textAlign: 'left',
           cursor: 'pointer',
           userSelect: 'none',
           borderRadius: 1,

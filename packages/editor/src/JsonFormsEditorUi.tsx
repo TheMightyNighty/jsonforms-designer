@@ -3,10 +3,11 @@ import {
   CircularProgress,
   Tab,
   Tabs,
+  Typography,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import {
   Group,
   Panel,
@@ -174,8 +175,44 @@ function MobileLayout({
   );
 }
 
+/**
+ * Überschrift eines Arbeitsbereichs. Nur für Screenreader sichtbar: Die drei
+ * Spalten sind visuell durch Trennlinien und Inhalt klar unterschieden, für
+ * die Landmark- und Überschriften-Navigation fehlte bisher jede Struktur —
+ * die Seite hatte genau eine Überschrift (den Produktnamen).
+ */
+function BereichsUeberschrift({
+  id,
+  children,
+}: {
+  id: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Typography
+      id={id}
+      component="h2"
+      // Visuell ausgeblendet, aber vorlesbar und in der
+      // Überschriften-Navigation auffindbar (nicht display:none).
+      sx={{
+        // Achtung: MUI deutet sx-Zahlen zwischen 0 und 1 als Bruchteil —
+        // `width: 1` wäre 100 % und riss die Seite auf 3x Breite auf.
+        position: 'absolute',
+        width: '1px',
+        height: '1px',
+        overflow: 'hidden',
+        clipPath: 'inset(50%)',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {children}
+    </Typography>
+  );
+}
+
 export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
   const theme = useTheme();
+  const { t } = useI18n();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const { defaultLayout, onLayoutChange } = useDefaultLayout({
@@ -219,7 +256,14 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
           style={{ height: '100%' }}
         >
           <Panel minSize="15%">
-            <Box sx={sidePanelSx}>
+            <Box
+              component="section"
+              aria-labelledby="bereich-palette"
+              sx={sidePanelSx}
+            >
+              <BereichsUeberschrift id="bereich-palette">
+                {t.bereiche.palette}
+              </BereichsUeberschrift>
               <FieldPalettePanel />
             </Box>
           </Panel>
@@ -227,7 +271,14 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
             <Box sx={handleSx} />
           </Separator>
           <Panel minSize="20%">
-            <Box sx={centerPanelSx}>
+            <Box
+              component="section"
+              aria-labelledby="bereich-arbeitsflaeche"
+              sx={centerPanelSx}
+            >
+              <BereichsUeberschrift id="bereich-arbeitsflaeche">
+                {t.bereiche.arbeitsflaeche}
+              </BereichsUeberschrift>
               {mode === 'code' ? (
                 <Suspense fallback={codeModeFallback}>
                   <CodeModePanel
@@ -250,7 +301,14 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
             <Box sx={handleSx} />
           </Separator>
           <Panel minSize="15%">
-            <Box sx={sidePanelSx}>
+            <Box
+              component="section"
+              aria-labelledby="bereich-eigenschaften"
+              sx={sidePanelSx}
+            >
+              <BereichsUeberschrift id="bereich-eigenschaften">
+                {t.bereiche.eigenschaften}
+              </BereichsUeberschrift>
               <FieldPropertiesPanel
                 selectedScope={selectedScope}
                 schema={fieldState.schema}
