@@ -83,6 +83,53 @@ Beim Ablegen einer **Datenfeldgruppe** wird ein benannter `GroupContainer` mit v
 
 ---
 
+## Formular-Verwaltung
+
+Der Editor verwaltet mehrere benannte Formulare (ADR 0006). Der
+Formularname in der Kopfzeile ist zugleich das Menü: **Neues Formular**,
+**Formular öffnen …**, **Umbenennen …**, **Speichern unter …**. Der Name
+eines Formulars ist sein Titel (`schema.title`) — kein zweiter, davon
+unabhängiger Name.
+
+Die Verwaltung hängt an einer **optionalen** Erweiterung des
+Persistenz-Adapters:
+
+```ts
+interface FieldStateStorageService {
+  load(): …;
+  save(state): …;
+  /** Optional. Fehlt sie, bleibt es beim Ein-Dokument-Betrieb. */
+  readonly ablage?: FormularAblage;
+}
+
+interface FormularAblage {
+  liste(): FormularEintrag[] | Promise<FormularEintrag[]>;
+  oeffnen(id: string): FieldAwareState | undefined | Promise<…>;
+  speichernAls(name: string, state: FieldAwareState): FormularEintrag | Promise<…>;
+  umbenennen(id: string, name: string): void | Promise<void>;
+  loeschen(id: string): void | Promise<void>;
+  aktuelleId(): string | undefined;
+  setzeAktuelleId(id: string | undefined): void;
+}
+```
+
+Bringt der Adapter des Hosts keine Ablage mit, arbeitet der Editor
+unverändert mit genau einem Formular und blendet die Menüpunkte nicht ein
+— bestehende Einbettungen brechen nicht.
+
+Der Default `LocalStorageFieldStateService` bringt
+`LocalStorageFormularAblage` mit: ein Index (`jfd_formulare_v1`) plus je
+Formular ein eigener Schlüssel (`jfd_formular_<id>`). Ein vorhandener
+Stand unter dem alten Ein-Dokument-Schlüssel `jfd_fieldState_v1` wird beim
+ersten Laden einmalig als erstes Formular übernommen; der alte Schlüssel
+wird weiter mitgeschrieben.
+
+`HttpFieldStateService` bringt bewusst **keine** Ablage mit: Wie mehrere
+Formulare auf einem Server abgelegt und berechtigt werden, hängt am
+Fachverfahren.
+
+---
+
 ## Baustein-Bibliothek
 
 Bausteine sind vorgefertigte Feldgruppen, die als benannter Abschnitt in einem
