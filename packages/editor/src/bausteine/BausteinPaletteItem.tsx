@@ -3,11 +3,11 @@ import { useDrag } from 'react-dnd';
 
 import { useDispatch, useFieldState } from '../core/context';
 import {
-  Baustein,
   BAUSTEIN_DND_TYPE,
   BausteinDragItem,
   createBausteinAction,
-} from '../field-types/bausteine';
+} from './bausteinAktion';
+import { Baustein } from './bausteinService';
 
 interface BausteinPaletteItemProps {
   baustein: Baustein;
@@ -29,10 +29,10 @@ export function BausteinPaletteItem({ baustein }: BausteinPaletteItemProps) {
   >(
     () => ({
       type: BAUSTEIN_DND_TYPE,
-      item: { dndType: BAUSTEIN_DND_TYPE, bausteinId: baustein.id },
+      item: { dndType: BAUSTEIN_DND_TYPE, baustein },
       collect: (m) => ({ isDragging: m.isDragging() }),
     }),
-    [baustein.id],
+    [baustein],
   );
 
   // Tastatur-Alternativpfad zum Drag & Drop (BITV) — gleiche Action wie der

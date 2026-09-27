@@ -83,6 +83,67 @@ Beim Ablegen einer **Datenfeldgruppe** wird ein benannter `GroupContainer` mit v
 
 ---
 
+## Baustein-Bibliothek
+
+Bausteine sind vorgefertigte Feldgruppen, die als benannter Abschnitt in einem
+Schritt eingefügt werden — „Antragsteller", „Anschrift", „Bankverbindung". Sie
+sind der Standard-Reiter der Palette, weil die Formularredakteurin in
+Abschnitten denkt und nicht in Feldtypen.
+
+**Der Katalog liegt nicht im Editor** (ADR 0005). Er kommt über den
+austauschbaren `BausteinService`, damit eine Behörde ihre eigene Bibliothek
+pflegen kann, ohne den Editor neu zu bauen. Ohne Konfiguration liefert der
+`MockBausteinService` drei Bausteine, die in der Palette sichtbar als
+**Beispiel** gekennzeichnet sind.
+
+Der mitgelieferte `HttpBausteinService` liest den Katalog als JSON — entweder
+ein Array oder `{ items: [...] }`:
+
+```json
+[
+  {
+    "id": "anschrift-inland",
+    "name": "Anschrift",
+    "beschreibung": "Straße, Hausnummer, Postleitzahl und Ort",
+    "icon": "home",
+    "istBeispiel": false,
+    "felder": [
+      {
+        "propertyKey": "strasse",
+        "label": "Straße",
+        "schemaFragment": { "type": "string", "title": "Straße" },
+        "uiSchemaOptions": { "required": true }
+      },
+      {
+        "propertyKey": "plz",
+        "label": "Postleitzahl",
+        "schemaFragment": {
+          "type": "string",
+          "title": "Postleitzahl",
+          "pattern": "^[0-9]{5}$",
+          "description": "Fünfstellig"
+        }
+      }
+    ]
+  }
+]
+```
+
+Pflicht sind `id`, `name` und mindestens ein Feld mit `propertyKey`, `label`
+und einem `schemaFragment` mit `type`. Fehlt `icon`, wird ein neutrales Symbol
+gesetzt; ohne ausdrückliches `istBeispiel: false` gilt ein Baustein als
+Beispiel. Einträge, die diese Anforderungen nicht erfüllen, werden übersprungen
+und über `onEintragVerworfen` gemeldet — ein fehlerhafter Eintrag legt nicht
+den ganzen Katalog lahm. Bausteine werden über dieselbe Action eingefügt wie
+FIM-Datenfeldgruppen und sind wie diese auch per Tastatur erreichbar
+(Enter/Leertaste).
+
+> **Sicherheit:** Der Katalog ist unvertraute Eingabe. `url` und `headers`
+> müssen aus vertrauenswürdiger Konfiguration stammen, und der Origin gehört
+> in die `connect-src`-Direktive der CSP.
+
+---
+
 ## OpenCode-Integration
 
 Validatoren und UI-Bausteine aus dem OpenCode-Ökosystem werden per Drag aus der Palette auf Felder angewendet. Die Anbindung erfolgt über das austauschbare `OpenCodeService`-Interface — im Entwicklungsmodus ist ein Mock-Provider aktiv.
@@ -99,6 +160,7 @@ Alle Module werden über den `config`-Prop am `<JsonFormsEditor>`-Component konf
 import {
   JsonFormsEditor,
   FimApiService,
+  HttpBausteinService,
   EditorConfig,
 } from '@jsonforms-designer/editor';
 
@@ -128,6 +190,20 @@ const config: EditorConfig = {
       enabled: true,
       // service: new MyOpenCodeService(),  // eigene Implementierung
     },
+
+    bausteine: {
+      enabled: true,
+
+      // Eigener Baustein-Katalog, z. B. als statische JSON-Datei im
+      // Intranet oder aus einem Fachverfahren:
+      service: new HttpBausteinService('/api/bausteine', {
+        // headers: { Authorization: 'Bearer <token>' },
+        // onEintragVerworfen: (grund, roh) => logger.warn(grund, roh),
+      }),
+
+      // Default ohne Angabe: MockBausteinService mit drei als Beispiel
+      // gekennzeichneten Bausteinen
+    },
   },
 
   palette: {
@@ -149,6 +225,10 @@ function MyApp() {
 | `modules.fim.service` | `FimService` | `MockFimService` | Service-Implementierung für FIM-Daten |
 | `modules.openCode.enabled` | `boolean` | `true` | OpenCode-Sektion in der Palette aktivieren |
 | `modules.openCode.service` | `OpenCodeService` | `MockOpenCodeService` | Service-Implementierung für OpenCode-Daten |
+| `modules.bausteine.enabled` | `boolean` | `true` | Reiter „Bausteine" in der Palette aktivieren |
+| `modules.bausteine.service` | `BausteinService` | `MockBausteinService` | Katalog der vorgefertigten Feldgruppen |
+| `features.canvasGeraeteAnsicht` | `boolean` | `false` | Prototyp: Umschalter Desktop/Handy auf der Arbeitsfläche (ADR 0003) |
+| `produktName` | `string` | `„JSONForms Designer"` | Produktname in der Kopfzeile |
 | `palette.collapsedByDefault` | `FieldGroup[]` | `['struktur', 'layout']` | Feldtyp-Gruppen, die initial zugeklappt sind |
 
 ### FimApiService-Parameter
@@ -415,6 +495,10 @@ interface FimService {
 interface OpenCodeService {
   getBausteine(): Promise<OpenCodeBaustein[]>;
   getBausteineByKategorie(kategorie: OpenCodeBausteinKategorie): Promise<OpenCodeBaustein[]>;
+}
+
+interface BausteinService {
+  getBausteine(): Promise<Baustein[]>;
 }
 ```
 

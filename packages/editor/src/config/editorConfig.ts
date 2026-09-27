@@ -1,3 +1,4 @@
+import { BausteinService } from '../bausteine/bausteinService';
 import { FieldGroup } from '../field-types/fieldTypes';
 import { FimService } from '../fim/fimService';
 import { OpenCodeService } from '../opencode/openCodeService';
@@ -6,6 +7,16 @@ export interface FimModuleConfig {
   enabled: boolean;
   /** Eigener Service-Override. Default: MockFimService */
   service?: FimService;
+}
+
+export interface BausteinModuleConfig {
+  enabled: boolean;
+  /**
+   * Eigener Katalog. Default: MockBausteinService mit drei als Beispiel
+   * gekennzeichneten Bausteinen. Ein Betriebs-Host hängt hier den Katalog
+   * seiner Behörde ein — siehe HttpBausteinService (ADR 0005).
+   */
+  service?: BausteinService;
 }
 
 export interface OpenCodeModuleConfig {
@@ -46,6 +57,7 @@ export interface EditorConfig {
   modules?: {
     fim?: FimModuleConfig;
     openCode?: OpenCodeModuleConfig;
+    bausteine?: BausteinModuleConfig;
   };
   palette?: PaletteConfig;
   features?: FeatureFlags;
@@ -56,6 +68,7 @@ export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
   modules: {
     fim: { enabled: true },
     openCode: { enabled: true },
+    bausteine: { enabled: true },
   },
   palette: {
     collapsedByDefault: ['struktur', 'layout'],
@@ -79,6 +92,11 @@ export function mergeEditorConfig(partial?: EditorConfig): EditorConfig {
         enabled: true,
         ...DEFAULT_EDITOR_CONFIG.modules?.openCode,
         ...partial?.modules?.openCode,
+      },
+      bausteine: {
+        enabled: true,
+        ...DEFAULT_EDITOR_CONFIG.modules?.bausteine,
+        ...partial?.modules?.bausteine,
       },
     },
     palette: {

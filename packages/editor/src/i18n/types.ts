@@ -48,6 +48,8 @@ export interface EditorTranslations {
     suche: string;
     suchergebnisse: string;
     weitereFeldtypen: string;
+    bausteineLeer: string;
+    bausteineFehler: string;
     fimSucheHinweis: string;
     tabs: {
       bausteine: string;

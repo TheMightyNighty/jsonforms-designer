@@ -1,4 +1,3 @@
-export * from './bausteine';
 export * from './feldtypErkennung';
 export * from './feldtypVorschlag';
 export * from './fieldTypes';

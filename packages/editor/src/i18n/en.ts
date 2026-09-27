@@ -49,6 +49,8 @@ export const en: EditorTranslations = {
     suche: 'Search components and fields …',
     suchergebnisse: 'Search results',
     weitereFeldtypen: 'More field types',
+    bausteineLeer: 'The component catalogue is empty.',
+    bausteineFehler: 'The component catalogue could not be loaded.',
     fimSucheHinweis:
       'FIM components are loaded from the FIM portal — open the "FIM" tab for those.',
     tabs: {
