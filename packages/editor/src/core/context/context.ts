@@ -90,8 +90,7 @@ export const useSpeicherStatus = (): SpeicherStatus => {
 };
 
 export const useFormularAblage = ():
-  | EditorContext['formularAblage']
-  | undefined => {
+  EditorContext['formularAblage'] | undefined => {
   const { formularAblage } = useEditorContext();
   return formularAblage;
 };

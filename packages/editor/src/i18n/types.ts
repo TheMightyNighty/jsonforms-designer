@@ -15,8 +15,44 @@ export interface EditorTranslations {
     zeilennummern: string;
     sprache: string;
     weitere: string;
+    menue: {
+      datei: string;
+      bearbeiten: string;
+      ansicht: string;
+      formular: string;
+      hilfe: string;
+    };
+    hilfe: {
+      anleitung: string;
+      anleitungTitel: string;
+      anleitungEinleitung: string;
+      schritte: string[];
+      tastatur: string;
+      tastaturTitel: string;
+      kuerzel: Array<{ taste: string; was: string }>;
+      tipp: string;
+      tippTitel: string;
+      tipps: string[];
+      naechsterTipp: string;
+      beimStart: string;
+      ueber: string;
+      ueberTitel: string;
+      version: string;
+      lizenz: string;
+      lizenzen: string;
+      lizenzenTitel: string;
+      lizenzenEinleitung: string;
+      komponente: string;
+      wofuer: string;
+    };
     ablage: {
       menue: string;
+      oeffnenDatei: string;
+      speichern: string;
+      speichernUnter: string;
+      zuletzt: string;
+      dateiFehler: string;
+      gespeichert: string;
       neu: string;
       oeffnen: string;
       oeffnenTitel: string;

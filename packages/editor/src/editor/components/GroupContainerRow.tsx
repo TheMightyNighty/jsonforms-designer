@@ -258,8 +258,7 @@ function GroupChild({
     const scope = child.scope;
     const key = scope.replace(/^#\/properties\//, '');
     const fieldSchema = schema.properties?.[key] as
-      | { 'x-opencode-validators'?: string[] }
-      | undefined;
+      { 'x-opencode-validators'?: string[] } | undefined;
     return (
       <FieldRow
         propertyKey={key}

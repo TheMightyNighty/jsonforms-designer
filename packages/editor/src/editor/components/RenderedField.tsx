@@ -7,6 +7,8 @@ import { JsonForms } from '@jsonforms/react';
 import { Box } from '@mui/material';
 
 import { FieldAwareState } from '../../core/model/addFieldReducer';
+import { jsonFormsI18n } from '../../core/util/jsonFormsI18n';
+import { useI18n } from '../../i18n';
 
 interface RenderedFieldProps {
   scope: string;
@@ -36,6 +38,7 @@ export function RenderedField({
   onDataChange,
   disabled = false,
 }: RenderedFieldProps) {
+  const { locale } = useI18n();
   const key = scope.replace(/^#\/properties\//, '');
   const fieldSchema = schema.properties?.[key];
   if (!fieldSchema) return null;
@@ -59,6 +62,8 @@ export function RenderedField({
         data={testMode ? (data ?? {}) : {}}
         renderers={materialRenderers}
         cells={materialCells}
+        // Ohne das meldet AJV auf Englisch mitten im deutschen Formular.
+        i18n={jsonFormsI18n(locale)}
         // Außerhalb des Testen-Modus ist das Formular noch leer und wurde
         // von niemandem "abgeschickt" — Pflichtfeld-Fehlermeldungen wären
         // hier irreführend (sähen aus wie ein kaputtes statt wie ein

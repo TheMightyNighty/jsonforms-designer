@@ -13,13 +13,7 @@ import { FieldAwareState } from '../model/addFieldReducer';
 // ---------------------------------------------------------------------------
 
 type XdfDatentyp =
-  | 'text'
-  | 'date'
-  | 'datetime'
-  | 'num_int'
-  | 'num_gk'
-  | 'bool'
-  | 'file';
+  'text' | 'date' | 'datetime' | 'num_int' | 'num_gk' | 'bool' | 'file';
 type XdfFeldart = 'input' | 'select' | 'label';
 
 function mapDatentyp(schema: JsonSchema7): XdfDatentyp {

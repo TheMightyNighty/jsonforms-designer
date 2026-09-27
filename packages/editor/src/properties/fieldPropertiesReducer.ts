@@ -61,9 +61,7 @@ function mapElementsDeep(
 export function fieldPropertiesReducer<S extends FieldAwareState>(
   state: S,
   action:
-    | UpdateFieldPropertyAction
-    | SetFieldRuleAction
-    | ChangeFieldTypeAction,
+    UpdateFieldPropertyAction | SetFieldRuleAction | ChangeFieldTypeAction,
 ): S {
   if (action.type === CHANGE_FIELD_TYPE) {
     return changeFieldType(state, action);
@@ -141,8 +139,7 @@ function changeFieldType<S extends FieldAwareState>(
   const { scope, feldtypId } = action.payload;
   const key = propertyKeyFromScope(scope);
   const bestehend = state.schema.properties?.[key] as
-    | (JsonSchema7 & { title?: string; description?: string })
-    | undefined;
+    (JsonSchema7 & { title?: string; description?: string }) | undefined;
   if (!bestehend) return state;
 
   let ziel;

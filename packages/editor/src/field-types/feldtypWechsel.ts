@@ -94,8 +94,7 @@ export function wechselFolgen(
 
   const key = schluesselAus(scope);
   const feld = state.schema.properties?.[key] as
-    | (FeldSchema & { 'x-opencode-validators'?: string[] })
-    | undefined;
+    (FeldSchema & { 'x-opencode-validators'?: string[] }) | undefined;
   if (!feld) return leer;
 
   let ziel;
@@ -136,8 +135,7 @@ export function wechselFolgen(
         .filter((c) => c.rule?.condition?.scope === scope)
         .map((c) => {
           const anderes = state.schema.properties?.[schluesselAus(c.scope)] as
-            | { title?: string }
-            | undefined;
+            { title?: string } | undefined;
           return anderes?.title?.trim() || schluesselAus(c.scope);
         })
     : [];

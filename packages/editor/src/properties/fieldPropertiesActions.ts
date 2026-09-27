@@ -60,10 +60,7 @@ export function createSetFieldRuleAction(
 export const UPDATE_FIELD_PROPERTY = 'UPDATE_FIELD_PROPERTY' as const;
 
 export type FieldPropertyKey =
-  | 'label'
-  | 'description'
-  | 'placeholder'
-  | 'required';
+  'label' | 'description' | 'placeholder' | 'required';
 
 export interface UpdateFieldPropertyPayload {
   /** scope des Controls, z. B. "#/properties/vorname" */

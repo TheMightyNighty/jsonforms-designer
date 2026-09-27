@@ -246,8 +246,7 @@ export function FieldFormPreview({
     }
     const key = el.scope.replace(/^#\/properties\//, '');
     const fs = schema.properties?.[key] as
-      | (JsonSchema7 & { 'x-opencode-validators'?: string[] })
-      | undefined;
+      (JsonSchema7 & { 'x-opencode-validators'?: string[] }) | undefined;
     return {
       kind: 'control' as const,
       scope: el.scope,
