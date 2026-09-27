@@ -149,14 +149,12 @@ export function feldtypLabel(
 }
 
 /**
- * Feldtypen, in die ein Feld ohne Datenverlust gewechselt werden kann:
- * gleicher JSON-Basistyp wie der Ausgangstyp (Text ↔ E-Mail ↔ Datum, aber
- * nicht Text → Ja/Nein).
+ * Feldtypen, in die ein Feld **ohne Verlust** gewechselt werden kann:
+ * gleicher JSON-Basistyp wie der Ausgangstyp (Text ↔ E-Mail ↔ Datum).
  *
- * [RÜCKFRAGE AN FABLE: Verhalten bei einem Wechsel über Basistypgrenzen
- * hinweg (z. B. Text → Ja/Nein). Bereits erfasste Antworten passen dann
- * nicht mehr zum Schema. Bis zur Entscheidung bietet der Editor solche
- * Wechsel gar nicht erst an — der vorsichtigste Default.]
+ * Wechsel darüber hinaus sind nicht verboten, nur nicht verlustfrei — die
+ * Oberfläche bietet sie getrennt an und fragt vorher nach, was dabei
+ * wegfällt (siehe `wechselFolgen`).
  */
 export function kompatibleFeldtypen(feldtypId: string): FieldTypeDefinition[] {
   const basis = getFieldType(feldtypId).schema.type;

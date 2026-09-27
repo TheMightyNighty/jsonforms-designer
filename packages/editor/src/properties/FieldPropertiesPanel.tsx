@@ -22,8 +22,13 @@ import {
   Box,
   Button,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControlLabel,
+  ListSubheader,
   MenuItem,
   Tab,
   Tabs,
@@ -44,6 +49,8 @@ import {
   kompatibleFeldtypen,
 } from '../field-types/feldtypErkennung';
 import { vorschlagWeichtAb } from '../field-types/feldtypVorschlag';
+import { WechselFolgen, wechselFolgen } from '../field-types/feldtypWechsel';
+import { FIELD_TYPE_CATALOG, getFieldType } from '../field-types/fieldTypes';
 import { useI18n } from '../i18n';
 import { ConditionEditor } from './ConditionEditor';
 import { EnumEditor } from './EnumEditor';
@@ -153,10 +160,93 @@ interface FeldtypAuswahlProps {
 }
 
 /**
- * Zeigt die Art des Feldes in Fachsprache und erlaubt den Wechsel innerhalb
- * derselben Art von Antwort (Text ↔ E-Mail ↔ Telefonnummer). Gibt es keine
- * Alternative oder ist die Art nicht erkennbar (Fremdimport), steht hier nur
- * der Text.
+ * Dialog, der vor einem nicht verlustfreien Wechsel benennt, was dabei
+ * wegfällt. Erscheint nur, wenn es etwas zu bedenken gibt — ein Wechsel
+ * innerhalb derselben Art von Antwort läuft ohne Rückfrage durch.
+ */
+function WechselBestaetigung({
+  offen,
+  feldName,
+  altName,
+  neuName,
+  folgen,
+  onAbbrechen,
+  onBestaetigen,
+}: {
+  offen: boolean;
+  feldName: string;
+  altName: string;
+  neuName: string;
+  folgen: WechselFolgen | null;
+  onAbbrechen: () => void;
+  onBestaetigen: () => void;
+}) {
+  const { t } = useI18n();
+  if (!folgen) return null;
+  const texte = t.properties.wechsel;
+
+  const punkte: string[] = [];
+  if (folgen.basistypWechsel) punkte.push(texte.andereAntwort);
+  if (folgen.verlierteOptionen.length > 0) {
+    punkte.push(
+      texte.optionen.replace('{liste}', folgen.verlierteOptionen.join(', ')),
+    );
+  }
+  if (folgen.verlierteePruefungen.length > 0) {
+    punkte.push(
+      texte.pruefungen.replace(
+        '{liste}',
+        folgen.verlierteePruefungen.join(', '),
+      ),
+    );
+  }
+  if (folgen.betroffeneBedingungen.length > 0) {
+    punkte.push(
+      texte.bedingungen.replace(
+        '{liste}',
+        folgen.betroffeneBedingungen.join(', '),
+      ),
+    );
+  }
+
+  return (
+    <Dialog open={offen} onClose={onAbbrechen} data-testid="wechsel-dialog">
+      <DialogTitle>{texte.titel}</DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          {texte.einleitung
+            .replace('{feld}', feldName)
+            .replace('{alt}', altName)
+            .replace('{neu}', neuName)}
+        </Typography>
+        <Box component="ul" sx={{ pl: 2.5, m: 0 }}>
+          {punkte.map((punkt) => (
+            <Typography component="li" variant="body2" key={punkt}>
+              {punkt}
+            </Typography>
+          ))}
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onAbbrechen}>{texte.abbrechen}</Button>
+        <Button variant="contained" onClick={onBestaetigen}>
+          {texte.bestaetigen}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+/**
+ * Zeigt die Art des Feldes in Fachsprache und erlaubt den Wechsel.
+ *
+ * Angeboten werden alle Feldtypen, getrennt in zwei Gruppen: gleiche Art von
+ * Antwort (verlustfrei) und andere Art von Antwort. Für die zweite Gruppe
+ * fragt ein Dialog vorher nach und benennt, was wegfällt — verbieten wäre
+ * bevormundend, still wechseln wäre Datenverlust.
+ *
+ * Ist die Art des Feldes nicht erkennbar (Fremdimport), steht hier nur der
+ * Text: Ohne Ausgangstyp lässt sich nicht sagen, was ein Wechsel kostet.
  */
 function FeldtypAuswahl({
   selectedScope,
@@ -165,9 +255,10 @@ function FeldtypAuswahl({
   dispatch,
 }: FeldtypAuswahlProps) {
   const { t } = useI18n();
-  const alternativen = feldtypId ? kompatibleFeldtypen(feldtypId) : [];
+  const { fieldState } = useEditorContext();
+  const [zielId, setZielId] = useState<string | null>(null);
 
-  if (!feldtypId || alternativen.length < 2) {
+  if (!feldtypId) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -180,27 +271,69 @@ function FeldtypAuswahl({
     );
   }
 
+  const verlustfrei = kompatibleFeldtypen(feldtypId);
+  const verlustfreiIds = new Set(verlustfrei.map((f) => f.id));
+  const uebrige = FIELD_TYPE_CATALOG.filter(
+    (ft) => !ft.isStructural && !verlustfreiIds.has(ft.id),
+  );
+
+  const waehle = (neueId: string) => {
+    if (neueId === feldtypId) return;
+    const folgen = wechselFolgen(fieldState, selectedScope, neueId);
+    if (folgen.istVerlustfrei) {
+      dispatch(createChangeFieldTypeAction(selectedScope, neueId));
+      return;
+    }
+    setZielId(neueId);
+  };
+
+  const folgen = zielId
+    ? wechselFolgen(fieldState, selectedScope, zielId)
+    : null;
+
   return (
-    <TextField
-      select
-      size="small"
-      fullWidth
-      label={t.properties.feldtyp}
-      value={feldtypId}
-      onChange={(e) =>
-        dispatch(createChangeFieldTypeAction(selectedScope, e.target.value))
-      }
-      helperText={t.properties.feldtypWechselHinweis}
-      // aria-label gehört an das Select selbst (role="combobox"); über
-      // inputProps landete es am versteckten nativen Input.
-      SelectProps={{ 'aria-label': t.properties.feldtypWechseln }}
-    >
-      {alternativen.map((ft) => (
-        <MenuItem key={ft.id} value={ft.id}>
-          {ft.displayName}
-        </MenuItem>
-      ))}
-    </TextField>
+    <>
+      <TextField
+        select
+        size="small"
+        fullWidth
+        label={t.properties.feldtyp}
+        value={feldtypId}
+        onChange={(e) => waehle(e.target.value)}
+        helperText={t.properties.feldtypWechselHinweis}
+        // aria-label gehört an das Select selbst (role="combobox"); über
+        // inputProps landete es am versteckten nativen Input.
+        SelectProps={{ 'aria-label': t.properties.feldtypWechseln }}
+      >
+        <ListSubheader>{t.properties.feldtypGleicheAntwort}</ListSubheader>
+        {verlustfrei.map((ft) => (
+          <MenuItem key={ft.id} value={ft.id}>
+            {ft.displayName}
+          </MenuItem>
+        ))}
+        <ListSubheader>{t.properties.feldtypAndereAntwort}</ListSubheader>
+        {uebrige.map((ft) => (
+          <MenuItem key={ft.id} value={ft.id}>
+            {ft.displayName}
+          </MenuItem>
+        ))}
+      </TextField>
+
+      <WechselBestaetigung
+        offen={zielId !== null}
+        feldName={label}
+        altName={getFieldType(feldtypId).displayName}
+        neuName={zielId ? getFieldType(zielId).displayName : ''}
+        folgen={folgen}
+        onAbbrechen={() => setZielId(null)}
+        onBestaetigen={() => {
+          if (zielId) {
+            dispatch(createChangeFieldTypeAction(selectedScope, zielId));
+          }
+          setZielId(null);
+        }}
+      />
+    </>
   );
 }
 
@@ -220,9 +353,8 @@ interface TypvorschlagHinweisProps {
  * nahelegt als den gewählten („Geburtsdatum" als Textfeld). „Übernehmen"
  * wechselt den Typ, „Ignorieren" merkt die Entscheidung für dieses Feld.
  *
- * Führt der Vorschlag über eine Basistypgrenze (Text → Ganzzahl), wird er
- * erklärt, aber nicht angeboten — derselbe vorsichtige Default wie beim
- * Typwechsel im Reiter „Inhalt" (siehe kompatibleFeldtypen).
+ * Führt der Vorschlag über eine Basistypgrenze, fragt derselbe Dialog wie
+ * bei der Auswahl oben nach, was dabei wegfällt.
  */
 function TypvorschlagHinweis({
   selectedScope,
@@ -232,14 +364,32 @@ function TypvorschlagHinweis({
 }: TypvorschlagHinweisProps) {
   const { t } = useI18n();
   const { fieldState } = useEditorContext();
+  const [zielId, setZielId] = useState<string | null>(null);
 
-  if (fieldState.typvorschlagIgnoriert[selectedScope]) return null;
-  const vorschlag = vorschlagWeichtAb(label, feldtypId);
+  const vorschlag = fieldState.typvorschlagIgnoriert[selectedScope]
+    ? undefined
+    : vorschlagWeichtAb(label, feldtypId);
+
+  const folgen = zielId
+    ? wechselFolgen(fieldState, selectedScope, zielId)
+    : null;
+
+  // Der Dialog muss auch dann noch rendern können, wenn der Vorschlag
+  // gerade übernommen wurde und damit verschwindet.
   if (!vorschlag) return null;
 
-  const wechselMoeglich =
-    feldtypId !== undefined &&
-    kompatibleFeldtypen(feldtypId).some((f) => f.id === vorschlag.feldtypId);
+  const onUebernehmen = () => {
+    const kosten = wechselFolgen(
+      fieldState,
+      selectedScope,
+      vorschlag.feldtypId,
+    );
+    if (kosten.istVerlustfrei) {
+      dispatch(createChangeFieldTypeAction(selectedScope, vorschlag.feldtypId));
+      return;
+    }
+    setZielId(vorschlag.feldtypId);
+  };
 
   return (
     <Alert
@@ -248,21 +398,9 @@ function TypvorschlagHinweis({
       data-testid="typvorschlag-hinweis"
       action={
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {wechselMoeglich && (
-            <Button
-              size="small"
-              onClick={() =>
-                dispatch(
-                  createChangeFieldTypeAction(
-                    selectedScope,
-                    vorschlag.feldtypId,
-                  ),
-                )
-              }
-            >
-              {t.properties.vorschlag.uebernehmen}
-            </Button>
-          )}
+          <Button size="small" onClick={onUebernehmen}>
+            {t.properties.vorschlag.uebernehmen}
+          </Button>
           <Button
             size="small"
             color="inherit"
@@ -280,11 +418,21 @@ function TypvorschlagHinweis({
           .replace('{ausloeser}', vorschlag.ausloeser)
           .replace('{vorschlag}', vorschlag.feldtypName)}
       </Typography>
-      {!wechselMoeglich && (
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {t.properties.vorschlag.nichtMoeglich}
-        </Typography>
-      )}
+
+      <WechselBestaetigung
+        offen={zielId !== null}
+        feldName={label}
+        altName={feldtypId ? getFieldType(feldtypId).displayName : ''}
+        neuName={vorschlag.feldtypName}
+        folgen={folgen}
+        onAbbrechen={() => setZielId(null)}
+        onBestaetigen={() => {
+          if (zielId) {
+            dispatch(createChangeFieldTypeAction(selectedScope, zielId));
+          }
+          setZielId(null);
+        }}
+      />
     </Alert>
   );
 }

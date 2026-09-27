@@ -16,12 +16,8 @@ import { JsonSchema7 } from '@jsonforms/core';
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { FlatElement } from '../core/model/uiElements';
 import { stripHtml } from '../core/util/plainText';
-import {
-  ermittleFeldtyp,
-  FeldSchema,
-  kompatibleFeldtypen,
-} from '../field-types/feldtypErkennung';
 import { getFieldType } from '../field-types/fieldTypes';
+import { passtValidatorZuFeldtyp } from '../opencode/validatorZuordnung';
 import {
   CHANGE_FIELD_TYPE,
   ChangeFieldTypeAction,
@@ -130,8 +126,13 @@ export function fieldPropertiesReducer<S extends FieldAwareState>(
  * mitbringt. Der Property-Schlüssel und damit der scope bleiben unberührt,
  * sonst zeigten Bedingungen und Übersetzungen ins Leere.
  *
- * Ein Wechsel über Basistypgrenzen hinweg wird abgelehnt (siehe
- * kompatibleFeldtypen) — der Zustand bleibt dann unverändert.
+ * Auch ein Wechsel über Basistypgrenzen hinweg (Text → Ja/Nein) ist erlaubt.
+ * Er ist nicht verlustfrei, deshalb fragt die Oberfläche vorher nach und
+ * benennt die Folgen (`wechselFolgen`). Der Reducer räumt dabei konsistent
+ * auf: Prüfungen, die zum neuen Typ nicht mehr passen, werden entfernt statt
+ * unsichtbar am Feld hängen zu bleiben. Bedingungen anderer Felder bleiben
+ * bestehen — sie zu löschen wäre ein stiller Eingriff in fremde Felder; die
+ * Qualitäts-Ampel und die Rückfrage weisen darauf hin.
  */
 function changeFieldType<S extends FieldAwareState>(
   state: S,
@@ -144,20 +145,33 @@ function changeFieldType<S extends FieldAwareState>(
     | undefined;
   if (!bestehend) return state;
 
-  const aktuell = ermittleAktuellenFeldtyp(bestehend, state, scope);
-  if (aktuell && !kompatibleFeldtypen(aktuell).some((f) => f.id === feldtypId))
+  let ziel;
+  try {
+    ziel = getFieldType(feldtypId);
+  } catch {
+    // Unbekannte Feldtyp-id: nichts tun statt das Feld zu zerstören.
     return state;
-
-  const ziel = getFieldType(feldtypId);
+  }
+  // Strukturelemente tragen keine Antwort — ein Feld kann nicht zu einer
+  // Überschrift werden.
   if (ziel.isStructural) return state;
-  if (aktuell === undefined && ziel.schema.type !== bestehend.type)
-    return state;
+
+  const bisherigePruefungen =
+    (bestehend as { 'x-opencode-validators'?: string[] })[
+      'x-opencode-validators'
+    ] ?? [];
+  const weiterPassendePruefungen = bisherigePruefungen.filter((id) =>
+    passtValidatorZuFeldtyp(id, feldtypId),
+  );
 
   const neuesSchema = {
     ...ziel.schema,
     title: bestehend.title ?? ziel.schema.title,
     ...(bestehend.description !== undefined
       ? { description: bestehend.description }
+      : {}),
+    ...(weiterPassendePruefungen.length > 0
+      ? { 'x-opencode-validators': weiterPassendePruefungen }
       : {}),
   };
 
@@ -176,8 +190,9 @@ function changeFieldType<S extends FieldAwareState>(
       const bisherigerPlatzhalter = (el.options ?? {})['placeholder'];
       const zielOptionen = { ...(ziel.uiSchema.options ?? {}) };
       // Einen selbst gesetzten Platzhalter nicht durch den Beispieltext des
-      // neuen Typs ersetzen.
-      if (bisherigerPlatzhalter) {
+      // neuen Typs ersetzen — aber nur, solange der neue Typ überhaupt ein
+      // Eingabefeld mit Platzhalter ist.
+      if (bisherigerPlatzhalter && ziel.schema.type === 'string') {
         zielOptionen['placeholder'] = bisherigerPlatzhalter;
       }
       return { ...el, options: zielOptionen };
@@ -185,18 +200,6 @@ function changeFieldType<S extends FieldAwareState>(
   );
 
   return { ...mitSchema, uiSchema: { ...mitSchema.uiSchema, elements } };
-}
-
-/** Feldtyp des bestehenden Feldes — lokal, um Importzyklen zu vermeiden. */
-function ermittleAktuellenFeldtyp(
-  fieldSchema: JsonSchema7,
-  state: FieldAwareState,
-  scope: string,
-): string | undefined {
-  const control = state.uiSchema.elements.find(
-    (el) => el.type === 'Control' && el.scope === scope,
-  );
-  return ermittleFeldtyp(fieldSchema as FeldSchema, control?.options)?.id;
 }
 
 // ---------------------------------------------------------------------------

@@ -101,9 +101,20 @@ export interface EditorTranslations {
       text: string;
       uebernehmen: string;
       ignorieren: string;
-      nichtMoeglich: string;
     };
     feldtypWechselHinweis: string;
+    feldtypGleicheAntwort: string;
+    feldtypAndereAntwort: string;
+    wechsel: {
+      titel: string;
+      einleitung: string;
+      andereAntwort: string;
+      optionen: string;
+      pruefungen: string;
+      bedingungen: string;
+      abbrechen: string;
+      bestaetigen: string;
+    };
     bedingung: {
       titel: string;
       aktivieren: string;

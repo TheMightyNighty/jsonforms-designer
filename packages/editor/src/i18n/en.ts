@@ -103,11 +103,22 @@ export const en: EditorTranslations = {
       text: 'Because of "{ausloeser}" in the name, {vorschlag} probably fits here.',
       uebernehmen: 'Apply',
       ignorieren: 'Ignore',
-      nichtMoeglich:
-        'This change is not straightforward — answers already collected would no longer fit.',
     },
-    feldtypWechselHinweis:
-      'Only kinds expecting the same kind of answer are offered.',
+    feldtypWechselHinweis: 'Determines how the field is filled in.',
+    feldtypGleicheAntwort: 'Same kind of answer',
+    feldtypAndereAntwort: 'Different kind of answer',
+    wechsel: {
+      titel: 'Really change the kind of field?',
+      einleitung: '"{feld}" changes from {alt} to {neu}. This discards:',
+      andereAntwort:
+        'The field will expect a different kind of answer. Forms already filled in no longer match this field.',
+      optionen: 'Choice options: {liste}',
+      pruefungen: 'Checks that no longer apply: {liste}',
+      bedingungen:
+        'Conditions on these fields compare a value of this field and may never match again: {liste}',
+      abbrechen: 'Cancel',
+      bestaetigen: 'Change',
+    },
     bedingung: {
       titel: 'Conditional display',
       aktivieren: 'Enable condition',

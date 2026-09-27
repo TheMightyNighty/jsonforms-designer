@@ -9,17 +9,34 @@ import {
   ReorderInColumnAction,
 } from './addFieldActions';
 import { FieldAwareState, resolveKey } from './addFieldReducer';
-import {
-  ColumnContainer,
-  GroupContainer,
-  LabelElement,
-  newId,
-  UiElement,
-} from './uiElements';
+import { ColumnContainer, LabelElement, newId, UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen: Baum traversieren
 // ---------------------------------------------------------------------------
+
+/** Prüft rekursiv, ob es einen Container mit dieser id gibt. */
+function containerExistiert(
+  elements: UiElement[],
+  containerId: string,
+): boolean {
+  for (const el of elements) {
+    if (
+      el.id === containerId &&
+      (el.type === 'ColumnContainer' || el.type === 'GroupContainer')
+    ) {
+      return true;
+    }
+    if (el.type === 'ColumnContainer') {
+      if (el.columns.some((col) => containerExistiert(col, containerId)))
+        return true;
+    }
+    if (el.type === 'GroupContainer') {
+      if (containerExistiert(el.children, containerId)) return true;
+    }
+  }
+  return false;
+}
 
 /** Findet ein Element by ID (rekursiv), gibt [element, parent, columnIndex?] zurück */
 function findElement(
@@ -277,38 +294,33 @@ export function moveElementReducer<S extends FieldAwareState>(
   if (!found) return state;
   const { el: movingEl } = found;
 
+  // Zielcontainer prüfen, BEVOR das Element aus seiner Position genommen
+  // wird: Sonst wird es entfernt und nirgends wieder eingefügt — es ginge
+  // verloren. Dasselbe gilt für verschachtelte Container, die die frühere,
+  // nur einstufige Suche gar nicht erreichte.
+  if (
+    targetContainerId !== 'root' &&
+    !containerExistiert(state.uiSchema.elements, targetContainerId)
+  ) {
+    return state;
+  }
+
   // Aus aktueller Position entfernen
   const withoutEl = removeById(state.uiSchema.elements, elementId);
 
-  // In Zielposition einfügen
-  let nextElements: UiElement[];
-
-  if (targetContainerId === 'root') {
-    nextElements = insertInto(withoutEl, movingEl, insertAfterId);
-  } else {
-    nextElements = withoutEl.map((el) => {
-      if (el.id !== targetContainerId) return el;
-      if (el.type === 'ColumnContainer') {
-        const col = el as ColumnContainer;
-        return {
-          ...col,
-          columns: col.columns.map((colItems, ci) =>
-            ci === targetColumnIndex
-              ? insertInto(colItems, movingEl, insertAfterId)
-              : colItems,
-          ),
-        };
-      }
-      if (el.type === 'GroupContainer') {
-        const grp = el as GroupContainer;
-        return {
-          ...grp,
-          children: insertInto(grp.children, movingEl, insertAfterId),
-        };
-      }
-      return el;
-    });
-  }
+  // In Zielposition einfügen — rekursiv, auch über verschachtelte
+  // Strukturen hinweg (dieselbe Hilfsfunktion wie beim Ablegen aus der
+  // Palette).
+  const nextElements =
+    targetContainerId === 'root'
+      ? insertInto(withoutEl, movingEl, insertAfterId)
+      : insertIntoContainer(
+          withoutEl,
+          targetContainerId,
+          targetColumnIndex,
+          movingEl,
+          insertAfterId,
+        );
 
   return {
     ...state,

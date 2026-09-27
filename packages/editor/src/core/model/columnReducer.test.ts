@@ -505,15 +505,9 @@ describe('moveElementReducer() — Ziel-Container', () => {
     expect(next).toBe(state);
   });
 
-  // Festgehaltenes Ist-Verhalten, kein Wunschverhalten: Zeigt das Ziel auf
-  // einen Container, den es nicht (mehr) gibt, wird das Element aus seiner
-  // alten Position entfernt und nirgends wieder eingefügt — es geht
-  // verloren. Über die Oberfläche ist das derzeit nicht auslösbar (Ziele
-  // kommen aus gerenderten Drop-Zonen).
-  // [RÜCKFRAGE AN FABLE: Soll moveElementReducer bei unbekanntem Ziel den
-  // Zustand unverändert lassen? Das wäre eine Verhaltensänderung und damit
-  // keine reine UX-Arbeit — deshalb hier nur dokumentiert.]
-  it('verliert das Element, wenn der Ziel-Container nicht existiert', () => {
+  it('lässt den Zustand unverändert, wenn der Ziel-Container nicht existiert', () => {
+    // Früher wurde das Element hier aus seiner Position entfernt und
+    // nirgends wieder eingefügt — es ging verloren.
     const state = stateMitRootFeld();
     const next = moveElementReducer(
       state,
@@ -522,6 +516,66 @@ describe('moveElementReducer() — Ziel-Container', () => {
         targetContainerId: 'gibt_es_nicht',
       }),
     );
+    expect(next).toBe(state);
+  });
+
+  it('lässt den Zustand unverändert, wenn das Ziel kein Container ist', () => {
+    const state = stateMitRootFeld();
+    const next = moveElementReducer(
+      state,
+      createMoveElementAction({
+        elementId: 'ctrl_001',
+        // ctrl_001 selbst ist ein Control, kein Container
+        targetContainerId: 'ctrl_001',
+      }),
+    );
+    expect(next).toBe(state);
+  });
+
+  it('verschiebt in eine Gruppe, die in einer Spalte liegt', () => {
+    const state: FieldAwareState = {
+      ...stateMitRootFeld(),
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [
+          { id: 'ctrl_001', type: 'Control', scope: '#/properties/name' },
+          {
+            id: 'col_001',
+            type: 'ColumnContainer',
+            widths: [1, 1],
+            columns: [
+              [
+                {
+                  id: 'grp_tief',
+                  type: 'GroupContainer',
+                  label: 'Tiefe Gruppe',
+                  children: [],
+                },
+              ],
+              [],
+            ],
+          },
+        ] as UiElement[],
+      },
+    };
+
+    const next = moveElementReducer(
+      state,
+      createMoveElementAction({
+        elementId: 'ctrl_001',
+        targetContainerId: 'grp_tief',
+      }),
+    );
+
+    const spalte = (
+      next.uiSchema.elements.find((el) => el.id === 'col_001') as Extract<
+        UiElement,
+        { columns: unknown }
+      >
+    ).columns[0];
+    const gruppe = spalte[0] as Extract<UiElement, { children: unknown }>;
+    expect(gruppe.children.map((el) => el.id)).toEqual(['ctrl_001']);
+    // Und nicht doppelt in der root-Liste
     expect(next.uiSchema.elements.some((el) => el.id === 'ctrl_001')).toBe(
       false,
     );
