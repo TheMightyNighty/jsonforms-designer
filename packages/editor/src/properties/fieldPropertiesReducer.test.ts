@@ -305,12 +305,75 @@ describe('fieldPropertiesReducer — CHANGE_FIELD_TYPE', () => {
     expect('scope' in control && control.scope).toBe(scope);
   });
 
-  it('lehnt einen Wechsel über Basistypgrenzen hinweg ab', () => {
+  it('führt auch einen Wechsel über Basistypgrenzen hinweg aus', () => {
+    // Text → Ja/Nein. Nicht verlustfrei, aber erlaubt — die Oberfläche
+    // fragt vorher nach (siehe wechselFolgen).
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'checkbox'),
+    );
+    expect(feldSchema(next).type).toBe('boolean');
+    expect(feldSchema(next).title).toBe('Vorname');
+  });
+
+  it('wirft einen Platzhalter weg, wenn der neue Typ keiner ist', () => {
     const start = stateWithField();
-    // Text → Ja/Nein: unterschiedlicher JSON-Basistyp
+    start.uiSchema.elements[0].options = { placeholder: 'Bitte eintragen' };
     const next = fieldPropertiesReducer(
       start,
       createChangeFieldTypeAction(scope, 'checkbox'),
+    );
+    expect(controlOptionen(next).placeholder).toBeUndefined();
+  });
+
+  it('entfernt Prüfungen, die zum neuen Typ nicht mehr passen', () => {
+    const start = stateWithField();
+    (
+      start.schema.properties!['vorname'] as JsonSchema7 & {
+        'x-opencode-validators'?: string[];
+      }
+    )['x-opencode-validators'] = ['oc-val-plz', 'oc-val-tax-id'];
+
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'date'),
+    );
+    // Beide hängen an text-short und passen am Datumsfeld nicht mehr.
+    expect(
+      (
+        feldSchema(next) as JsonSchema7 & {
+          'x-opencode-validators'?: string[];
+        }
+      )['x-opencode-validators'],
+    ).toBeUndefined();
+  });
+
+  it('behält Prüfungen, die weiterhin passen', () => {
+    const start = stateWithField();
+    (
+      start.schema.properties!['vorname'] as JsonSchema7 & {
+        'x-opencode-validators'?: string[];
+      }
+    )['x-opencode-validators'] = ['oc-val-phone'];
+
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'tel'),
+    );
+    expect(
+      (
+        feldSchema(next) as JsonSchema7 & {
+          'x-opencode-validators'?: string[];
+        }
+      )['x-opencode-validators'],
+    ).toEqual(['oc-val-phone']);
+  });
+
+  it('lässt den Zustand unverändert bei unbekannter Feldtyp-id', () => {
+    const start = stateWithField();
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'gibt-es-nicht'),
     );
     expect(next).toBe(start);
   });
@@ -333,7 +396,7 @@ describe('fieldPropertiesReducer — CHANGE_FIELD_TYPE', () => {
     expect(next).toBe(start);
   });
 
-  it('bietet als Alternativen nur Feldtypen mit gleichem Basistyp an', () => {
+  it('nennt als verlustfreie Alternativen nur Feldtypen mit gleichem Basistyp', () => {
     const ids = kompatibleFeldtypen('email').map((f) => f.id);
     expect(ids).toContain('text-short');
     expect(ids).toContain('date');

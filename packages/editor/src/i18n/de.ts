@@ -104,11 +104,22 @@ export const de: EditorTranslations = {
       text: 'Wegen „{ausloeser}" im Namen passt hier vermutlich {vorschlag}.',
       uebernehmen: 'Übernehmen',
       ignorieren: 'Ignorieren',
-      nichtMoeglich:
-        'Der Wechsel ist nicht ohne Weiteres möglich — bereits erfasste Antworten würden nicht mehr passen.',
     },
-    feldtypWechselHinweis:
-      'Nur Arten mit derselben Art von Antwort stehen zur Auswahl.',
+    feldtypWechselHinweis: 'Bestimmt, wie das Feld ausgefüllt wird.',
+    feldtypGleicheAntwort: 'Gleiche Art von Antwort',
+    feldtypAndereAntwort: 'Andere Art von Antwort',
+    wechsel: {
+      titel: 'Art des Feldes wirklich ändern?',
+      einleitung: '„{feld}" wird von {alt} zu {neu}. Dabei geht verloren:',
+      andereAntwort:
+        'Das Feld erwartet danach eine andere Art von Antwort. Bereits ausgefüllte Formulare passen nicht mehr zu diesem Feld.',
+      optionen: 'Auswahloptionen: {liste}',
+      pruefungen: 'Prüfungen, die nicht mehr passen: {liste}',
+      bedingungen:
+        'Bedingungen an diesen Feldern vergleichen einen Wert dieses Feldes und treffen danach womöglich nie mehr zu: {liste}',
+      abbrechen: 'Abbrechen',
+      bestaetigen: 'Ändern',
+    },
     bedingung: {
       titel: 'Bedingte Anzeige',
       aktivieren: 'Bedingung aktivieren',

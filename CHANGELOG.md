@@ -7,6 +7,12 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Behoben
+- **Verschieben in einen Container verlor das Element:** `moveElementReducer` entfernte das Element aus seiner Position und fügte es nicht wieder ein, wenn der Zielcontainer nicht gefunden wurde — und gefunden wurde er nur eine Ebene tief, eine Gruppe innerhalb einer Spalte also nie. Beides behoben: Das Ziel wird vor dem Entfernen geprüft, und das Einfügen läuft über dieselbe rekursive Hilfsfunktion wie das Ablegen aus der Palette.
+
+### Geändert (Editor-UX)
+- **Feldtyp-Wechsel über Basistypgrenzen ist jetzt möglich** (vorher abgelehnt): Die Auswahl im Reiter „Inhalt" zeigt alle Feldtypen, getrennt in „Gleiche Art von Antwort" und „Andere Art von Antwort". Vor einem nicht verlustfreien Wechsel fragt ein Dialog nach und benennt konkret, was wegfällt — Auswahloptionen, nicht mehr passende Prüfungen und Bedingungen anderer Felder, die einen Wert dieses Feldes vergleichen. Die Aufzählung liegt als reine Funktion `wechselFolgen` und ist getestet; der Reducer entfernt beim Wechsel die Prüfungen, die nicht mehr passen, statt sie unsichtbar am Feld zu lassen. Damit kann der Typvorschlag jetzt immer „Übernehmen" anbieten.
+
 ### Geändert (Architektur)
 - **Baustein-Katalog kommt aus einem austauschbaren Dienst** statt aus dem Editor-Code (ADR 0005): neues `BausteinService`-Interface, konfiguriert über `EditorConfig.modules.bausteine` — dasselbe Muster wie `FimService` und `OpenCodeService`. Eine Behörde pflegt ihre Bausteinbibliothek damit ohne Editor-Build. Default bleibt der `MockBausteinService` mit den drei als Beispiel gekennzeichneten Bausteinen.
 - **`HttpBausteinService`** als Referenz-Adapter: liest den Katalog als JSON (Array oder `{ items }`) von einer konfigurierten URL. Eingehende Einträge sind unvertraute Eingabe und laufen durch `normalisiereBaustein` — Prototype-Pollution-Schlüssel raus, Pflichtangaben geprüft, unbrauchbare Einträge einzeln verworfen und über `onEintragVerworfen` gemeldet, statt den ganzen Katalog scheitern zu lassen. Format dokumentiert im README.
