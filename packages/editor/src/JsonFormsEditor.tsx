@@ -146,9 +146,12 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     }
   }, [ablage, reportError]);
 
+  // Beim Start einmal lesen. Danach frischt der Auto-Save auf — er
+  // schreibt den Index, und vorher gelesen wäre er stets einen Schritt
+  // hinterher.
   useEffect(() => {
     void ablageAuffrischen();
-  }, [ablageAuffrischen, fieldState]);
+  }, [ablageAuffrischen]);
 
   const formularAblage: FormularVerwaltung | undefined = useMemo(() => {
     if (!ablage) return undefined;
@@ -255,9 +258,13 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   // Auto-Save bei jeder Zustandsänderung über den Persistenz-Adapter.
   useEffect(() => {
     let verworfen = false;
-    const gespeichert = () =>
-      !verworfen &&
+    const gespeichert = () => {
+      if (verworfen) return;
       setSpeicherStatus({ art: 'gespeichert', zeitpunkt: Date.now() });
+      // Der Auto-Save schreibt auch den Ablage-Index (Name, Zeitstempel) —
+      // die Liste danach neu lesen, nicht davor.
+      void ablageAuffrischen();
+    };
     const fehlgeschlagen = (err: unknown) => {
       if (!verworfen) setSpeicherStatus({ art: 'fehler' });
       reportError(err, 'Auto-Save fehlgeschlagen');
@@ -279,7 +286,10 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     return () => {
       verworfen = true;
     };
-  }, [fieldState, fieldStateStorage]);
+    // ablageAuffrischen ist über useCallback stabil; reportError bewusst
+    // nicht in den Abhängigkeiten (siehe die übrigen Effekte).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldState, fieldStateStorage, ablageAuffrischen]);
 
   // Extern bereitgestellte Schemas (SchemaService) werden in den
   // Form-First-Zustand konvertiert. Liefert der Service nichts (Default),

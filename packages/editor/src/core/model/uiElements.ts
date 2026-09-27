@@ -4,10 +4,7 @@
  */
 
 export type UiElementType =
-  | 'Control'
-  | 'Label'
-  | 'ColumnContainer'
-  | 'GroupContainer';
+  'Control' | 'Label' | 'ColumnContainer' | 'GroupContainer';
 
 interface BaseUiElement {
   id: string;
@@ -47,10 +44,7 @@ export interface GroupContainer extends BaseUiElement {
 }
 
 export type UiElement =
-  | ControlElement
-  | LabelElement
-  | ColumnContainer
-  | GroupContainer;
+  ControlElement | LabelElement | ColumnContainer | GroupContainer;
 
 /**
  * Loses Grenz-Format („parse, don't validate"): beschreibt, was von außen

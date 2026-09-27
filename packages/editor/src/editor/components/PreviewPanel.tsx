@@ -20,7 +20,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { FieldAwareState, FormTab } from '../../core/model/addFieldReducer';
 import { sectionColorDisplay } from '../../core/model/sectionColorTokens';
 import { toJsonForms, UiElement } from '../../core/model/uiElements';
+import { jsonFormsI18n } from '../../core/util/jsonFormsI18n';
 import { buildOfmSchema, buildOfmUiSchema } from '../../core/util/ofmExport';
+import { useI18n } from '../../i18n';
 import { PREVIEW_VARIANTS, PreviewVariant } from '../../preview-variants';
 import { KERN_FARBEN } from '../../theme/kernTokens';
 import { FormStepperSidebar } from './FormStepperSidebar';
@@ -190,6 +192,7 @@ function PreviewWrapper({
   sectionColors,
 }: PreviewWrapperProps) {
   const theme = useTheme();
+  const { locale } = useI18n();
   return (
     <Box>
       {elements.map((el, idx: number) => {
@@ -339,6 +342,8 @@ function PreviewWrapper({
                     data={{}}
                     renderers={materialRenderers}
                     cells={materialCells}
+                    // Deutsche Validierungsmeldungen statt AJV-Englisch.
+                    i18n={jsonFormsI18n(locale)}
                     onChange={() => {}}
                   />
                 </ThemeProvider>
@@ -349,6 +354,8 @@ function PreviewWrapper({
                   data={{}}
                   renderers={materialRenderers}
                   cells={materialCells}
+                  // Deutsche Validierungsmeldungen statt AJV-Englisch.
+                  i18n={jsonFormsI18n(locale)}
                   onChange={() => {}}
                 />
               )}
@@ -372,6 +379,7 @@ export function PreviewPanel({
   fieldState,
   initialData = {},
 }: PreviewPanelProps) {
+  const { locale } = useI18n();
   const [data, setData] = useState<Record<string, unknown>>(initialData);
   const [activeStep, setActiveStep] = useState(0);
   const [variantId, setVariantId] = useState<PreviewVariant['id']>(() =>
@@ -587,6 +595,8 @@ export function PreviewPanel({
                 data={data}
                 renderers={selectedVariant.renderers}
                 cells={selectedVariant.cells}
+                // Deutsche Validierungsmeldungen statt AJV-Englisch.
+                i18n={jsonFormsI18n(locale)}
                 onChange={({ data: d }) => setData(d)}
               />
             </selectedVariant.ThemeProvider>
@@ -609,6 +619,8 @@ export function PreviewPanel({
             data={data}
             renderers={selectedVariant.renderers}
             cells={selectedVariant.cells}
+            // Deutsche Validierungsmeldungen statt AJV-Englisch.
+            i18n={jsonFormsI18n(locale)}
             onChange={({ data: d }) => setData(d)}
           />
         </selectedVariant.ThemeProvider>

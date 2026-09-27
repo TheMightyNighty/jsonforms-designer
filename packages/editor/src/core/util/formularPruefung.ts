@@ -95,8 +95,7 @@ const schluesselAus = (scope: string) => scope.replace(/^#\/properties\//, '');
 /** Anzeigename eines Feldes für den Hinweistext. */
 function feldName(state: FieldAwareState, scope: string): string {
   const feld = state.schema.properties?.[schluesselAus(scope)] as
-    | { title?: string }
-    | undefined;
+    { title?: string } | undefined;
   return feld?.title?.trim() || schluesselAus(scope);
 }
 
@@ -121,8 +120,7 @@ export function pruefeFormular(state: FieldAwareState): Hinweis[] {
   for (const control of controls) {
     const key = schluesselAus(control.scope);
     const feld = state.schema.properties?.[key] as
-      | (FeldSchema & { title?: string; description?: string })
-      | undefined;
+      (FeldSchema & { title?: string; description?: string }) | undefined;
     if (!feld) continue;
 
     const label = (feld.title ?? '').trim();

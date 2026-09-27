@@ -13,12 +13,11 @@ const STORAGE_KEY = 'jfd_fieldState_v1';
  * (react-dnd prüft `isTrusted` nicht).
  */
 /**
- * Seltene Aktionen liegen seit dem Kopfzeilen-Umbau im Menü „Weitere"
- * (Code-Modus, Schema kopieren, Import/Export, Vorlagen, Metadaten,
- * Editorsprache).
+ * Die Befehle liegen in der Befehlsleiste: Datei · Bearbeiten · Ansicht ·
+ * Formular.
  */
-async function ausMenueWeitere(page: Page, eintrag: string) {
-  await page.getByRole('button', { name: 'Weitere' }).click();
+async function ausBefehlsleiste(page: Page, menue: string, eintrag: string) {
+  await page.getByRole('button', { name: menue, exact: true }).click();
   await page.getByRole('menuitem', { name: eintrag }).click();
 }
 
@@ -300,7 +299,7 @@ test('Code-Modus lädt Monaco lokal — keine CDN-Requests', async ({ page }) =>
   });
 
   await gotoSeeded(page);
-  await ausMenueWeitere(page, 'Code-Modus');
+  await ausBefehlsleiste(page, 'Ansicht', 'Code-Modus');
 
   // Monaco gerendert und mit dem Schema befüllt
   await expect(page.locator('.monaco-editor').first()).toBeVisible({
@@ -331,17 +330,26 @@ test('Kopfzeile zeigt Formularname, Speicherstatus und das Menü „Weitere"', a
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
 
-  // Seltene Aktionen liegen im Menü
-  await page.getByRole('button', { name: 'Weitere' }).click();
-  const menu = page.getByRole('menu');
+  // Die Befehlsleiste trägt die Klassiker
+  for (const menue of ['Datei', 'Bearbeiten', 'Ansicht', 'Formular']) {
+    await expect(
+      page.getByRole('button', { name: menue, exact: true }),
+    ).toBeVisible();
+  }
+
+  await page.getByRole('button', { name: 'Datei', exact: true }).click();
+  const dateiMenue = page.getByRole('menu');
   for (const eintrag of [
-    'Code-Modus',
-    'Schema kopieren',
-    'Export / Import',
+    'Neues Formular',
+    'Öffnen …',
+    'Speichern',
+    'Speichern unter …',
     'Vorlage laden',
-    'Formular-Metadaten',
+    'Export / Import',
   ]) {
-    await expect(menu.getByRole('menuitem', { name: eintrag })).toBeVisible();
+    await expect(
+      dateiMenue.getByRole('menuitem', { name: eintrag, exact: true }),
+    ).toBeVisible();
   }
 });
 
@@ -355,16 +363,14 @@ test('Neues Formular legt ein zweites an, ohne das erste zu verlieren', async ({
   await gotoSeeded(page);
   await expect(page.getByTestId('field-row')).toHaveCount(1);
 
-  await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Neues Formular' }).click();
+  await ausBefehlsleiste(page, 'Datei', 'Neues Formular');
 
   // Das neue Formular ist leer …
   await expect(page.getByTestId('field-row')).toHaveCount(0);
   await expect(page.getByTestId('empty-editor-drop')).toBeVisible();
 
   // … und das alte liegt weiterhin in der Ablage.
-  await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Formular öffnen' }).click();
+  await ausBefehlsleiste(page, 'Datei', 'Zuletzt bearbeitet');
   const dialog = page.getByTestId('ablage-dialog');
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText('Unbenanntes Formular')).toHaveCount(2);
@@ -375,21 +381,18 @@ test('Formular speichern unter, wechseln und wieder öffnen', async ({
 }) => {
   await gotoSeeded(page);
 
-  // Aktuellen Stand unter einem Namen ablegen
+  // Formular benennen (der Name ist der Titel)
   await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Speichern unter' }).click();
   await page.getByLabel('Name des Formulars').fill('Wohngeld');
   await page.getByRole('button', { name: 'Übernehmen' }).click();
   await expect(page.getByTestId('formular-menue')).toContainText('Wohngeld');
 
-  // Neues Formular anlegen und ihm ein eigenes Feld geben
-  await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Neues Formular' }).click();
+  // Neues Formular anlegen
+  await ausBefehlsleiste(page, 'Datei', 'Neues Formular');
   await expect(page.getByTestId('field-row')).toHaveCount(0);
 
   // Zurück zum ersten Formular — der Inhalt ist noch da
-  await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Formular öffnen' }).click();
+  await ausBefehlsleiste(page, 'Datei', 'Zuletzt bearbeitet');
   await page
     .getByTestId('ablage-dialog')
     .getByRole('button', { name: /^Wohngeld / })
@@ -401,8 +404,8 @@ test('Formular speichern unter, wechseln und wieder öffnen', async ({
 test('Formular umbenennen ändert Name und Titel', async ({ page }) => {
   await gotoSeeded(page);
 
+  // Der Name ist dort änderbar, wo er steht
   await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Umbenennen' }).click();
   await page.getByLabel('Name des Formulars').fill('Antrag auf Elterngeld');
   await page.getByRole('button', { name: 'Übernehmen' }).click();
 
@@ -414,12 +417,10 @@ test('Formular umbenennen ändert Name und Titel', async ({ page }) => {
 test('Formular löschen fragt vorher nach', async ({ page }) => {
   await gotoSeeded(page);
   await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Speichern unter' }).click();
   await page.getByLabel('Name des Formulars').fill('Weg damit');
   await page.getByRole('button', { name: 'Übernehmen' }).click();
 
-  await page.getByTestId('formular-menue').click();
-  await page.getByRole('menuitem', { name: 'Formular öffnen' }).click();
+  await ausBefehlsleiste(page, 'Datei', 'Zuletzt bearbeitet');
   await page.getByRole('button', { name: /Löschen: Weg damit/ }).click();
 
   // Rückfrage, weil Löschen nicht über Rückgängig zurückzuholen ist
@@ -546,7 +547,7 @@ test('Geräte-Ansicht mit Flag: Umschalten verengt die Fläche, Auswahl bleibt',
 test('Export-Dialog öffnet mit Schema- und XDF-Tab', async ({ page }) => {
   await gotoSeeded(page);
 
-  await ausMenueWeitere(page, 'Export / Import');
+  await ausBefehlsleiste(page, 'Datei', 'Export / Import');
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('tab', { name: 'XDF 2.0' })).toBeVisible();

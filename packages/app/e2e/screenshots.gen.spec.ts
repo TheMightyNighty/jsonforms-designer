@@ -123,7 +123,7 @@ test('screenshot: visueller Modus', async ({ page }) => {
 
 test('screenshot: Code-Modus', async ({ page }) => {
   await gotoDemo(page);
-  await page.getByRole('button', { name: 'Weitere' }).click();
+  await page.getByRole('button', { name: 'Ansicht', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Code-Modus' }).click();
   await expect(page.locator('.view-lines').first()).toContainText('Wohngeld', {
     timeout: 15_000,
