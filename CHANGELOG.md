@@ -7,6 +7,14 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert (Werkzeugkette)
+- **Toolchain-Upgrade in einem Zug:** TypeScript 6.0.3, ESLint 10 (+ `eslint-config-prettier` 10, `simple-import-sort` 14, `react-hooks` 7), Vite 8, `@vitejs/plugin-react` 6, jsdom 30, Vitest 5, JSONForms 3.8, Monaco 0.57, `@types/node` 26, `@testing-library/jest-dom` 7. `@types/uuid` entfernt (uuid ist seit 0.3.0 keine Abhängigkeit mehr), `@eslint/js` ergänzt (ESLint 10 liefert es nicht mehr mit). **`npm audit`: 0 Findings** (vorher 13, davon 7 hoch).
+- **Zwei Upgrades sind gescheitert — mit Grund:**
+  - **MUI 9** geht nicht: `@jsonforms/material-renderers@3.8.0` fordert `@mui/material ^7.0.0`. Das Upgrade erzeugt zwei MUI-Instanzen und damit zwei Theme-Kontexte; das KERN-Theme erreichte die gerenderten Formularfelder nicht mehr (ADR 0004). Zurückgenommen.
+  - **TypeScript 7** geht nicht: `@typescript-eslint` unterstützt in 8.70.1 nur `<6.1.0`. TS 7 hieße, das gesamte TypeScript-Linting zu verlieren, inklusive `no-explicit-any`. Stattdessen TS 6.0.3, das die Plugins tragen.
+- **Vite 8 nutzt Rolldown statt Rollup** und löst einen bloßen Paketpfad mit `?worker`-Suffix nicht mehr auf — der Monaco-Worker-Import brach den Build. Behoben über einen Alias auf das Monaco-Paketverzeichnis, der unabhängig vom npm-Hoisting greift. Der E2E-Nachweis „Code-Modus lädt Monaco lokal, null CDN-Requests" läuft weiter grün.
+- **`react-hooks/set-state-in-effect`** (neu in Plugin 7) trifft an neun Stellen dasselbe Muster und steht vorerst auf `warn` — mit Begründung in der ESLint-Config und einem ROADMAP-Punkt. Der zugehörige Einzelbefund `static-components` ist behoben.
+
 ### Hinzugefügt (Formular-Verwaltung)
 - **Mehrere benannte Formulare** (ADR 0006): „Neues Formular", „Formular öffnen …", „Umbenennen …" und „Speichern unter …" — erreichbar über den Formularnamen in der Kopfzeile, der damit zugleich der Ort ist, an dem der Titel geändert wird. Vorher kannte der Editor genau ein Formular; wer ein zweites wollte, musste das erste exportieren und überschreiben. Löschen fragt nach, weil es nicht über Rückgängig zurückzuholen ist.
 - **`FormularAblage`** als **optionale** Erweiterung von `FieldStateStorageService` (`readonly ablage?`). Fehlt sie im Adapter des Hosts, arbeitet der Editor unverändert im Ein-Dokument-Betrieb und blendet die Menüpunkte nicht ein — bestehende Einbettungen brechen nicht. Der Name eines Formulars ist sein Titel (`schema.title`), kein zweiter davon unabhängiger Name.

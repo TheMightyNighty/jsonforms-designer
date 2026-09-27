@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
 
 import react from '@vitejs/plugin-react';
 import { defineConfig, Plugin } from 'vite';
@@ -38,18 +39,36 @@ const cspPlugin = (): Plugin => ({
   },
 });
 
+/**
+ * Seit Vite 8 (Rolldown statt Rollup) löst der Bundler einen bloßen
+ * Paketpfad mit `?worker`-Suffix nicht mehr auf — der Monaco-Worker-Import
+ * scheiterte deshalb im Build. Ein Alias auf das tatsächliche
+ * Paketverzeichnis behebt das unabhängig davon, ob npm monaco-editor
+ * hoisted oder in den Workspace legt; ein relativer `../../node_modules`-
+ * Pfad wäre genau davon abhängig.
+ */
+// Der Paketstamm wird über den Haupteinstieg (min/vs/index.js) ermittelt:
+// Die exports-Karte von monaco-editor lässt weder package.json noch die
+// esm/-Pfade direkt auflösen.
+const monacoVerzeichnis = resolve(
+  dirname(createRequire(import.meta.url).resolve('monaco-editor')),
+  '../..',
+);
+
 // In dev, alias the editor package to its source for instant hot-reload.
 // In production the workspace link resolves to the built dist/.
 export default defineConfig(({ command }) => {
-  const alias: Record<string, string> =
-    command === 'serve'
+  const alias: Record<string, string> = {
+    'monaco-editor': monacoVerzeichnis,
+    ...(command === 'serve'
       ? {
           '@jsonforms-designer/editor': resolve(
             import.meta.dirname,
             '../editor/src/index.ts',
           ),
         }
-      : {};
+      : {}),
+  };
 
   return {
     plugins: [react(), cspPlugin()],
