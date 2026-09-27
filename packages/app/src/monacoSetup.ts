@@ -5,8 +5,10 @@
  * Code-Modus (editor/components/monacoSetup.ts) — kein CDN-Zugriff.
  * dompurify-Override für monaco-editor: siehe package.json "overrides".
  */
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+// Mit ausdrücklicher .js-Endung: Rolldown (seit Vite 8) löst den bloßen
+// Paketpfad mit ?worker-Suffix nicht mehr auf.
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
 
 self.MonacoEnvironment = {
   getWorker(_workerId: string, label: string): Worker {

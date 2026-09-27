@@ -28,9 +28,22 @@ Voraussetzungen:
       `packages/app/vite.config.ts` und `docs/BETRIEB.md`)
 - [x] ~~**Bundle-Optimierung (Monaco lazy)**~~ (umgesetzt: Initial-Bundle
       0,48 MB gzip, Code-Modus-Chunk lädt on demand)
-- [ ] **Upgrade-Session Dev-Toolchain:** TypeScript 6, ESLint 10,
-      eslint-plugin-react-hooks 7 — als gemeinsames Paket prüfen
-      (offene Dependabot-PRs #7/#8/#10; mögliche Regel-/Codeanpassungen)
+- [x] ~~**Upgrade-Session Dev-Toolchain**~~ (umgesetzt 2026-09):
+      TypeScript 6.0.3, ESLint 10, eslint-plugin-react-hooks 7,
+      simple-import-sort 14, eslint-config-prettier 10, Vite 8,
+      @vitejs/plugin-react 6, jsdom 30, Vitest 5, JSONForms 3.8,
+      Monaco 0.57, @types/node 26, jest-dom 7. `npm audit`: 0 Findings
+      (vorher 13)
+- [ ] **`set-state-in-effect` auflösen** (9 Stellen, 7 Dateien): Neu in
+      eslint-plugin-react-hooks 7 und vorerst auf `warn` gesetzt. Es geht
+      überall um dasselbe Muster — lokalen Zustand angleichen, wenn sich
+      eine Prop ändert. React empfiehlt `key` oder Ableiten im Render;
+      das ist ein Umbau mit Verhaltensrisiko und braucht eigene Tests
+- [ ] **TypeScript 7** — blockiert: `@typescript-eslint` unterstützt in
+      8.70.1 nur `<6.1.0`. Ein Sprung auf TS 7 ohne passendes Plugin
+      hieße, das gesamte TypeScript-Linting zu verlieren (inkl.
+      `no-explicit-any`). Wieder aufnehmen, sobald typescript-eslint
+      nachzieht
 - [ ] **Docker-Image-Smoke-Test:** das Dockerfile wurde lokal nie gebaut
       (kein Daemon verfügbar) — beim ersten Host-/CI-Build verifizieren
 
@@ -53,10 +66,16 @@ Voraussetzungen:
 - [ ] **Komponenten-Sandbox** (Storybook o. ä.) evaluieren — bewusst noch
       nicht eingeführt (E2E + Screenshot-Generator decken die visuelle
       Verifikation derzeit ab)
-- [ ] **vitest 4** (gemeinsam mit `@vitest/coverage-v8` 4 — Dependabot-PR
-      #11 wegen Peer-Konflikt geschlossen, kommt nach dem Upgrade wieder)
-- [ ] **MUI 9** (material + icons-material gemeinsam — Dependabot-PR #9
-      wegen Peer-Konflikt geschlossen)
+- [x] ~~**vitest 4**~~ (übersprungen; direkt auf **Vitest 5**, 2026-09.
+      Achtung: Der v8-Provider wertet seitdem AST-genau aus — die
+      Coverage-Schwellwerte sind neu kalibriert, die Zahlen sind mit den
+      alten nicht vergleichbar)
+- [ ] **MUI 9** — **weiterhin blockiert** (2026-09 erneut geprüft):
+      `@jsonforms/material-renderers@3.8.0` fordert `@mui/material ^7.0.0`
+      als Peer. Ein Upgrade führt zu zwei MUI-Instanzen im Baum und damit
+      zu zwei Theme-Kontexten — das KERN-Theme (ADR 0004) würde die
+      gerenderten Formularfelder nicht mehr erreichen. Wartet darauf, dass
+      JSONForms MUI 8/9 unterstützt
 - [x] ~~**Tastatur-Hinzufügen auch für FIM-Paletteneinträge**~~ (umgesetzt:
       Enter/Leertaste auf FIM-Gruppen, FIM-Einzelfeldern und Bausteinen,
       über dieselbe Action wie der Drop-Pfad). **OpenCode-Einträge bleiben
