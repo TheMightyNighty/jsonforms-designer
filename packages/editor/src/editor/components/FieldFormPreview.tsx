@@ -15,7 +15,7 @@ import {
 } from '../../core/model/addFieldActions';
 import { FieldAwareState } from '../../core/model/addFieldReducer';
 import { fuelleVorlage } from '../../core/util/textVorlage';
-import { FIELD_TYPE_CATALOG } from '../../field-types/fieldTypes';
+import { useFeldtypKatalog } from '../../erweiterung/ErweiterungenProvider';
 import { useI18n } from '../../i18n';
 import { useFieldDrop } from '../../palette-panel/useFieldDrop';
 import { UISchemaRule } from '../../properties/fieldPropertiesActions';
@@ -186,6 +186,7 @@ export function FieldFormPreview({
     lineNumbersEnabled,
   } = fieldState;
   const { t } = useI18n();
+  const katalog = useFeldtypKatalog();
 
   const handleDelete = (scope: string) => {
     dispatch(createRemoveFieldAction(scope));
@@ -208,7 +209,7 @@ export function FieldFormPreview({
       if (fs.enum) return 'dropdown';
       return 'text-short';
     };
-    const def = FIELD_TYPE_CATALOG.find((f) => f.id === guessId());
+    const def = katalog.find((f) => f.id === guessId());
     if (!def) return;
     const tabIdx =
       tabs.length > 0 ? (tabAssignments[scope] ?? activeTabIndex) : undefined;

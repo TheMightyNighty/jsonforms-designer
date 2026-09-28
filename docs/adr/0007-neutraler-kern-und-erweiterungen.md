@@ -76,6 +76,30 @@ nachlädt, ist in einer Behörde nicht betreibbar, und die Trennung zwischen
 „Daten kann jeder beisteuern" und „Code wird eingebaut" ist genau die Grenze,
 an der diese Frage entschieden gehört.
 
+### Die Bibliothek ist lokal
+
+Datengetriebene Erweiterungen liegen in einer **lokalen Bibliothek** — im
+Browser der Redakteurin, nicht auf einem Server, den jemand betreiben müsste.
+Ein Paket kommt als Datei herein und wird dort abgelegt; der Editor lädt von
+sich aus nichts nach. Weitergegeben wird es wie jede Datei, etwa über ein
+Git-Repository. Wie die Formular-Ablage (ADR 0006) ist die Bibliothek
+austauschbar: Ein Host, der sie zentral pflegen will, hängt eine eigene
+Umsetzung ein.
+
+Ein Paket kann nur **hinzufügen**. Eine Feldtyp-id, die der Kern schon führt,
+wird verworfen und im Dialog gemeldet — sonst könnte eine Bibliothek
+unbemerkt ändern, was „E-Mail-Adresse" bedeutet, und zwei Formulare hießen
+dasselbe, ohne es zu sein. Ausgenommen sind Begriffe und das Regionsprofil:
+Beides ist ausdrücklich zum Überschreiben da.
+
+### Fachmodule sind aus, bis ein Profil sie einschaltet
+
+FIM und Open CoDE sind Einrichtungen der deutschen Verwaltung. Sie stehen im
+Kern deshalb auf `enabled: false`; wer nur JSON-Schema-Formulare bauen will,
+bekommt keine zwei Reiter, die er nicht zuordnen kann. Bausteine bleiben an —
+vorgefertigte Feldgruppen sind kein deutsches Konzept, und der Standard-Reiter
+der Palette darf nicht leer sein (ADR 0005).
+
 ## Konsequenzen
 
 Der Editor wird für Dritte benutzbar, ohne ihn zu forken, und die bisherige
@@ -86,6 +110,14 @@ Der Preis ist Umweg. Ein deutscher Anzeigename stand bisher an genau einer
 Stelle; künftig steht die id im Katalog, der Text in zwei Sprachdateien, und
 wer einen Feldtyp hinzufügt, muss alle drei anfassen — sonst schlägt der Test
 fehl. Das ist gewollt, aber es ist mehr Arbeit als vorher.
+
+Feldtypen aus Erweiterungen müssen auch die Reducer finden, und die sind
+reine Funktionen ohne Kontext. `getFieldType` liest deshalb aus einer
+Registrierstelle im Modul, die der Provider füllt. Der Preis ist bekannt: Der
+Katalog gilt für die ganze Seite, zwei Editor-Instanzen nebeneinander mit
+verschiedenen Bibliotheken gehen nicht. Dieselbe Einschränkung hat ein Theme,
+und für den Betriebsfall — eine Anwendung, eine Bibliothek — hat sie keine
+Bedeutung.
 
 Die Reduzierstelle liegt an den Reducern. `ADD_FIELD` schreibt ein Label in
 den Formularzustand, und Reducer sind reine Funktionen ohne Zugriff auf i18n.

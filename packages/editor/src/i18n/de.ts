@@ -278,6 +278,19 @@ export const de: EditorTranslations = {
       beschreibung: 'Benannter Abschnitt mit Rahmen',
     },
   },
+  erweiterungen: {
+    menue: 'Erweiterungen …',
+    titel: 'Erweiterungen',
+    einleitung:
+      'Erweiterungen bringen zusätzliche Feldtypen, Bausteine, Begriffe oder ein Regionsprofil mit. Sie liegen als Datei vor und werden hier hinzugefügt — der Editor lädt von sich aus nichts nach.',
+    leer: 'Noch keine Erweiterung hinzugefügt.',
+    hinzufuegen: 'Datei hinzufügen …',
+    entfernen: 'Entfernen',
+    aktiv: 'aktiv',
+    keinJson: 'Die Datei ist kein lesbares JSON.',
+    unbrauchbar:
+      'Die Datei enthält kein verwertbares Erweiterungspaket (id, Name und mindestens ein Beitrag sind nötig).',
+  },
   palette: {
     feldTooltip: '{name} — Enter fügt das Feld am Ende ein',
     feldHinzufuegen: '{name} hinzufügen',

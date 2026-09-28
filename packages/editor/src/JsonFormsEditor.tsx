@@ -40,7 +40,10 @@ import {
 import { SpeicherStatus } from './core/model/speicherStatus';
 import { UiElement } from './core/model/uiElements';
 import { fieldStateFromSchemas } from './core/util/fieldStateFromSchemas';
-import { I18nProvider } from './i18n';
+import {
+  ErweiterterI18nProvider,
+  ErweiterungenProvider,
+} from './erweiterung/ErweiterungenProvider';
 import { JsonFormsEditorUi } from './JsonFormsEditorUi';
 
 const defaultSchemaService = new EmptySchemaService();
@@ -340,30 +343,32 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
 
   return (
     <EditorConfigProvider config={config}>
-      <I18nProvider defaultLocale="de">
-        <DndProvider backend={HTML5Backend}>
-          <EditorContextInstance.Provider
-            value={{
-              dispatch,
-              reportError,
-              fieldState,
-              speicherStatus,
-              formularAblage,
-              selectedScope,
-              setSelectedScope,
-              undo,
-              redo,
-              canUndo,
-              canRedo,
-            }}
-          >
-            <JsonFormsEditorUi
-              header={headerComponent}
-              footer={footerComponent}
-            />
-          </EditorContextInstance.Provider>
-        </DndProvider>
-      </I18nProvider>
+      <ErweiterungenProvider>
+        <ErweiterterI18nProvider defaultLocale="de">
+          <DndProvider backend={HTML5Backend}>
+            <EditorContextInstance.Provider
+              value={{
+                dispatch,
+                reportError,
+                fieldState,
+                speicherStatus,
+                formularAblage,
+                selectedScope,
+                setSelectedScope,
+                undo,
+                redo,
+                canUndo,
+                canRedo,
+              }}
+            >
+              <JsonFormsEditorUi
+                header={headerComponent}
+                footer={footerComponent}
+              />
+            </EditorContextInstance.Provider>
+          </DndProvider>
+        </ErweiterterI18nProvider>
+      </ErweiterungenProvider>
     </EditorConfigProvider>
   );
 };

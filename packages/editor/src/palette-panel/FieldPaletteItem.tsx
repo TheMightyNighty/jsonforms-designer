@@ -1,9 +1,9 @@
 import { Box, Tooltip, Typography } from '@mui/material';
 import { useDrag } from 'react-dnd';
 
-import { useEditorConfig } from '../config/EditorConfigContext';
 import { useDispatch, useFieldState } from '../core/context';
 import { fuelleVorlage } from '../core/util/textVorlage';
+import { useRegion } from '../erweiterung/ErweiterungenProvider';
 import { feldtypTexte } from '../field-types/feldtypTexte';
 import { FieldTypeDefinition } from '../field-types/fieldTypes';
 import { useI18n } from '../i18n';
@@ -36,7 +36,7 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
   const dispatch = useDispatch();
   const fieldState = useFieldState();
   const { t } = useI18n();
-  const { region } = useEditorConfig();
+  const region = useRegion();
   const texte = feldtypTexte(t, fieldType.id);
 
   const [{ isDragging }, dragRef] = useDrag<

@@ -1,0 +1,76 @@
+{
+  "id": "musterstadt",
+  "name": "Musterstadt",
+  "version": "1.0.0",
+  "beschreibung": "Beispiel-Bibliothek: ein eigener Feldtyp, ein Baustein, ein Begriff und ein Regionsprofil",
+
+  "feldtypen": [
+    {
+      "id": "kfz-kennzeichen",
+      "gruppe": "eingabe",
+      "icon": "car",
+      "schema": {
+        "type": "string",
+        "pattern": "^[A-ZÄÖÜ]{1,3}-[A-Z]{1,2}[0-9]{1,4}$"
+      },
+      "uiSchema": { "options": { "placeholder": "M-AB123" } },
+      "texte": {
+        "de": {
+          "name": "Kfz-Kennzeichen",
+          "label": "Kennzeichen",
+          "beschreibung": "Amtliches Kennzeichen, z. B. M-AB123"
+        },
+        "en": {
+          "name": "Vehicle registration",
+          "label": "Registration",
+          "beschreibung": "Official registration number"
+        }
+      }
+    }
+  ],
+
+  "bausteine": [
+    {
+      "id": "musterstadt-fahrzeug",
+      "name": "Fahrzeug",
+      "beschreibung": "Kennzeichen, Halterin oder Halter, Erstzulassung",
+      "icon": "car",
+      "istBeispiel": false,
+      "felder": [
+        {
+          "propertyKey": "kennzeichen",
+          "label": "Kennzeichen",
+          "schemaFragment": { "type": "string", "title": "Kennzeichen" },
+          "uiSchemaOptions": { "placeholder": "M-AB123" }
+        },
+        {
+          "propertyKey": "halter",
+          "label": "Halterin oder Halter",
+          "schemaFragment": {
+            "type": "string",
+            "title": "Halterin oder Halter"
+          }
+        },
+        {
+          "propertyKey": "erstzulassung",
+          "label": "Erstzulassung",
+          "schemaFragment": {
+            "type": "string",
+            "format": "date",
+            "title": "Erstzulassung"
+          }
+        }
+      ]
+    }
+  ],
+
+  "region": {
+    "id": "de-by",
+    "platzhalter": { "tel": "+49 89 ...", "email": "name@musterstadt.de" }
+  },
+
+  "texte": {
+    "de": { "header.title": "Antragsdesigner Musterstadt" },
+    "en": { "header.title": "Musterstadt Form Designer" }
+  }
+}

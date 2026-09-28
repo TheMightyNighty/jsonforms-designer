@@ -7,6 +7,16 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Hinzugefügt (Erweiterungsarchitektur)
+- **Erweiterungspakete als JSON** (ADR 0007): eine Datei bringt Feldtypen, Bausteine, ein Regionsprofil und überschriebene Begriffe mit. Kein Build, keine Toolchain — eine Bibliothek weiterzugeben heißt, eine Datei weiterzugeben. Format und Beispiel: `beispiele/erweiterungen/`.
+- **Lokale Bibliothek** unter **Ansicht → Erweiterungen …**: hinzufügen, ein- und ausschalten, entfernen. Sie liegt im Browser (`jfd_erweiterungen_v1`) und ist wie die Formular-Ablage austauschbar (`ErweiterungsBibliothek`). Der Editor lädt von sich aus nichts nach.
+- **Pakete sind unvertraute Eingabe:** `normalisiereErweiterung` entfernt Prototype-Pollution-Schlüssel, prüft Pflichtangaben und verwirft einzelne unbrauchbare Einträge, statt das ganze Paket scheitern zu lassen. Verworfenes steht im Dialog — auch bei teilweise übernommenen Paketen, sonst sucht jemand vergeblich nach dem fehlenden Feldtyp.
+- **Ein Paket kann nur hinzufügen:** Eine Feldtyp-id, die der Kern schon führt, wird verworfen und gemeldet. Begriffe und Regionsprofil sind ausdrücklich zum Überschreiben da; ein Textpfad, den es nicht gibt, wird gemeldet statt still zu verpuffen.
+- **`setzeZusatzFeldtypen` / `alleFeldtypen`** im Katalog: `getFieldType` findet auch Feldtypen aus Erweiterungen, damit die Reducer sie kennen. Bewusst Modulzustand — der Katalog gilt damit für die ganze Seite.
+
+### Geändert (Modul-Defaults)
+- **FIM und Open CoDE sind im Kern aus** (`enabled: false`). Beides sind Einrichtungen der deutschen Verwaltung; wer nur JSON-Schema-Formulare bauen will, bekam bisher zwei Reiter, die er nicht zuordnen kann. `packages/app` schaltet sie als deutsches Profil ein. **Für einbettende Hosts eine Umstellung:** Wer FIM oder Open CoDE nutzt, setzt `modules.fim.enabled: true` bzw. `modules.openCode.enabled: true`. Bausteine bleiben an.
+
 ### Geändert (Neutraler Kern)
 - **Der Kern enthält keine Sprache und keine Region mehr** (ADR 0007). Bisher steckten rund dreißig deutsche Feldtyp-Namen, deutsche Vorgabe-Beschriftungen, Platzhalter mit `+49` und `DE89` und eine Pflichtangabe nach deutschem Verwaltungsrecht fest im Code. Wer nicht auf Deutsch und nicht nach deutschem Recht arbeitet, konnte den Editor bisher nur forken.
 - **Feldtyp-Katalog trägt nur noch Struktur:** id, Gruppe, Symbol, Schema-Fragment. Name, Vorgabe-Label und Erläuterung stehen unter `i18n.feldtypen[<id>]`. Ein Test hält Katalog und Sprachdateien deckungsgleich in beide Richtungen — eine fehlende Übersetzung und ein verwaister Text fallen beide auf.
