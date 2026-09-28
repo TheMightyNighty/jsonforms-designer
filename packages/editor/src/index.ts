@@ -11,6 +11,7 @@ export * from './core/context';
 export * from './core/model';
 export * from './core/util';
 export * from './editor';
+export * from './erweiterung';
 export * from './field-types';
 export * from './fim';
 export * from './i18n';

@@ -37,12 +37,15 @@ import {
 } from '@mui/material';
 import { Dispatch, useEffect, useState } from 'react';
 
-import { useEditorConfig } from '../config/EditorConfigContext';
 import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { createIgnoriereTypvorschlagAction } from '../core/model/addFieldActions';
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { UiElement } from '../core/model/uiElements';
+import {
+  useFeldtypKatalog,
+  useRegion,
+} from '../erweiterung/ErweiterungenProvider';
 import {
   ermittleFeldtyp,
   FeldSchema,
@@ -51,7 +54,6 @@ import {
 import { feldtypTexte } from '../field-types/feldtypTexte';
 import { vorschlagWeichtAb } from '../field-types/feldtypVorschlag';
 import { WechselFolgen, wechselFolgen } from '../field-types/feldtypWechsel';
-import { FIELD_TYPE_CATALOG } from '../field-types/fieldTypes';
 import { useI18n } from '../i18n';
 import { ConditionEditor } from './ConditionEditor';
 import { EnumEditor } from './EnumEditor';
@@ -255,7 +257,8 @@ function FeldtypAuswahl({
   dispatch,
 }: FeldtypAuswahlProps) {
   const { t } = useI18n();
-  const { region } = useEditorConfig();
+  const region = useRegion();
+  const katalog = useFeldtypKatalog();
   const { fieldState } = useEditorContext();
   const [zielId, setZielId] = useState<string | null>(null);
 
@@ -274,7 +277,7 @@ function FeldtypAuswahl({
 
   const verlustfrei = kompatibleFeldtypen(feldtypId);
   const verlustfreiIds = new Set(verlustfrei.map((f) => f.id));
-  const uebrige = FIELD_TYPE_CATALOG.filter(
+  const uebrige = katalog.filter(
     (ft) => !ft.isStructural && !verlustfreiIds.has(ft.id),
   );
 
@@ -376,7 +379,7 @@ function TypvorschlagHinweis({
   dispatch,
 }: TypvorschlagHinweisProps) {
   const { t } = useI18n();
-  const { region } = useEditorConfig();
+  const region = useRegion();
   const { fieldState } = useEditorContext();
   const [zielId, setZielId] = useState<string | null>(null);
 

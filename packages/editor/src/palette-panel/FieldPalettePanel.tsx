@@ -17,16 +17,19 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Baustein, defaultBausteinService } from '../bausteine';
 import { BausteinPaletteItem } from '../bausteine/BausteinPaletteItem';
 import { useEditorConfig } from '../config/EditorConfigContext';
 import { useReportError } from '../core/context';
+import {
+  useErweiterungen,
+  useFeldtypKatalog,
+} from '../erweiterung/ErweiterungenProvider';
 import { feldtypTexte } from '../field-types/feldtypTexte';
 import {
   FIELD_GROUPS,
-  FIELD_TYPE_CATALOG,
   FieldGroup,
   FieldTypeDefinition,
   getFieldTypesByGroup,
@@ -86,7 +89,14 @@ function useBausteinKatalog(): {
     };
   }, [aktiv, service, reportError]);
 
-  return { bausteine, zustand };
+  const zusatz = useErweiterungen().aufgeloest.bausteine;
+  // Bausteine aus Erweiterungspaketen stehen hinter denen des Dienstes.
+  const alle = useMemo(
+    () => (zusatz.length === 0 ? bausteine : [...bausteine, ...zusatz]),
+    [bausteine, zusatz],
+  );
+
+  return { bausteine: alle, zustand };
 }
 
 // ---------------------------------------------------------------------------
@@ -259,8 +269,9 @@ function EinzelfelderTab() {
   const [weitereOffen, setWeitereOffen] = useState(false);
   const collapsedByDefault = config.palette?.collapsedByDefault ?? [];
 
+  const katalog = useFeldtypKatalog();
   const haeufige = HAEUFIGE_FELDTYP_IDS.map((id) =>
-    FIELD_TYPE_CATALOG.find((ft) => ft.id === id),
+    katalog.find((ft) => ft.id === id),
   ).filter((ft): ft is FieldTypeDefinition => ft !== undefined);
 
   return (
@@ -327,15 +338,16 @@ function EinzelfelderTab() {
 
 function Suchergebnisse({
   suchtext,
-  katalog,
+  katalog: bausteinKatalog,
 }: {
   suchtext: string;
   katalog: Baustein[];
 }) {
   const { t } = useI18n();
-  const bausteine = sucheBausteine(katalog, suchtext);
+  const katalog = useFeldtypKatalog();
+  const bausteine = sucheBausteine(bausteinKatalog, suchtext);
   const feldtypen = sucheFeldtypen(
-    FIELD_TYPE_CATALOG,
+    katalog,
     suchtext,
     (id) => feldtypTexte(t, id).name,
   );

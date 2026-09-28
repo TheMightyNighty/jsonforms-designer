@@ -430,15 +430,47 @@ export const FIELD_TYPE_CATALOG: FieldTypeDefinition[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Registrierstelle für Feldtypen aus Erweiterungen
+// ---------------------------------------------------------------------------
+
+/**
+ * Feldtypen, die eine Erweiterung mitgebracht hat (ADR 0007).
+ *
+ * Bewusst ein Modulzustand und keine Prop: `getFieldType` wird auch aus
+ * Reducern heraus aufgerufen, und die sind reine Funktionen ohne Kontext.
+ * Einen Katalog durch jede Action zu reichen, hieße, jede Signatur im Kern
+ * dafür zu öffnen.
+ *
+ * Der Preis: Der Katalog gilt für die ganze Seite. Zwei Editor-Instanzen
+ * nebeneinander mit **verschiedenen** Erweiterungen gehen damit nicht —
+ * dieselbe Einschränkung wie bei einem Theme, und für den Betriebsfall
+ * (eine Anwendung, eine Bibliothek) ohne Bedeutung.
+ */
+let zusatzFeldtypen: readonly FieldTypeDefinition[] = [];
+
+export function setzeZusatzFeldtypen(
+  liste: readonly FieldTypeDefinition[],
+): void {
+  zusatzFeldtypen = liste;
+}
+
+/** Kern-Katalog plus die Feldtypen aktiver Erweiterungen. */
+export function alleFeldtypen(): readonly FieldTypeDefinition[] {
+  return zusatzFeldtypen.length === 0
+    ? FIELD_TYPE_CATALOG
+    : [...FIELD_TYPE_CATALOG, ...zusatzFeldtypen];
+}
+
+// ---------------------------------------------------------------------------
 // Hilfsfunktionen
 // ---------------------------------------------------------------------------
 
 export function getFieldType(id: string): FieldTypeDefinition {
-  const found = FIELD_TYPE_CATALOG.find((f) => f.id === id);
+  const found = alleFeldtypen().find((f) => f.id === id);
   if (!found) throw new Error(`Unbekannter Feldtyp: "${id}"`);
   return found;
 }
 
 export function getFieldTypesByGroup(group: FieldGroup): FieldTypeDefinition[] {
-  return FIELD_TYPE_CATALOG.filter((f) => f.group === group);
+  return alleFeldtypen().filter((f) => f.group === group);
 }

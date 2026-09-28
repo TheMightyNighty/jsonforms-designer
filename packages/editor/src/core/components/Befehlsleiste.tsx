@@ -20,6 +20,7 @@ import Snackbar from '@mui/material/Snackbar';
 import { useState } from 'react';
 
 import { EditorMode } from '../../editor/editorMode';
+import { ErweiterungenDialog } from '../../erweiterung/ErweiterungenDialog';
 import { FormTemplate } from '../../field-types/formTemplates';
 import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
 import { useI18n } from '../../i18n';
@@ -113,6 +114,7 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
   >(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [hinweis, setHinweis] = useState<string | null>(null);
+  const [erweiterungenOffen, setErweiterungenOffen] = useState(false);
   const [hilfeDialog, setHilfeDialog] = useState<
     null | 'anleitung' | 'tastatur' | 'tipp' | 'ueber' | 'lizenzen'
   >(
@@ -332,6 +334,15 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
             </MenuItem>,
             <Divider key="t1" />,
             <MenuItem
+              key="erweiterungen"
+              onClick={() => {
+                setErweiterungenOffen(true);
+                schliessen();
+              }}
+            >
+              <ListItemText>{t.erweiterungen.menue}</ListItemText>
+            </MenuItem>,
+            <MenuItem
               key="sprache"
               onClick={() => {
                 setLocale(locale === 'de' ? 'en' : 'de');
@@ -425,6 +436,11 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
           />
         </>
       )}
+
+      <ErweiterungenDialog
+        offen={erweiterungenOffen}
+        onSchliessen={() => setErweiterungenOffen(false)}
+      />
 
       <ImportExportDialog
         open={exportOpen}

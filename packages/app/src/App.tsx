@@ -24,6 +24,9 @@ function flagAusAdresszeile(name: string): boolean {
 }
 
 const editorConfig: EditorConfig = {
+  // FIM und OpenCode sind im Kern aus (ADR 0007) — beides sind
+  // Einrichtungen der deutschen Verwaltung. Das deutsche Profil schaltet
+  // sie ein.
   modules: {
     fim: { enabled: true, service: fimPortalService },
     openCode: { enabled: true },

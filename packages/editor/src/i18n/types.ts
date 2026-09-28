@@ -102,6 +102,17 @@ export interface EditorTranslations {
     string,
     { name: string; label: string; beschreibung: string }
   >;
+  erweiterungen: {
+    menue: string;
+    titel: string;
+    einleitung: string;
+    leer: string;
+    hinzufuegen: string;
+    entfernen: string;
+    aktiv: string;
+    keinJson: string;
+    unbrauchbar: string;
+  };
   palette: {
     feldTooltip: string;
     feldHinzufuegen: string;

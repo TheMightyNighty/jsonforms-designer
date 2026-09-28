@@ -78,11 +78,24 @@ export interface EditorConfig {
   region?: Regionsprofil;
 }
 
-/** Vollständige Config mit allen Defaults. Wird beim Mergen als Basis verwendet. */
+/**
+ * Vollständige Config mit allen Defaults. Wird beim Mergen als Basis
+ * verwendet.
+ *
+ * FIM und OpenCode sind **aus** (ADR 0007): Beides sind Einrichtungen der
+ * deutschen Verwaltung — das Föderale Informationsmanagement und die
+ * Plattform Open CoDE. Wer nur JSON-Schema-Formulare bauen will, bekommt
+ * sonst zwei Reiter, die er nicht zuordnen kann. Ein Profil schaltet sie
+ * ein; `packages/app` tut genau das.
+ *
+ * Bausteine bleiben an: Vorgefertigte Feldgruppen sind kein deutsches
+ * Konzept, und der Standard-Reiter der Palette darf nicht leer sein
+ * (ADR 0005).
+ */
 export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
   modules: {
-    fim: { enabled: true },
-    openCode: { enabled: true },
+    fim: { enabled: false },
+    openCode: { enabled: false },
     bausteine: { enabled: true },
   },
   palette: {
@@ -102,12 +115,12 @@ export function mergeEditorConfig(partial?: EditorConfig): EditorConfig {
     produktName: partial?.produktName,
     modules: {
       fim: {
-        enabled: true,
+        enabled: false,
         ...DEFAULT_EDITOR_CONFIG.modules?.fim,
         ...partial?.modules?.fim,
       },
       openCode: {
-        enabled: true,
+        enabled: false,
         ...DEFAULT_EDITOR_CONFIG.modules?.openCode,
         ...partial?.modules?.openCode,
       },

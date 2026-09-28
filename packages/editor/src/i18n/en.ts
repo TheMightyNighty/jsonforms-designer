@@ -259,6 +259,19 @@ export const en: EditorTranslations = {
       beschreibung: 'Named section with a border',
     },
   },
+  erweiterungen: {
+    menue: 'Extensions …',
+    titel: 'Extensions',
+    einleitung:
+      'Extensions add field types, components, terminology or a regional profile. They come as a file and are added here — the editor never loads anything on its own.',
+    leer: 'No extension added yet.',
+    hinzufuegen: 'Add file …',
+    entfernen: 'Remove',
+    aktiv: 'active',
+    keinJson: 'The file is not readable JSON.',
+    unbrauchbar:
+      'The file contains no usable extension package (id, name and at least one contribution are required).',
+  },
   palette: {
     feldTooltip: '{name} — Enter adds the field at the end',
     feldHinzufuegen: 'Add {name}',
