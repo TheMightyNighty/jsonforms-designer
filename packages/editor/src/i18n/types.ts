@@ -72,6 +72,8 @@ export interface EditorTranslations {
       ohneBefund: string;
       fehler: string;
       hinweise: string;
+      /** Textvorlagen je Prüfregel; Platzhalter in der Form {name}. */
+      regeln: Record<string, string>;
     };
     ausprobieren: string;
     bearbeiten: string;

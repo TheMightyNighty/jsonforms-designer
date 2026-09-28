@@ -107,6 +107,20 @@ export const en: EditorTranslations = {
       ohneBefund: 'Nothing open.',
       fehler: 'Errors',
       hinweise: 'Notices',
+      regeln: {
+        'feld-ohne-label': 'The field "{feld}" has no label.',
+        'label-zu-lang':
+          'The label of "{feld}…" is longer than {grenze} characters.',
+        'pflichtfeld-ohne-hilfetext':
+          'The mandatory field "{feld}" has no help text.',
+        'offener-typvorschlag': '"{feld}" is probably a {vorschlag}.',
+        'doppeltes-label': 'The label "{feld}" occurs {anzahl} times.',
+        'bedingung-ohne-feld':
+          'The condition on "{feld}" refers to a deleted field.',
+        'formular-ohne-titel': 'The form has no title.',
+        'formular-ohne-rechtsgrundlage':
+          'The metadata is missing the legal basis.',
+      },
     },
     ausprobieren: 'Try it out',
     bearbeiten: 'Back to editing',
