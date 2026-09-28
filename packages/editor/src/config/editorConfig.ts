@@ -1,4 +1,5 @@
 import { BausteinService } from '../bausteine/bausteinService';
+import { PruefEinstellungen } from '../core/util/formularPruefung';
 import { FieldGroup } from '../field-types/fieldTypes';
 import { FimService } from '../fim/fimService';
 import { OpenCodeService } from '../opencode/openCodeService';
@@ -61,6 +62,12 @@ export interface EditorConfig {
   };
   palette?: PaletteConfig;
   features?: FeatureFlags;
+  /**
+   * Qualitäts-Ampel: Schwellwerte und welche Prüfregeln gelten. Regeln,
+   * die nur regional zutreffen — etwa die Rechtsgrundlage nach deutschem
+   * Verwaltungsrecht — sind im Kern aus und werden hier eingeschaltet.
+   */
+  pruefung?: PruefEinstellungen;
 }
 
 /** Vollständige Config mit allen Defaults. Wird beim Mergen als Basis verwendet. */
@@ -76,6 +83,8 @@ export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
   features: {
     canvasGeraeteAnsicht: false,
   },
+  // Neutraler Default: nur die überall gültigen Regeln.
+  pruefung: {},
 };
 
 /** Merged eine partielle Nutzer-Config mit den Defaults. */
@@ -106,6 +115,10 @@ export function mergeEditorConfig(partial?: EditorConfig): EditorConfig {
     features: {
       ...DEFAULT_EDITOR_CONFIG.features,
       ...partial?.features,
+    },
+    pruefung: {
+      ...DEFAULT_EDITOR_CONFIG.pruefung,
+      ...partial?.pruefung,
     },
   };
 }

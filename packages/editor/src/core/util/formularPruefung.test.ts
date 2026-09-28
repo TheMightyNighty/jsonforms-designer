@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
+import { de } from '../../i18n/de';
+import { en } from '../../i18n/en';
 import { FieldAwareState } from '../model/addFieldReducer';
 import { emptyManifestMeta } from '../model/manifestMeta';
 import { UiElement } from '../model/uiElements';
 import {
   Hinweis,
+  hinweisText,
   MAX_LABEL_LAENGE,
+  PRUEF_REGELN,
   pruefeFormular,
+  PruefRegelId,
   zaehleHinweise,
 } from './formularPruefung';
 
@@ -194,12 +199,23 @@ describe('pruefeFormular — Metadaten', () => {
     expect(ids(pruefeFormular(state))).toContain('formular-ohne-titel');
   });
 
-  it('meldet fehlende Rechtsgrundlage als Fehler', () => {
+  it('meldet fehlende Rechtsgrundlage nur, wenn die Regel eingeschaltet ist', () => {
     const state = sauberesFormular();
     state.manifestMeta = { ...emptyManifestMeta };
-    expect(ids(pruefeFormular(state))).toContain(
+
+    // Neutraler Kern: „Rechtsgrundlage" ist ein Begriff des deutschen
+    // Verwaltungsrechts und gilt nicht überall.
+    expect(ids(pruefeFormular(state))).not.toContain(
       'formular-ohne-rechtsgrundlage',
     );
+
+    expect(
+      ids(
+        pruefeFormular(state, {
+          zusaetzlicheRegeln: ['formular-ohne-rechtsgrundlage'],
+        }),
+      ),
+    ).toContain('formular-ohne-rechtsgrundlage');
   });
 });
 
@@ -224,7 +240,11 @@ describe('pruefeFormular — leeres Formular', () => {
     state.uiSchema.elements = [
       { id: 'c1', type: 'Control', scope: '#/properties/a' },
     ] as UiElement[];
-    const befunde = ids(pruefeFormular(state));
+    const befunde = ids(
+      pruefeFormular(state, {
+        zusaetzlicheRegeln: ['formular-ohne-rechtsgrundlage'],
+      }),
+    );
     expect(befunde).toContain('formular-ohne-titel');
     expect(befunde).toContain('formular-ohne-rechtsgrundlage');
   });
@@ -259,7 +279,7 @@ describe('pruefeFormular — offener Typvorschlag', () => {
     );
     expect(treffer).toHaveLength(1);
     expect(treffer[0].schwere).toBe('hinweis');
-    expect(treffer[0].text).toContain('Datum');
+    expect(treffer[0].werte?.vorschlag).toBe('Datum');
   });
 
   it('schweigt, wenn der Vorschlag für das Feld ignoriert wurde', () => {
@@ -326,5 +346,101 @@ describe('zaehleHinweise', () => {
 
   it('zählt eine leere Liste als null', () => {
     expect(zaehleHinweise([])).toEqual({ fehler: 0, hinweise: 0 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Konfigurierbarkeit (neutraler Kern)
+// ---------------------------------------------------------------------------
+
+describe('pruefeFormular — Einstellungen', () => {
+  it('lässt sich eine allgemeine Regel abschalten', () => {
+    const state = sauberesFormular();
+    state.schema.properties!['nachname'].title = '';
+    expect(
+      ids(pruefeFormular(state, { abgeschalteteRegeln: ['feld-ohne-label'] })),
+    ).not.toContain('feld-ohne-label');
+  });
+
+  it('nimmt einen eigenen Schwellwert für die Label-Länge', () => {
+    const state = sauberesFormular();
+    state.schema.properties!['nachname'].title = 'A'.repeat(20);
+    expect(ids(pruefeFormular(state))).not.toContain('label-zu-lang');
+    expect(ids(pruefeFormular(state, { maxLabelLaenge: 10 }))).toContain(
+      'label-zu-lang',
+    );
+  });
+
+  it('meldet den Schwellwert im Hinweis mit', () => {
+    const state = sauberesFormular();
+    state.schema.properties!['nachname'].title = 'A'.repeat(20);
+    const treffer = mitId(
+      pruefeFormular(state, { maxLabelLaenge: 10 }),
+      'label-zu-lang',
+    );
+    expect(treffer[0].werte?.grenze).toBe(10);
+  });
+
+  it('schaltet eine abgeschaltete Regel auch dann nicht ein, wenn sie zusätzlich genannt ist', () => {
+    const state = sauberesFormular();
+    state.manifestMeta = { ...emptyManifestMeta };
+    expect(
+      ids(
+        pruefeFormular(state, {
+          zusaetzlicheRegeln: ['formular-ohne-rechtsgrundlage'],
+          abgeschalteteRegeln: ['formular-ohne-rechtsgrundlage'],
+        }),
+      ),
+    ).not.toContain('formular-ohne-rechtsgrundlage');
+  });
+});
+
+describe('Hinweise tragen Daten statt Text', () => {
+  it('enthält keine fertigen Sätze', () => {
+    const state = sauberesFormular();
+    state.schema.properties!['nachname'].title = '';
+    for (const befund of pruefeFormular(state)) {
+      expect(befund).not.toHaveProperty('text');
+    }
+  });
+
+  it('nennt jede Regel-id in beiden Sprachkatalogen', () => {
+    for (const id of PRUEF_REGELN) {
+      expect(de.header.qualitaet.regeln[id], `de: ${id}`).toBeTruthy();
+      expect(en.header.qualitaet.regeln[id], `en: ${id}`).toBeTruthy();
+    }
+  });
+});
+
+describe('hinweisText', () => {
+  it('setzt die Werte in die Vorlage ein', () => {
+    expect(
+      hinweisText(
+        {
+          id: 'doppeltes-label',
+          schwere: 'fehler',
+          werte: { feld: 'Nachname', anzahl: 2 },
+        },
+        de.header.qualitaet.regeln as Record<PruefRegelId, string>,
+      ),
+    ).toBe('Die Bezeichnung „Nachname" kommt 2-mal vor.');
+  });
+
+  it('kommt ohne Werte aus', () => {
+    expect(
+      hinweisText(
+        { id: 'formular-ohne-titel', schwere: 'fehler' },
+        de.header.qualitaet.regeln as Record<PruefRegelId, string>,
+      ),
+    ).toBe('Das Formular hat keinen Titel.');
+  });
+
+  it('fällt auf die Regel-id zurück, wenn die Vorlage fehlt', () => {
+    expect(
+      hinweisText(
+        { id: 'formular-ohne-titel', schwere: 'fehler' },
+        {} as Record<PruefRegelId, string>,
+      ),
+    ).toBe('formular-ohne-titel');
   });
 });

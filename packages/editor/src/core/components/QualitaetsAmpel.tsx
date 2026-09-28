@@ -22,18 +22,36 @@ import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 import { useMemo, useState } from 'react';
 
+import { useEditorConfig } from '../../config/EditorConfigContext';
 import { useI18n } from '../../i18n';
 import { useEditorContext } from '../context';
-import { pruefeFormular, zaehleHinweise } from '../util/formularPruefung';
+import {
+  hinweisText,
+  pruefeFormular,
+  PruefRegelId,
+  zaehleHinweise,
+} from '../util/formularPruefung';
 
 export function QualitaetsAmpel() {
   const { fieldState, setSelectedScope } = useEditorContext();
   const { t } = useI18n();
+  const config = useEditorConfig();
   const [anker, setAnker] = useState<null | HTMLElement>(null);
 
   // Die Prüfung läuft über das ganze Formular; ohne Memo liefe sie bei jedem
   // Tastendruck in einem beliebigen Eingabefeld erneut.
-  const befunde = useMemo(() => pruefeFormular(fieldState), [fieldState]);
+  const einstellungen = config.pruefung;
+  const befunde = useMemo(
+    () => pruefeFormular(fieldState, einstellungen),
+    [fieldState, einstellungen],
+  );
+  // Die Prüffunktion liefert Regel-id und Werte; den Satz baut erst die
+  // Oberfläche, weil nur sie die Sprache kennt.
+  const text = (befund: (typeof befunde)[number]) =>
+    hinweisText(
+      befund,
+      t.header.qualitaet.regeln as Record<PruefRegelId, string>,
+    );
   const { fehler, hinweise } = zaehleHinweise(befunde);
   const texte = t.header.qualitaet;
 
@@ -106,7 +124,7 @@ export function QualitaetsAmpel() {
                   )}
                 </ListItemIcon>
                 <ListItemText
-                  primary={befund.text}
+                  primary={text(befund)}
                   primaryTypographyProps={{ variant: 'body2' }}
                 />
               </ListItemButton>

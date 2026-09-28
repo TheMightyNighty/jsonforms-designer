@@ -30,6 +30,12 @@ const editorConfig: EditorConfig = {
   features: {
     canvasGeraeteAnsicht: flagAusAdresszeile('geraeteansicht'),
   },
+  // Die Demo-Anwendung ist das deutsche Profil: Sie schaltet die Regeln
+  // ein, die nur nach deutschem Verwaltungsrecht gelten. Der Kern selbst
+  // ist neutral (ADR 0007).
+  pruefung: {
+    zusaetzlicheRegeln: ['formular-ohne-rechtsgrundlage'],
+  },
 };
 
 // ---------------------------------------------------------------------------

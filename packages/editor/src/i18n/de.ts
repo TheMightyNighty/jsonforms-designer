@@ -113,6 +113,20 @@ export const de: EditorTranslations = {
       ohneBefund: 'Keine offenen Punkte.',
       fehler: 'Fehler',
       hinweise: 'Hinweise',
+      regeln: {
+        'feld-ohne-label': 'Das Feld „{feld}" hat keine Bezeichnung.',
+        'label-zu-lang':
+          'Die Bezeichnung von „{feld}…" ist länger als {grenze} Zeichen.',
+        'pflichtfeld-ohne-hilfetext':
+          'Das Pflichtfeld „{feld}" hat keinen Hilfetext.',
+        'offener-typvorschlag': 'Für „{feld}" passt vermutlich {vorschlag}.',
+        'doppeltes-label': 'Die Bezeichnung „{feld}" kommt {anzahl}-mal vor.',
+        'bedingung-ohne-feld':
+          'Die Bedingung an „{feld}" verweist auf ein gelöschtes Feld.',
+        'formular-ohne-titel': 'Das Formular hat keinen Titel.',
+        'formular-ohne-rechtsgrundlage':
+          'In den Metadaten fehlt die Rechtsgrundlage.',
+      },
     },
     ausprobieren: 'Ausprobieren',
     bearbeiten: 'Weiter bearbeiten',
