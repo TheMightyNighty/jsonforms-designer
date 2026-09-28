@@ -37,6 +37,7 @@ import {
 } from '@mui/material';
 import { Dispatch, useEffect, useState } from 'react';
 
+import { useEditorConfig } from '../config/EditorConfigContext';
 import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { createIgnoriereTypvorschlagAction } from '../core/model/addFieldActions';
@@ -45,12 +46,12 @@ import { UiElement } from '../core/model/uiElements';
 import {
   ermittleFeldtyp,
   FeldSchema,
-  feldtypLabel,
   kompatibleFeldtypen,
 } from '../field-types/feldtypErkennung';
+import { feldtypTexte } from '../field-types/feldtypTexte';
 import { vorschlagWeichtAb } from '../field-types/feldtypVorschlag';
 import { WechselFolgen, wechselFolgen } from '../field-types/feldtypWechsel';
-import { FIELD_TYPE_CATALOG, getFieldType } from '../field-types/fieldTypes';
+import { FIELD_TYPE_CATALOG } from '../field-types/fieldTypes';
 import { useI18n } from '../i18n';
 import { ConditionEditor } from './ConditionEditor';
 import { EnumEditor } from './EnumEditor';
@@ -87,7 +88,6 @@ interface FieldValues {
   isStringType: boolean;
   hasEnum: boolean;
   /** Fachsprachliche Art des Feldes für die Anzeige, z. B. „Datum". */
-  feldtyp: string;
   /** Katalog-id der erkannten Art, falls eine Regel gegriffen hat. */
   feldtypId: string | undefined;
 }
@@ -114,8 +114,8 @@ function readFieldValues(
     isStringType: fieldSchema.type === 'string',
     hasEnum: Array.isArray(fieldSchema.enum),
     // Fachsprachliche Art des Feldes (Datum, IBAN, Ja/Nein …) statt des
-    // JSON-Basistyps — siehe feldtypErkennung.
-    feldtyp: feldtypLabel(fieldSchema as FeldSchema, control?.options),
+    // JSON-Basistyps — siehe feldtypErkennung. Den Namen dazu holt die
+    // Oberfläche aus i18n.
     feldtypId: ermittleFeldtyp(fieldSchema as FeldSchema, control?.options)?.id,
   };
 }
@@ -255,6 +255,7 @@ function FeldtypAuswahl({
   dispatch,
 }: FeldtypAuswahlProps) {
   const { t } = useI18n();
+  const { region } = useEditorConfig();
   const { fieldState } = useEditorContext();
   const [zielId, setZielId] = useState<string | null>(null);
 
@@ -281,7 +282,13 @@ function FeldtypAuswahl({
     if (neueId === feldtypId) return;
     const folgen = wechselFolgen(fieldState, selectedScope, neueId);
     if (folgen.istVerlustfrei) {
-      dispatch(createChangeFieldTypeAction(selectedScope, neueId));
+      dispatch(
+        createChangeFieldTypeAction(
+          selectedScope,
+          neueId,
+          region?.platzhalter?.[neueId],
+        ),
+      );
       return;
     }
     setZielId(neueId);
@@ -308,13 +315,13 @@ function FeldtypAuswahl({
         <ListSubheader>{t.properties.feldtypGleicheAntwort}</ListSubheader>
         {verlustfrei.map((ft) => (
           <MenuItem key={ft.id} value={ft.id}>
-            {ft.displayName}
+            {feldtypTexte(t, ft.id).name}
           </MenuItem>
         ))}
         <ListSubheader>{t.properties.feldtypAndereAntwort}</ListSubheader>
         {uebrige.map((ft) => (
           <MenuItem key={ft.id} value={ft.id}>
-            {ft.displayName}
+            {feldtypTexte(t, ft.id).name}
           </MenuItem>
         ))}
       </TextField>
@@ -322,13 +329,19 @@ function FeldtypAuswahl({
       <WechselBestaetigung
         offen={zielId !== null}
         feldName={label}
-        altName={getFieldType(feldtypId).displayName}
-        neuName={zielId ? getFieldType(zielId).displayName : ''}
+        altName={feldtypTexte(t, feldtypId).name}
+        neuName={zielId ? feldtypTexte(t, zielId).name : ''}
         folgen={folgen}
         onAbbrechen={() => setZielId(null)}
         onBestaetigen={() => {
           if (zielId) {
-            dispatch(createChangeFieldTypeAction(selectedScope, zielId));
+            dispatch(
+              createChangeFieldTypeAction(
+                selectedScope,
+                zielId,
+                region?.platzhalter?.[zielId],
+              ),
+            );
           }
           setZielId(null);
         }}
@@ -363,6 +376,7 @@ function TypvorschlagHinweis({
   dispatch,
 }: TypvorschlagHinweisProps) {
   const { t } = useI18n();
+  const { region } = useEditorConfig();
   const { fieldState } = useEditorContext();
   const [zielId, setZielId] = useState<string | null>(null);
 
@@ -385,7 +399,13 @@ function TypvorschlagHinweis({
       vorschlag.feldtypId,
     );
     if (kosten.istVerlustfrei) {
-      dispatch(createChangeFieldTypeAction(selectedScope, vorschlag.feldtypId));
+      dispatch(
+        createChangeFieldTypeAction(
+          selectedScope,
+          vorschlag.feldtypId,
+          region?.platzhalter?.[vorschlag.feldtypId],
+        ),
+      );
       return;
     }
     setZielId(vorschlag.feldtypId);
@@ -416,19 +436,25 @@ function TypvorschlagHinweis({
       <Typography variant="body2">
         {t.properties.vorschlag.text
           .replace('{ausloeser}', vorschlag.ausloeser)
-          .replace('{vorschlag}', vorschlag.feldtypName)}
+          .replace('{vorschlag}', feldtypTexte(t, vorschlag.feldtypId).name)}
       </Typography>
 
       <WechselBestaetigung
         offen={zielId !== null}
         feldName={label}
-        altName={feldtypId ? getFieldType(feldtypId).displayName : ''}
-        neuName={vorschlag.feldtypName}
+        altName={feldtypId ? feldtypTexte(t, feldtypId).name : ''}
+        neuName={feldtypTexte(t, vorschlag.feldtypId).name}
         folgen={folgen}
         onAbbrechen={() => setZielId(null)}
         onBestaetigen={() => {
           if (zielId) {
-            dispatch(createChangeFieldTypeAction(selectedScope, zielId));
+            dispatch(
+              createChangeFieldTypeAction(
+                selectedScope,
+                zielId,
+                region?.platzhalter?.[zielId],
+              ),
+            );
           }
           setZielId(null);
         }}
@@ -534,7 +560,11 @@ export function FieldPropertiesPanel({
             <FeldtypAuswahl
               selectedScope={selectedScope}
               feldtypId={values.feldtypId}
-              feldtypLabel={values.feldtyp}
+              feldtypLabel={
+                values.feldtypId
+                  ? feldtypTexte(t, values.feldtypId).name
+                  : t.properties.feldtypUnbekannt
+              }
               dispatch={dispatch}
             />
 

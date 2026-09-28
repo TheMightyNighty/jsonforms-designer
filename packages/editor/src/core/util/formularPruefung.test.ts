@@ -279,7 +279,7 @@ describe('pruefeFormular — offener Typvorschlag', () => {
     );
     expect(treffer).toHaveLength(1);
     expect(treffer[0].schwere).toBe('hinweis');
-    expect(treffer[0].werte?.vorschlag).toBe('Datum');
+    expect(treffer[0].feldtypId).toBe('date');
   });
 
   it('schweigt, wenn der Vorschlag für das Feld ignoriert wurde', () => {

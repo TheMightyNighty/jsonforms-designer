@@ -1,4 +1,5 @@
 export * from './feldtypErkennung';
+export * from './feldtypTexte';
 export * from './feldtypVorschlag';
 export * from './feldtypWechsel';
 export * from './fieldTypes';

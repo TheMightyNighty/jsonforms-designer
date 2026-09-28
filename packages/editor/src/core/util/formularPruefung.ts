@@ -13,10 +13,8 @@
  * Formularreihenfolge.
  *
  * **Sie liefert Daten, keinen Text.** Jeder Hinweis trägt seine Regel-id und
- * die Werte zur Textbildung; übersetzt wird erst in der Oberfläche. Vorher
- * standen hier acht deutsche Sätze fest im Code — das verstieß gegen
- * ADR 0002/V6 und machte den Kern unbrauchbar für alle, die nicht auf
- * Deutsch arbeiten.
+ * die Werte zur Textbildung; den Satz baut erst die Oberfläche, weil nur sie
+ * die Sprache kennt (ADR 0007).
  *
  * Welche Regeln gelten, entscheidet die Einrichtung:
  * `formular-ohne-rechtsgrundlage` ist eine Anforderung des deutschen
@@ -29,6 +27,7 @@ import {
 import { vorschlagWeichtAb } from '../../field-types/feldtypVorschlag';
 import { FieldAwareState } from '../model/addFieldReducer';
 import { UiElement } from '../model/uiElements';
+import { fuelleVorlage } from './textVorlage';
 
 // ---------------------------------------------------------------------------
 // Regeln
@@ -88,6 +87,11 @@ export interface Hinweis {
   schwere: Hinweisschwere;
   /** scope des betroffenen Feldes, falls die Regel ein Feld betrifft. */
   feldScope?: string;
+  /**
+   * Feldtyp, auf den sich der Hinweis bezieht. Nur die id — den Namen dazu
+   * holt die Oberfläche aus i18n und reicht ihn als `{vorschlag}` nach.
+   */
+  feldtypId?: string;
   /**
    * Werte für die Textbildung in der Oberfläche, z. B.
    * `{ feld: 'Nachname', anzahl: 2 }`. Bewusst keine fertigen Sätze —
@@ -242,7 +246,8 @@ export function pruefeFormular(
           id: 'offener-typvorschlag',
           schwere: 'hinweis',
           feldScope: control.scope,
-          werte: { feld: label, vorschlag: vorschlag.feldtypName },
+          werte: { feld: label },
+          feldtypId: vorschlag.feldtypId,
         });
       }
     }
@@ -315,10 +320,10 @@ export function zaehleHinweise(hinweise: readonly Hinweis[]): {
 export function hinweisText(
   hinweis: Hinweis,
   vorlagen: Record<PruefRegelId, string>,
+  zusatzWerte?: Record<string, string | number>,
 ): string {
-  const vorlage = vorlagen[hinweis.id] ?? hinweis.id;
-  return Object.entries(hinweis.werte ?? {}).reduce(
-    (text, [name, wert]) => text.replaceAll(`{${name}}`, String(wert)),
-    vorlage,
-  );
+  return fuelleVorlage(vorlagen[hinweis.id] ?? hinweis.id, {
+    ...hinweis.werte,
+    ...zusatzWerte,
+  });
 }

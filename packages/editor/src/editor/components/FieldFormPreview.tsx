@@ -14,6 +14,7 @@ import {
   createReorderElementAction,
 } from '../../core/model/addFieldActions';
 import { FieldAwareState } from '../../core/model/addFieldReducer';
+import { fuelleVorlage } from '../../core/util/textVorlage';
 import { FIELD_TYPE_CATALOG } from '../../field-types/fieldTypes';
 import { useI18n } from '../../i18n';
 import { useFieldDrop } from '../../palette-panel/useFieldDrop';
@@ -213,12 +214,9 @@ export function FieldFormPreview({
       tabs.length > 0 ? (tabAssignments[scope] ?? activeTabIndex) : undefined;
     dispatch(
       createAddFieldAction(
-        {
-          ...def,
-          schema: { ...fs },
-          defaults: { ...def.defaults, label: (fs.title ?? key) + ' (Kopie)' },
-        },
+        { ...def, schema: { ...fs } },
         key + '_kopie',
+        fuelleVorlage(t.actions.kopieLabel, { label: fs.title ?? key }),
         scope,
         tabIdx,
       ),

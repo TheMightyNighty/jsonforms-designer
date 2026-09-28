@@ -1,5 +1,9 @@
 import type { EditorConfig } from '@jsonforms-designer/editor';
-import { fimPortalService, JsonFormsEditor } from '@jsonforms-designer/editor';
+import {
+  fimPortalService,
+  JsonFormsEditor,
+  REGION_DE,
+} from '@jsonforms-designer/editor';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 
 import { theme } from './theme';
@@ -30,12 +34,11 @@ const editorConfig: EditorConfig = {
   features: {
     canvasGeraeteAnsicht: flagAusAdresszeile('geraeteansicht'),
   },
-  // Die Demo-Anwendung ist das deutsche Profil: Sie schaltet die Regeln
-  // ein, die nur nach deutschem Verwaltungsrecht gelten. Der Kern selbst
-  // ist neutral (ADR 0007).
-  pruefung: {
-    zusaetzlicheRegeln: ['formular-ohne-rechtsgrundlage'],
-  },
+  // Die Demo-Anwendung ist das deutsche Profil, der Kern ist neutral
+  // (ADR 0007). Das Profil bringt Platzhalter mit Länderkennung mit und
+  // schaltet die Prüfregeln ein, die nur nach deutschem Verwaltungsrecht
+  // gelten.
+  region: REGION_DE,
 };
 
 // ---------------------------------------------------------------------------

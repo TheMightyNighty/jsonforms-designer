@@ -172,6 +172,8 @@ export function columnDropReducer<S extends FieldAwareState>(
     columnIndex,
     fieldTypeId,
     propertyKey,
+    label,
+    platzhalter,
     insertAfterId,
     fimSchema,
     fimUiOptions,
@@ -212,7 +214,7 @@ export function columnDropReducer<S extends FieldAwareState>(
         newEl = {
           id: newId('lbl'),
           type: 'Label',
-          label: fieldType.defaults.label,
+          label: label,
           variant: (fieldType.uiSchema.options?.variant ??
             'text') as LabelElement['variant'],
           options: fieldType.uiSchema.options,
@@ -231,7 +233,7 @@ export function columnDropReducer<S extends FieldAwareState>(
         newEl = {
           id: newId('grp'),
           type: 'GroupContainer',
-          label: fieldType.defaults.label,
+          label: label,
           children: [],
         };
       }
@@ -240,7 +242,9 @@ export function columnDropReducer<S extends FieldAwareState>(
         id: newId('ctrl'),
         type: 'Control',
         scope: safeScope,
-        options: fieldType.uiSchema.options,
+        options: platzhalter
+          ? { ...fieldType.uiSchema.options, placeholder: platzhalter }
+          : fieldType.uiSchema.options,
       };
     }
 
@@ -250,7 +254,7 @@ export function columnDropReducer<S extends FieldAwareState>(
           ...state.schema,
           properties: {
             ...(state.schema.properties ?? {}),
-            [safeKey]: { ...fieldType.schema, title: fieldType.defaults.label },
+            [safeKey]: { ...fieldType.schema, title: label },
           },
         };
   }

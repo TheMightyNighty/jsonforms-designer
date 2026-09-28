@@ -23,6 +23,7 @@ import { Baustein, defaultBausteinService } from '../bausteine';
 import { BausteinPaletteItem } from '../bausteine/BausteinPaletteItem';
 import { useEditorConfig } from '../config/EditorConfigContext';
 import { useReportError } from '../core/context';
+import { feldtypTexte } from '../field-types/feldtypTexte';
 import {
   FIELD_GROUPS,
   FIELD_TYPE_CATALOG,
@@ -307,7 +308,7 @@ function EinzelfelderTab() {
       </Box>
 
       <Collapse in={weitereOffen} timeout={150}>
-        {FIELD_GROUPS.map(({ id }) => (
+        {FIELD_GROUPS.map((id) => (
           <Box key={id} role="listitem">
             <CollapsibleFieldGroup
               groupId={id}
@@ -333,7 +334,11 @@ function Suchergebnisse({
 }) {
   const { t } = useI18n();
   const bausteine = sucheBausteine(katalog, suchtext);
-  const feldtypen = sucheFeldtypen(FIELD_TYPE_CATALOG, suchtext);
+  const feldtypen = sucheFeldtypen(
+    FIELD_TYPE_CATALOG,
+    suchtext,
+    (id) => feldtypTexte(t, id).name,
+  );
 
   return (
     <Box role="list" aria-label={t.palette.suchergebnisse}>

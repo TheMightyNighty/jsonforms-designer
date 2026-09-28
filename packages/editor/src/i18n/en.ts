@@ -140,7 +140,128 @@ export const en: EditorTranslations = {
     arbeitsflaeche: 'Form',
     eigenschaften: 'Properties',
   },
+  feldtypen: {
+    'text-short': {
+      name: 'Text field (single line)',
+      label: 'Text field',
+      beschreibung: '',
+    },
+    'text-long': {
+      name: 'Text field (multi-line)',
+      label: 'Free text',
+      beschreibung: '',
+    },
+    integer: { name: 'Whole number', label: 'Whole number', beschreibung: '' },
+    number: { name: 'Decimal number', label: 'Number', beschreibung: '' },
+    currency: {
+      name: 'Amount',
+      label: 'Amount',
+      beschreibung: 'Monetary amount with two decimal places',
+    },
+    date: { name: 'Date', label: 'Date', beschreibung: '' },
+    time: { name: 'Time', label: 'Time', beschreibung: '' },
+    datetime: { name: 'Date + time', label: 'Date and time', beschreibung: '' },
+    email: { name: 'Email address', label: 'Email address', beschreibung: '' },
+    tel: { name: 'Phone number', label: 'Phone number', beschreibung: '' },
+    url: { name: 'Website URL', label: 'Website', beschreibung: '' },
+    password: {
+      name: 'Password',
+      label: 'Password',
+      beschreibung: 'At least 8 characters',
+    },
+    iban: {
+      name: 'IBAN',
+      label: 'IBAN',
+      beschreibung: 'International bank account number',
+    },
+    checkbox: {
+      name: 'Checkbox (yes/no)',
+      label: 'Checkbox',
+      beschreibung: '',
+    },
+    'checkbox-group': {
+      name: 'Multiple choice',
+      label: 'Multiple choice',
+      beschreibung: '',
+    },
+    dropdown: { name: 'Dropdown', label: 'Selection', beschreibung: '' },
+    radio: { name: 'Radio group', label: 'Options', beschreibung: '' },
+    slider: { name: 'Slider', label: 'Value', beschreibung: '0 – 100' },
+    'file-upload': {
+      name: 'File upload',
+      label: 'File',
+      beschreibung: 'Allowed formats: PDF, JPG, PNG',
+    },
+    'repeat-group': {
+      name: 'Repeating group',
+      label: 'Repeating group',
+      beschreibung: 'Add several entries (e.g. people, children)',
+    },
+    'label-heading': { name: 'Heading', label: 'Heading', beschreibung: '' },
+    'label-text': {
+      name: 'Explanatory text',
+      label: 'Explanatory text goes here.',
+      beschreibung: '',
+    },
+    'alert-info': {
+      name: 'Info box',
+      label: 'ℹ Information',
+      beschreibung: '',
+    },
+    'alert-warning': {
+      name: 'Warning',
+      label: '⚠ Important note',
+      beschreibung: '',
+    },
+    'section-header': {
+      name: 'Section header',
+      label: 'Section title',
+      beschreibung: 'Dark section header, as used in official forms',
+    },
+    annotation: {
+      name: 'Annotation (note on the right)',
+      label: 'Note (right)',
+      beschreibung: 'Short explanation beside the fields',
+    },
+    'col-2': {
+      name: '2 columns',
+      label: '2 columns',
+      beschreibung: 'Two columns of equal width',
+    },
+    'col-3': {
+      name: '3 columns',
+      label: '3 columns',
+      beschreibung: 'Three columns of equal width',
+    },
+    'col-1-2': {
+      name: 'Narrow + wide',
+      label: 'Narrow + wide (1:2)',
+      beschreibung: 'E.g. postcode + city',
+    },
+    'col-2-1': {
+      name: 'Wide + narrow',
+      label: 'Wide + narrow (2:1)',
+      beschreibung: 'E.g. street + house number',
+    },
+    'col-4': {
+      name: '4 columns',
+      label: '4 columns',
+      beschreibung: 'Four columns of equal width',
+    },
+    'col-custom': {
+      name: 'Columns (custom)',
+      label: 'Columns (freely configurable)',
+      beschreibung: 'Widths e.g. 1:2:1',
+    },
+    group: {
+      name: 'Group (named)',
+      label: 'Group',
+      beschreibung: 'Named section with a border',
+    },
+  },
   palette: {
+    feldTooltip: '{name} — Enter adds the field at the end',
+    feldHinzufuegen: 'Add {name}',
     groups: {
       eingabe: 'Input',
       auswahl: 'Selection',
@@ -195,6 +316,7 @@ export const en: EditorTranslations = {
     },
   },
   properties: {
+    feldtypUnbekannt: 'Field',
     emptyHint: 'Select a field\nto edit its properties',
     label: 'Label',
     description: 'Help text / Description',
@@ -271,6 +393,7 @@ export const en: EditorTranslations = {
     noContent: 'No fields yet. Add fields from the palette in visual mode.',
   },
   actions: {
+    kopieLabel: '{label} (copy)',
     duplicate: 'Duplicate',
     remove: 'Remove',
     rename: 'Rename',

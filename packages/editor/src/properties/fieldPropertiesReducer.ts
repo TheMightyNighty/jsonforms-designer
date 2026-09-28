@@ -136,7 +136,7 @@ function changeFieldType<S extends FieldAwareState>(
   state: S,
   action: ChangeFieldTypeAction,
 ): S {
-  const { scope, feldtypId } = action.payload;
+  const { scope, feldtypId, platzhalter } = action.payload;
   const key = propertyKeyFromScope(scope);
   const bestehend = state.schema.properties?.[key] as
     (JsonSchema7 & { title?: string; description?: string }) | undefined;
@@ -186,6 +186,9 @@ function changeFieldType<S extends FieldAwareState>(
       if (el.scope !== scope) return el;
       const bisherigerPlatzhalter = (el.options ?? {})['placeholder'];
       const zielOptionen = { ...(ziel.uiSchema.options ?? {}) };
+      // Beispieltext des neuen Typs: aus dem Regionsprofil, wenn es einen
+      // vorgibt (ADR 0007).
+      if (platzhalter) zielOptionen['placeholder'] = platzhalter;
       // Einen selbst gesetzten Platzhalter nicht durch den Beispieltext des
       // neuen Typs ersetzen — aber nur, solange der neue Typ überhaupt ein
       // Eingabefeld mit Platzhalter ist.

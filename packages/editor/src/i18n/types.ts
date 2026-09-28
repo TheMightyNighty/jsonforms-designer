@@ -93,7 +93,18 @@ export interface EditorTranslations {
     arbeitsflaeche: string;
     eigenschaften: string;
   };
+  /**
+   * Feldtyp-Texte je Katalog-id (ADR 0007). Der Katalog in `field-types/`
+   * kennt keine Sprache; jede id dort braucht hier einen Eintrag, und ein
+   * Test hält beide Kataloge deckungsgleich.
+   */
+  feldtypen: Record<
+    string,
+    { name: string; label: string; beschreibung: string }
+  >;
   palette: {
+    feldTooltip: string;
+    feldHinzufuegen: string;
     groups: {
       eingabe: string;
       auswahl: string;
@@ -146,6 +157,7 @@ export interface EditorTranslations {
     };
   };
   properties: {
+    feldtypUnbekannt: string;
     emptyHint: string;
     label: string;
     description: string;
@@ -217,6 +229,7 @@ export interface EditorTranslations {
   mobile: { fields: string; editor: string; properties: string };
   preview: { noContent: string };
   actions: {
+    kopieLabel: string;
     duplicate: string;
     remove: string;
     rename: string;

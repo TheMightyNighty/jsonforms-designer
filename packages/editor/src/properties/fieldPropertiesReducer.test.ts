@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { FieldAwareState } from '../core/model/addFieldReducer';
 import { emptyManifestMeta } from '../core/model/manifestMeta';
 import { kompatibleFeldtypen } from '../field-types/feldtypErkennung';
+import { REGION_DE } from '../region/regionsprofil';
 import {
   createChangeFieldTypeAction,
   createUpdateFieldPropertyAction,
@@ -267,12 +268,24 @@ describe('fieldPropertiesReducer — CHANGE_FIELD_TYPE', () => {
     expect(feldSchema(next).title).toBe('Vorname');
   });
 
-  it('übernimmt die UI-Optionen des neuen Feldtyps', () => {
+  it('übernimmt den Platzhalter des Regionsprofils', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(
+        scope,
+        'email',
+        REGION_DE.platzhalter?.['email'],
+      ),
+    );
+    expect(controlOptionen(next).placeholder).toBe('name@behoerde.de');
+  });
+
+  it('setzt ohne Regionsprofil keinen Beispieltext', () => {
     const next = fieldPropertiesReducer(
       stateWithField(),
       createChangeFieldTypeAction(scope, 'email'),
     );
-    expect(controlOptionen(next).placeholder).toBe('name@behoerde.de');
+    expect(controlOptionen(next).placeholder).toBe('');
   });
 
   it('behält einen selbst gesetzten Platzhalter', () => {

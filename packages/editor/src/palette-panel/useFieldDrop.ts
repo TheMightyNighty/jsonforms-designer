@@ -6,6 +6,7 @@ import {
   BausteinDragItem,
   createBausteinAction,
 } from '../bausteine';
+import { useEditorConfig } from '../config/EditorConfigContext';
 import {
   AddFieldAction,
   AddFimGruppeAction,
@@ -13,9 +14,12 @@ import {
   createAddFieldAction,
   createAddFimGruppeAction,
 } from '../core/model/addFieldActions';
+import { feldtypFuerRegion, feldtypTexte } from '../field-types/feldtypTexte';
 import { getFieldType } from '../field-types/fieldTypes';
 import { mapDatenfeld, mapDatenfeldgruppe } from '../fim/fimMapper';
 import { FIM_DND_TYPE, FimDragItem } from '../fim/FimPaletteSection';
+import { useI18n } from '../i18n';
+import { Regionsprofil } from '../region/regionsprofil';
 import { FIELD_TYPE_DND_TYPE, FieldTypeDragItem } from './FieldPaletteItem';
 
 type FimOrFieldAction = AddFieldAction | AddFimGruppeAction;
@@ -109,14 +113,17 @@ export function createFimPaletteAction(
  */
 export function createPaletteFieldAction(
   fieldTypeId: string,
+  label: string,
   insertAfterScope?: string,
   tabIndex?: number,
+  region?: Regionsprofil,
 ): AddFieldAction {
-  const fieldType = getFieldType(fieldTypeId);
+  const fieldType = feldtypFuerRegion(getFieldType(fieldTypeId), region);
   const propertyKey = derivePropertyKey(fieldTypeId);
   return createAddFieldAction(
     fieldType,
     propertyKey,
+    label,
     insertAfterScope,
     tabIndex,
   );
@@ -127,6 +134,8 @@ export function useFieldDrop(
   insertAfterScope?: string,
   tabIndex?: number,
 ) {
+  const { t } = useI18n();
+  const { region } = useEditorConfig();
   return useDrop<
     FieldTypeDragItem | FimDragItem | BausteinDragItem,
     unknown,
@@ -148,8 +157,10 @@ export function useFieldDrop(
         dispatch(
           createPaletteFieldAction(
             item.fieldTypeId,
+            feldtypTexte(t, item.fieldTypeId).label,
             insertAfterScope,
             tabIndex,
+            region,
           ),
         );
       },
@@ -158,6 +169,6 @@ export function useFieldDrop(
         canDrop: monitor.canDrop(),
       }),
     }),
-    [dispatch, insertAfterScope, tabIndex],
+    [dispatch, insertAfterScope, tabIndex, t, region],
   );
 }
