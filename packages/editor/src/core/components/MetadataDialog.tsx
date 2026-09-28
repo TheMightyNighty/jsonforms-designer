@@ -15,6 +15,8 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import { useRegion } from '../../erweiterung/ErweiterungenProvider';
+import { useI18n } from '../../i18n';
 import { FormMetadata } from '../model/addFieldActions';
 import { FieldAwareState } from '../model/addFieldReducer';
 import {
@@ -55,6 +57,11 @@ export function MetadataDialog({
   manifestMeta,
   onSave,
 }: MetadataDialogProps) {
+  const { t } = useI18n();
+  const m = t.metadaten;
+  const region = useRegion();
+  const rechtsgrundlageNoetig =
+    region?.pruefRegeln?.includes('formular-ohne-rechtsgrundlage') ?? false;
   const [meta, setMeta] = useState<FormMetadata>(
     readMeta(schema, manifestMeta),
   );
@@ -84,7 +91,7 @@ export function MetadataDialog({
       aria-labelledby="metadata-title"
     >
       <DialogTitle id="metadata-title" sx={{ fontWeight: 700, pb: 1 }}>
-        Formular-Metadaten
+        {m.titel}
       </DialogTitle>
       <Divider />
 
@@ -93,46 +100,42 @@ export function MetadataDialog({
       >
         {/* Basis */}
         <TextField
-          label="Formular-Titel *"
+          label={m.formularTitel}
           value={meta.title ?? ''}
           onChange={(e) => set('title', e.target.value)}
           size="small"
           fullWidth
-          helperText="Erscheint als Überschrift im Formular (schema.title)"
+          helperText={m.formularTitelHinweis}
           inputProps={{ 'aria-required': 'true' }}
         />
 
         <TextField
-          label="Beschreibung / Zweck"
+          label={m.beschreibung}
           value={meta.description ?? ''}
           onChange={(e) => set('description', e.target.value)}
           size="small"
           fullWidth
           multiline
           minRows={2}
-          helperText="Kurze Beschreibung des Antragsvorgangs"
+          helperText={m.beschreibungHinweis}
         />
 
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
           <TextField
-            label="Formular-ID (URN)"
+            label={m.urn}
             value={urn}
             onChange={(e) => set('id', e.target.value)}
             size="small"
             fullWidth
             error={urnInvalid}
-            placeholder="urn:de:bonn:formular:bewohnerparkausweis"
-            helperText={
-              urnInvalid
-                ? 'Muster: urn:<namensraum>:<rest>, z. B. urn:de:bonn:formular:bewohnerparkausweis'
-                : 'Stabile Formular-ID über alle Versionen (Manifest form.id)'
-            }
+            placeholder={m.urnPlatzhalter}
+            helperText={urnInvalid ? m.urnFehler : m.urnHinweis}
             slotProps={{ htmlInput: { spellCheck: false } }}
           />
-          <Tooltip title="URN-Vorschlag aus Behörde und Titel erzeugen">
+          <Tooltip title={m.urnVorschlag}>
             <span>
               <IconButton
-                aria-label="URN-Vorschlag erzeugen"
+                aria-label={m.urnVorschlag}
                 onClick={() =>
                   set(
                     'id',
@@ -152,49 +155,54 @@ export function MetadataDialog({
 
         <Divider>
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            Behördeninformationen
+            {m.abschnittHerausgeber}
           </Typography>
         </Divider>
 
         {/* Behörde */}
         <TextField
-          label="Herausgebende Behörde"
+          label={m.herausgeber}
           value={meta.publisher ?? ''}
           onChange={(e) => set('publisher', e.target.value)}
           size="small"
           fullWidth
-          placeholder="z. B. Bundesagentur für Arbeit"
-          helperText="Wird im Manifest als form.publisher geführt"
+          placeholder={m.herausgeberPlatzhalter}
+          helperText={m.herausgeberHinweis}
         />
 
-        <TextField
-          label="Rechtsgrundlage"
-          value={meta.legalBasis ?? ''}
-          onChange={(e) => set('legalBasis', e.target.value)}
-          size="small"
-          fullWidth
-          placeholder="z. B. § 16 SGB II, OZG-Leistungs-ID 99001234"
-          helperText="Wird im Manifest als form.legalBasis geführt"
-        />
+        {/* Die Rechtsgrundlage ist ein Begriff des deutschen
+            Verwaltungsrechts. Sie steht nur da, wenn das Regionsprofil sie
+            verlangt (ADR 0007) — sonst ist sie ein Feld ohne Bedeutung. */}
+        {rechtsgrundlageNoetig && (
+          <TextField
+            label={m.rechtsgrundlage}
+            value={meta.legalBasis ?? ''}
+            onChange={(e) => set('legalBasis', e.target.value)}
+            size="small"
+            fullWidth
+            placeholder={m.rechtsgrundlagePlatzhalter}
+            helperText={m.rechtsgrundlageHinweis}
+          />
+        )}
 
         <Divider>
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            Versionierung
+            {m.abschnittVersion}
           </Typography>
         </Divider>
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           <TextField
-            label="Version"
+            label={m.version}
             value={meta.version ?? ''}
             onChange={(e) => set('version', e.target.value)}
             size="small"
             fullWidth
-            placeholder="z. B. 1.0.0"
-            helperText="SemVer"
+            placeholder={m.versionPlatzhalter}
+            helperText={m.versionHinweis}
           />
           <TextField
-            label="Gültig ab"
+            label={m.gueltigAb}
             value={meta.validFrom ?? ''}
             onChange={(e) => set('validFrom', e.target.value)}
             size="small"
@@ -203,15 +211,15 @@ export function MetadataDialog({
             slotProps={{ inputLabel: { shrink: true } }}
           />
           <TextField
-            label="Sprache"
+            label={m.sprache}
             value={meta.language ?? 'de'}
             onChange={(e) => set('language', e.target.value)}
             size="small"
             select
             sx={{ minWidth: 110 }}
           >
-            <MenuItem value="de">Deutsch</MenuItem>
-            <MenuItem value="en">Englisch</MenuItem>
+            <MenuItem value="de">{m.sprachen.de}</MenuItem>
+            <MenuItem value="en">{m.sprachen.en}</MenuItem>
           </TextField>
         </Box>
       </DialogContent>
@@ -219,14 +227,14 @@ export function MetadataDialog({
       <Divider />
       <DialogActions sx={{ px: 3, py: 1.5, gap: 1 }}>
         <Button onClick={onClose} variant="outlined">
-          Abbrechen
+          {t.dialog.cancel}
         </Button>
         <Button
           onClick={handleSave}
           variant="contained"
           disabled={!meta.title?.trim() || urnInvalid}
         >
-          Speichern
+          {t.dialog.speichern}
         </Button>
       </DialogActions>
     </Dialog>

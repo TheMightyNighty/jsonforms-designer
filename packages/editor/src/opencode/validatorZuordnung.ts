@@ -1,10 +1,15 @@
 /**
  * Zuordnung: Welcher OpenCode-Validator passt zu welchem Feldtyp?
  *
- * Ohne diese Zuordnung bot der Eigenschaften-Bereich jedem Feld jeden
- * Validator an — die Steuer-ID-Prüfung stand am Geburtsdatum. Die Tabelle ist
- * bewusst explizit und nicht aus Namen abgeleitet, damit sie ohne
+ * Ohne diese Zuordnung bietet der Eigenschaften-Bereich jedem Feld jeden
+ * Validator an — die Steuer-ID-Prüfung stünde am Geburtsdatum. Die Tabelle
+ * ist bewusst explizit und nicht aus Namen abgeleitet, damit sie ohne
  * Codeverständnis lesbar und erweiterbar bleibt.
+ *
+ * Dass hier deutsche Prüfungen stehen (PLZ, Steuer-ID), ist kein Rückstand
+ * des neutralen Kerns: Open CoDE ist eine Plattform der deutschen
+ * Verwaltung, und dieses Modul **ist** der regionale Teil. Im Kern steht es
+ * nicht, und ohne `modules.openCode.enabled` läuft es gar nicht (ADR 0007).
  *
  * [RÜCKFRAGE AN FABLE: `OpenCodeBaustein` trägt keine Typinformation. Soll das
  * Interface um ein Feld wie `passtZuFeldtypen?: string[]` erweitert werden,

@@ -138,21 +138,33 @@ export function mergeEditorConfig(partial?: EditorConfig): EditorConfig {
       ...DEFAULT_EDITOR_CONFIG.features,
       ...partial?.features,
     },
-    pruefung: mergePruefung(partial),
+    pruefung: { ...DEFAULT_EDITOR_CONFIG.pruefung, ...partial?.pruefung },
     region: partial?.region ?? REGION_NEUTRAL,
   };
 }
 
 /**
- * Die regionalen Prüfregeln des Profils kommen zu den ausdrücklich genannten
- * hinzu — wer ein Profil wählt, hat dessen Regeln gewählt.
+ * Die geltenden Prüfeinstellungen: das, was der Host genannt hat, plus das,
+ * was das Regionsprofil mitbringt. Wer ein Profil wählt, hat dessen Regeln
+ * und Stichwörter gewählt, ohne sie nochmals aufzählen zu müssen.
+ *
+ * Das Profil kommt hier als Argument und nicht aus der Config, weil auch
+ * Erweiterungspakete eines beisteuern können (ADR 0007) — die Auflösung
+ * kennt nur der Provider.
  */
-function mergePruefung(partial?: EditorConfig): PruefEinstellungen {
-  const ausProfil = partial?.region?.pruefRegeln ?? [];
-  const genannt = partial?.pruefung?.zusaetzlicheRegeln ?? [];
+export function pruefEinstellungenFuer(
+  config: EditorConfig,
+  region?: Regionsprofil,
+): PruefEinstellungen {
   return {
-    ...DEFAULT_EDITOR_CONFIG.pruefung,
-    ...partial?.pruefung,
-    zusaetzlicheRegeln: [...new Set([...ausProfil, ...genannt])],
+    ...config.pruefung,
+    zusaetzlicheRegeln: [
+      ...new Set([
+        ...(region?.pruefRegeln ?? []),
+        ...(config.pruefung?.zusaetzlicheRegeln ?? []),
+      ]),
+    ],
+    typvorschlaege:
+      config.pruefung?.typvorschlaege ?? region?.typvorschlaege ?? [],
   };
 }

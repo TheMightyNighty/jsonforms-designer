@@ -24,9 +24,7 @@ describe('MetadataDialog', () => {
 
     const titel = screen.getByLabelText(/Formular-Titel/);
     expect(titel).toHaveValue('Wohngeld');
-    expect(screen.getByLabelText(/Herausgebende Behörde/)).toHaveValue(
-      'Amt 42',
-    );
+    expect(screen.getByLabelText(/Herausgebende Stelle/)).toHaveValue('Amt 42');
 
     fireEvent.change(titel, { target: { value: 'Wohngeldantrag 2026' } });
     fireEvent.click(screen.getByRole('button', { name: 'Speichern' }));
@@ -67,9 +65,7 @@ describe('MetadataDialog', () => {
       />,
     );
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'URN-Vorschlag erzeugen' }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: /URN-Vorschlag/ }));
     expect(screen.getByLabelText(/Formular-ID/)).toHaveValue(
       'urn:de:stadt-bonn:formular:bewohnerparkausweis',
     );

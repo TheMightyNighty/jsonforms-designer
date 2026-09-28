@@ -385,7 +385,7 @@ function TypvorschlagHinweis({
 
   const vorschlag = fieldState.typvorschlagIgnoriert[selectedScope]
     ? undefined
-    : vorschlagWeichtAb(label, feldtypId);
+    : vorschlagWeichtAb(label, feldtypId, region?.typvorschlaege);
 
   const folgen = zielId
     ? wechselFolgen(fieldState, selectedScope, zielId)

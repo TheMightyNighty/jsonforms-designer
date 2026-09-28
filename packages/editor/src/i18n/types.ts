@@ -113,6 +113,32 @@ export interface EditorTranslations {
     keinJson: string;
     unbrauchbar: string;
   };
+  metadaten: {
+    titel: string;
+    formularTitel: string;
+    formularTitelHinweis: string;
+    beschreibung: string;
+    beschreibungHinweis: string;
+    urn: string;
+    urnPlatzhalter: string;
+    urnHinweis: string;
+    urnFehler: string;
+    urnVorschlag: string;
+    abschnittHerausgeber: string;
+    herausgeber: string;
+    herausgeberPlatzhalter: string;
+    herausgeberHinweis: string;
+    rechtsgrundlage: string;
+    rechtsgrundlagePlatzhalter: string;
+    rechtsgrundlageHinweis: string;
+    abschnittVersion: string;
+    version: string;
+    versionPlatzhalter: string;
+    versionHinweis: string;
+    gueltigAb: string;
+    sprache: string;
+    sprachen: { de: string; en: string };
+  };
   palette: {
     feldTooltip: string;
     feldHinzufuegen: string;
@@ -223,6 +249,7 @@ export interface EditorTranslations {
     gruppenTitle: string;
   };
   dialog: {
+    speichern: string;
     templateTitle: string;
     templateLoad: string;
     cancel: string;

@@ -291,6 +291,34 @@ export const de: EditorTranslations = {
     unbrauchbar:
       'Die Datei enthält kein verwertbares Erweiterungspaket (id, Name und mindestens ein Beitrag sind nötig).',
   },
+  metadaten: {
+    titel: 'Formular-Metadaten',
+    formularTitel: 'Formular-Titel *',
+    formularTitelHinweis:
+      'Erscheint als Überschrift im Formular (schema.title)',
+    beschreibung: 'Beschreibung / Zweck',
+    beschreibungHinweis: 'Kurze Beschreibung des Vorgangs',
+    urn: 'Formular-ID (URN)',
+    urnPlatzhalter: 'urn:de:bonn:formular:bewohnerparkausweis',
+    urnHinweis: 'Stabile Formular-ID über alle Versionen (Manifest form.id)',
+    urnFehler:
+      'Muster: urn:<namensraum>:<rest>, z. B. urn:de:bonn:formular:bewohnerparkausweis',
+    urnVorschlag: 'URN-Vorschlag aus Herausgeber und Titel erzeugen',
+    abschnittHerausgeber: 'Herausgeber',
+    herausgeber: 'Herausgebende Stelle',
+    herausgeberPlatzhalter: 'z. B. Bundesagentur für Arbeit',
+    herausgeberHinweis: 'Wird im Manifest als form.publisher geführt',
+    rechtsgrundlage: 'Rechtsgrundlage',
+    rechtsgrundlagePlatzhalter: 'z. B. § 16 SGB II, OZG-Leistungs-ID 99001234',
+    rechtsgrundlageHinweis: 'Wird im Manifest als form.legalBasis geführt',
+    abschnittVersion: 'Versionierung',
+    version: 'Version',
+    versionPlatzhalter: 'z. B. 1.0.0',
+    versionHinweis: 'SemVer',
+    gueltigAb: 'Gültig ab',
+    sprache: 'Sprache',
+    sprachen: { de: 'Deutsch', en: 'Englisch' },
+  },
   palette: {
     feldTooltip: '{name} — Enter fügt das Feld am Ende ein',
     feldHinzufuegen: '{name} hinzufügen',
@@ -407,6 +435,7 @@ export const de: EditorTranslations = {
     gruppenTitle: 'Gruppenüberschrift',
   },
   dialog: {
+    speichern: 'Speichern',
     templateTitle: 'Vorlage auswählen',
     templateLoad: 'Vorlage laden',
     cancel: 'Abbrechen',

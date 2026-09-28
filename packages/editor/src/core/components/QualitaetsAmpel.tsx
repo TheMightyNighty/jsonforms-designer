@@ -22,7 +22,9 @@ import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 import { useMemo, useState } from 'react';
 
+import { pruefEinstellungenFuer } from '../../config/editorConfig';
 import { useEditorConfig } from '../../config/EditorConfigContext';
+import { useRegion } from '../../erweiterung/ErweiterungenProvider';
 import { feldtypTexte } from '../../field-types/feldtypTexte';
 import { useI18n } from '../../i18n';
 import { useEditorContext } from '../context';
@@ -41,7 +43,11 @@ export function QualitaetsAmpel() {
 
   // Die Prüfung läuft über das ganze Formular; ohne Memo liefe sie bei jedem
   // Tastendruck in einem beliebigen Eingabefeld erneut.
-  const einstellungen = config.pruefung;
+  const region = useRegion();
+  const einstellungen = useMemo(
+    () => pruefEinstellungenFuer(config, region),
+    [config, region],
+  );
   const befunde = useMemo(
     () => pruefeFormular(fieldState, einstellungen),
     [fieldState, einstellungen],

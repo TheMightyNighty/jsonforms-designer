@@ -7,7 +7,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useState } from 'react';
 import {
   Group,
   Panel,
@@ -231,13 +231,20 @@ export const JsonFormsEditorUi = ({ footer }: JsonFormsEditorUiProps) => {
     dispatch(createSetFieldStateAction(next));
   };
 
-  const HeaderWithMode = () => (
-    <Header
-      mode={mode}
-      onModeChange={setMode}
-      testMode={testMode}
-      onTestModeChange={setTestMode}
-    />
+  // useCallback, nicht einfach `() => <Header …/>`: Ein bei jedem Render neu
+  // erzeugter Komponententyp zwingt React, die ganze Kopfzeile abzuhängen und
+  // neu einzuhängen. Deren Zustand — welches Menü offen ist, welcher Dialog —
+  // ginge dabei jedes Mal verloren.
+  const HeaderWithMode = useCallback(
+    () => (
+      <Header
+        mode={mode}
+        onModeChange={setMode}
+        testMode={testMode}
+        onTestModeChange={setTestMode}
+      />
+    ),
+    [mode, testMode],
   );
 
   return (

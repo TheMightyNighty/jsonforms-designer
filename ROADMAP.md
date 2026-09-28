@@ -34,20 +34,19 @@ Voraussetzungen:
       @vitejs/plugin-react 6, jsdom 30, Vitest 5, JSONForms 3.8,
       Monaco 0.57, @types/node 26, jest-dom 7. `npm audit`: 0 Findings
       (vorher 13)
-- [ ] **Neutraler Kern, verbleibende Deutschland-Annahmen** (ADR 0007):
-      Feldtyp-Texte, Platzhalter und Prüfregeln sind heraus. Offen sind
-      (a) die abgeleiteten Property-Keys — `deriveKey`/`derivePropertyKey`
-      bilden Feldtyp-ids auf deutsche Schlüssel ab (`textfeld`, `betrag`),
-      und die Feldkopie hängt `_kopie` an; (b) die Stichwortliste in
-      `feldtypVorschlag.ts`, die deutsche Feldbezeichnungen erwartet;
-      (c) `validatorZuordnung.ts`; (d) `manifestMeta.legalBasis` samt
-      Beschriftung im Metadaten-Dialog. Property-Keys zuerst bedenken:
-      Sie stehen im erzeugten Schema, eine Änderung ist für bestehende
-      Formulare sichtbar
-- [ ] **Erweiterungsarchitektur ausbauen** (ADR 0007): Regionsprofile und
-      Feldtyp-Kataloge als nachladbares JSON mit Normalisierung — wie die
-      Baustein-Kataloge in ADR 0005 —, damit eine Bibliothek weiterzugeben
-      heißt, eine Datei weiterzugeben
+- [x] ~~**Neutraler Kern** (ADR 0007)~~ (umgesetzt 2026-09): Feldtyp-Texte
+      nach i18n, Regionsprofile, Property-Schlüssel aus der Beschriftung
+      statt aus einer deutschen Tabelle, Typvorschlag-Stichwörter ins
+      Profil, Metadaten-Dialog übersetzt, FIM und Open CoDE im Kern aus
+- [x] ~~**Erweiterungsarchitektur, Stufe 1**~~ (umgesetzt 2026-09):
+      Erweiterungspakete als JSON, lokale Bibliothek unter
+      Ansicht → Erweiterungen, Normalisierung unvertrauter Eingabe
+- [ ] **Erweiterungsarchitektur, Stufe 2:** Pakete auch von einer URL
+      laden (wie `HttpBausteinService`, ADR 0005) und Formularvorlagen als
+      Beitragsart ergänzen. Bisher kommt ein Paket nur als Datei herein
+- [ ] **Restliche Dialoge übersetzen:** `ImportExportDialog` und die
+      Hilfe-Dialoge tragen ihre Texte noch fest im Code. Der
+      Metadaten-Dialog ist durch; dieselbe Arbeit steht dort noch aus
 - [ ] **`set-state-in-effect` auflösen** (9 Stellen, 7 Dateien): Neu in
       eslint-plugin-react-hooks 7 und vorerst auf `warn` gesetzt. Es geht
       überall um dasselbe Muster — lokalen Zustand angleichen, wenn sich
