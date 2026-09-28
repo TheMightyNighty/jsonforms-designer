@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  VORSCHLAG_STICHWOERTER,
-  vorschlagFeldtyp,
-  vorschlagWeichtAb,
-} from './feldtypVorschlag';
+import { TYPVORSCHLAEGE_DE } from '../region/typvorschlaegeDe';
+import { vorschlagFeldtyp, vorschlagWeichtAb } from './feldtypVorschlag';
 import { getFieldType } from './fieldTypes';
 
 /** Kurzform: nur die id des Vorschlags. */
-const id = (label: string) => vorschlagFeldtyp(label)?.feldtypId;
+// Die Stichwörter stehen im deutschen Profil, nicht im Kern (ADR 0007).
+const id = (label: string) =>
+  vorschlagFeldtyp(label, TYPVORSCHLAEGE_DE)?.feldtypId;
 
 describe('vorschlagFeldtyp — Zeitangaben', () => {
   it.each([
@@ -59,11 +58,15 @@ describe('vorschlagFeldtyp — Bank, Geld, Adresse', () => {
   });
 
   it('gibt zur Postleitzahl den passenden Validator mit', () => {
-    expect(vorschlagFeldtyp('Postleitzahl')?.validatorId).toBe('oc-val-plz');
+    expect(
+      vorschlagFeldtyp('Postleitzahl', TYPVORSCHLAEGE_DE)?.validatorId,
+    ).toBe('oc-val-plz');
   });
 
   it('gibt ohne zugehörigen Validator keinen mit', () => {
-    expect(vorschlagFeldtyp('Geburtsdatum')?.validatorId).toBeUndefined();
+    expect(
+      vorschlagFeldtyp('Geburtsdatum', TYPVORSCHLAEGE_DE)?.validatorId,
+    ).toBeUndefined();
   });
 });
 
@@ -103,9 +106,9 @@ describe('vorschlagFeldtyp — Schreibweisen', () => {
 
 describe('vorschlagFeldtyp — Negativfälle', () => {
   it('schlägt bei leerer oder sehr kurzer Bezeichnung nichts vor', () => {
-    expect(vorschlagFeldtyp('')).toBeUndefined();
-    expect(vorschlagFeldtyp('  ')).toBeUndefined();
-    expect(vorschlagFeldtyp('Ab')).toBeUndefined();
+    expect(vorschlagFeldtyp('', TYPVORSCHLAEGE_DE)).toBeUndefined();
+    expect(vorschlagFeldtyp('  ', TYPVORSCHLAEGE_DE)).toBeUndefined();
+    expect(vorschlagFeldtyp('Ab', TYPVORSCHLAEGE_DE)).toBeUndefined();
   });
 
   it.each([
@@ -116,7 +119,7 @@ describe('vorschlagFeldtyp — Negativfälle', () => {
     'Bezeichnung der Maßnahme',
     'Sonstiges',
   ])('schlägt bei „%s" nichts vor', (label) => {
-    expect(vorschlagFeldtyp(label)).toBeUndefined();
+    expect(vorschlagFeldtyp(label, TYPVORSCHLAEGE_DE)).toBeUndefined();
   });
 
   it('trifft mehrdeutige Stichwörter nur als eigenständiges Wort', () => {
@@ -133,38 +136,48 @@ describe('vorschlagFeldtyp — Negativfälle', () => {
 
 describe('vorschlagWeichtAb', () => {
   it('meldet nichts, wenn der gewählte Typ schon passt', () => {
-    expect(vorschlagWeichtAb('Geburtsdatum', 'date')).toBeUndefined();
+    expect(
+      vorschlagWeichtAb('Geburtsdatum', 'date', TYPVORSCHLAEGE_DE),
+    ).toBeUndefined();
   });
 
   it('meldet den Vorschlag, wenn der gewählte Typ abweicht', () => {
-    const vorschlag = vorschlagWeichtAb('Geburtsdatum', 'text-short');
+    const vorschlag = vorschlagWeichtAb(
+      'Geburtsdatum',
+      'text-short',
+      TYPVORSCHLAEGE_DE,
+    );
     expect(vorschlag?.feldtypId).toBe('date');
     expect(vorschlag?.ausloeser).toBe('geburtsdatum');
   });
 
   it('meldet nichts, wenn es zur Bezeichnung keinen Vorschlag gibt', () => {
-    expect(vorschlagWeichtAb('Aktenzeichen', 'text-short')).toBeUndefined();
+    expect(
+      vorschlagWeichtAb('Aktenzeichen', 'text-short', TYPVORSCHLAEGE_DE),
+    ).toBeUndefined();
   });
 
   it('meldet nichts ohne erkennbaren Feldtyp (Fremdimport)', () => {
-    expect(vorschlagWeichtAb('Geburtsdatum', undefined)).toBeUndefined();
+    expect(
+      vorschlagWeichtAb('Geburtsdatum', undefined, TYPVORSCHLAEGE_DE),
+    ).toBeUndefined();
   });
 });
 
-describe('VORSCHLAG_STICHWOERTER', () => {
+describe('TYPVORSCHLAEGE_DE', () => {
   it('verweist ausschließlich auf existierende Katalog-Feldtypen', () => {
-    for (const regel of VORSCHLAG_STICHWOERTER) {
+    for (const regel of TYPVORSCHLAEGE_DE) {
       expect(() => getFieldType(regel.feldtypId)).not.toThrow();
     }
   });
 
   it('nennt kein Stichwort doppelt', () => {
-    const alle = VORSCHLAG_STICHWOERTER.flatMap((r) => r.stichwoerter);
+    const alle = TYPVORSCHLAEGE_DE.flatMap((r) => r.stichwoerter);
     expect(new Set(alle).size).toBe(alle.length);
   });
 
   it('hat zu jeder Regel mindestens ein Stichwort', () => {
-    for (const regel of VORSCHLAG_STICHWOERTER) {
+    for (const regel of TYPVORSCHLAEGE_DE) {
       expect(regel.stichwoerter.length).toBeGreaterThan(0);
     }
   });

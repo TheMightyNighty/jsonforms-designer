@@ -16,6 +16,7 @@ import {
 } from '../core/model/addFieldActions';
 import { feldtypFuerRegion, feldtypTexte } from '../field-types/feldtypTexte';
 import { getFieldType } from '../field-types/fieldTypes';
+import { feldtypPropertyKey } from '../field-types/propertyKey';
 import { mapDatenfeld, mapDatenfeldgruppe } from '../fim/fimMapper';
 import { FIM_DND_TYPE, FimDragItem } from '../fim/FimPaletteSection';
 import { useI18n } from '../i18n';
@@ -23,45 +24,6 @@ import { Regionsprofil } from '../region/regionsprofil';
 import { FIELD_TYPE_DND_TYPE, FieldTypeDragItem } from './FieldPaletteItem';
 
 type FimOrFieldAction = AddFieldAction | AddFimGruppeAction;
-
-function derivePropertyKey(fieldTypeId: string): string {
-  const keyMap: Record<string, string> = {
-    'text-short': 'textfeld',
-    'text-long': 'freitext',
-    integer: 'ganzzahl',
-    number: 'zahl',
-    currency: 'betrag',
-    date: 'datum',
-    time: 'uhrzeit',
-    datetime: 'datum_uhrzeit',
-    email: 'email',
-    tel: 'telefon',
-    url: 'website',
-    password: 'passwort',
-    iban: 'iban',
-    checkbox: 'checkbox',
-    'checkbox-group': 'auswahl_mehrfach',
-    dropdown: 'auswahl',
-    radio: 'optionen',
-    slider: 'wert',
-    'file-upload': 'datei',
-    'section-header': '_abschnitt',
-    annotation: '_annotation',
-    'label-heading': '_label',
-    'label-text': '_hinweis',
-    'alert-info': '_info',
-    'alert-warning': '_warnung',
-    'col-2': '_spalten2',
-    'col-3': '_spalten3',
-    'col-4': '_spalten4',
-    'col-custom': '_spalten_frei',
-    'col-1-2': '_spalten12',
-    'col-2-1': '_spalten21',
-    group: '_gruppe',
-    'repeat-group': 'eintraege',
-  };
-  return keyMap[fieldTypeId] ?? fieldTypeId.replace(/[^a-z0-9]/gi, '_');
-}
 
 /**
  * Erzeugt die Action für einen FIM-Eintrag — gemeinsame Logik für den
@@ -119,7 +81,7 @@ export function createPaletteFieldAction(
   region?: Regionsprofil,
 ): AddFieldAction {
   const fieldType = feldtypFuerRegion(getFieldType(fieldTypeId), region);
-  const propertyKey = derivePropertyKey(fieldTypeId);
+  const propertyKey = feldtypPropertyKey(fieldType, label);
   return createAddFieldAction(
     fieldType,
     propertyKey,

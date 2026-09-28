@@ -7,6 +7,9 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Behoben
+- **Die Kopfzeile wurde bei jedem Render abgehängt und neu eingehängt:** `HeaderWithMode` war eine im Render erzeugte Komponente, damit bei jedem Durchlauf ein neuer Komponententyp. Sichtbar wurde es erst mit den Erweiterungen — ein hinzugefügtes Paket ändert die Texte, die Kopfzeile wurde neu eingehängt, und der offene Dialog verschwand, bevor die Redakteurin ihr Paket in der Liste sah. Jetzt `useCallback`; zwei E2E-Tests halten den Pfad fest.
+
 ### Hinzugefügt (Erweiterungsarchitektur)
 - **Erweiterungspakete als JSON** (ADR 0007): eine Datei bringt Feldtypen, Bausteine, ein Regionsprofil und überschriebene Begriffe mit. Kein Build, keine Toolchain — eine Bibliothek weiterzugeben heißt, eine Datei weiterzugeben. Format und Beispiel: `beispiele/erweiterungen/`.
 - **Lokale Bibliothek** unter **Ansicht → Erweiterungen …**: hinzufügen, ein- und ausschalten, entfernen. Sie liegt im Browser (`jfd_erweiterungen_v1`) und ist wie die Formular-Ablage austauschbar (`ErweiterungsBibliothek`). Der Editor lädt von sich aus nichts nach.
@@ -24,6 +27,10 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - **Die Demo-Anwendung ist das deutsche Profil,** nicht der Normalfall: `packages/app` setzt `region: REGION_DE` und bekommt damit die Platzhalter und die Regel zur Rechtsgrundlage zurück. Für die bisherige Nutzerin ändert sich nichts — mit einer Ausnahme: Der Feldtyp heißt jetzt „Betrag" statt „Betrag (€)", weil das Währungszeichen keine Eigenschaft des Feldtyps ist.
 - **`ADD_FIELD`, `COLUMN_DROP` und `CHANGE_FIELD_TYPE` tragen ihre Texte selbst.** Reducer sind reine Funktionen ohne Zugriff auf i18n, die auslösende Komponente kennt die Sprache — also reicht sie Label und Platzhalter in der Action mit. `createAddFieldAction` hat dafür einen dritten Parameter `label`.
 - **`feldtypLabel` und `FELDTYP_FALLBACK_LABEL` entfallen;** `vorschlagFeldtyp` liefert keinen `feldtypName` mehr, sondern nur die id, und `sucheFeldtypen` bekommt die Namensfunktion hereingereicht. Ein Prüfhinweis trägt statt eines fertigen Feldtypnamens das Feld `feldtypId`.
+- **Property-Schlüssel kommen aus der Beschriftung,** nicht mehr aus zwei gepflegten deutschen Tabellen (`deriveKey`, `derivePropertyKey`, je ~30 Einträge): „Vorname" wird `vorname`, „First name" wird `first_name`. Umlaute und Akzente werden ASCII-gefaltet. Für einige Feldtypen ändert sich der Vorgabeschlüssel neuer Felder (`telefon` → `telefonnummer`, `datum_uhrzeit` → `datum_und_uhrzeit`, `auswahl_mehrfach` → `mehrfachauswahl`, `eintraege` → `wiederholungsgruppe`); bestehende Formulare bleiben unberührt. Die Feldkopie hängt kein `_kopie` mehr an — den eindeutigen Namen vergibt `resolveKey`, und der ist sprachfrei.
+- **Die Stichwörter des Typvorschlags stehen im Regionsprofil** (`TYPVORSCHLAEGE_DE`), nicht im Kern: „Geburtsdatum" hilft nur, wer auf Deutsch arbeitet. Ohne Profil schlägt der Editor nichts vor, statt falsch zu raten. `vorschlagFeldtyp` und `vorschlagWeichtAb` nehmen die Regeln als Argument; `pruefEinstellungenFuer(config, region)` setzt zusammen, was gilt.
+- **Metadaten-Dialog übersetzt** — er trug alle neun Beschriftungen samt Platzhaltern und Hilfetexten fest im Code. „Herausgebende Behörde" heißt jetzt „Herausgebende Stelle"; die **Rechtsgrundlage erscheint nur**, wenn das Regionsprofil sie verlangt, sonst wäre es ein Feld ohne Bedeutung.
+- **`validatorZuordnung.ts` bleibt, wo es ist:** Open CoDE ist eine Plattform der deutschen Verwaltung, das Modul **ist** der regionale Teil und läuft ohne `modules.openCode.enabled` gar nicht.
 - **`fuelleVorlage`** als gemeinsame Stelle für Platzhalter in Übersetzungstexten (`{name}`, `{anzahl}`); `hinweisText` baut darauf auf und nimmt zusätzliche Werte entgegen.
 
 ### Geändert (Werkzeugkette)

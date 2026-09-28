@@ -24,7 +24,10 @@ import {
   ermittleFeldtyp,
   FeldSchema,
 } from '../../field-types/feldtypErkennung';
-import { vorschlagWeichtAb } from '../../field-types/feldtypVorschlag';
+import {
+  Vorschlagsregel,
+  vorschlagWeichtAb,
+} from '../../field-types/feldtypVorschlag';
 import { FieldAwareState } from '../model/addFieldReducer';
 import { UiElement } from '../model/uiElements';
 import { fuelleVorlage } from './textVorlage';
@@ -74,6 +77,11 @@ export interface PruefEinstellungen {
   zusaetzlicheRegeln?: readonly PruefRegelId[];
   /** Regeln, die ausgeschaltet werden, auch wenn sie allgemein gelten. */
   abgeschalteteRegeln?: readonly PruefRegelId[];
+  /**
+   * Stichwörter für den Typvorschlag. Ohne sie prüft `offener-typvorschlag`
+   * nichts — die Stichwörter hängen an der Sprache (ADR 0007).
+   */
+  typvorschlaege?: readonly Vorschlagsregel[];
 }
 
 // ---------------------------------------------------------------------------
@@ -240,7 +248,11 @@ export function pruefeFormular(
       aktiv('offener-typvorschlag')
     ) {
       const aktuell = ermittleFeldtyp(feld, control.options)?.id;
-      const vorschlag = vorschlagWeichtAb(label, aktuell);
+      const vorschlag = vorschlagWeichtAb(
+        label,
+        aktuell,
+        einstellungen.typvorschlaege,
+      );
       if (vorschlag) {
         hinweise.push({
           id: 'offener-typvorschlag',

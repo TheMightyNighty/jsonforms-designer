@@ -216,7 +216,9 @@ export function FieldFormPreview({
     dispatch(
       createAddFieldAction(
         { ...def, schema: { ...fs } },
-        key + '_kopie',
+        // Kein Suffix: Den eindeutigen Namen vergibt resolveKey, und der
+        // ist sprachfrei.
+        key,
         fuelleVorlage(t.actions.kopieLabel, { label: fs.title ?? key }),
         scope,
         tabIdx,

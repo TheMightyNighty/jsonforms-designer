@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { de } from '../../i18n/de';
 import { en } from '../../i18n/en';
+import { TYPVORSCHLAEGE_DE } from '../../region/typvorschlaegeDe';
 import { FieldAwareState } from '../model/addFieldReducer';
 import { emptyManifestMeta } from '../model/manifestMeta';
 import { UiElement } from '../model/uiElements';
@@ -272,9 +273,17 @@ describe('pruefeFormular — offener Typvorschlag', () => {
     return state;
   }
 
+  it('schweigt ohne Stichwörter — sie hängen an der Sprache', () => {
+    expect(
+      mitId(pruefeFormular(geburtsdatumAlsText()), 'offener-typvorschlag'),
+    ).toEqual([]);
+  });
+
   it('meldet einen abweichenden Typvorschlag als Hinweis', () => {
     const treffer = mitId(
-      pruefeFormular(geburtsdatumAlsText()),
+      pruefeFormular(geburtsdatumAlsText(), {
+        typvorschlaege: TYPVORSCHLAEGE_DE,
+      }),
       'offener-typvorschlag',
     );
     expect(treffer).toHaveLength(1);

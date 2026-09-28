@@ -23,9 +23,9 @@ import { FIELD_TYPE_CATALOG } from './fieldTypes';
  * („iban", „telefon"). Alles Mehrdeutige („ort", „land") gehört zu `wort`,
  * sonst schlägt „Geburtsort" ein Auswahlfeld vor.
  */
-type Treffermodus = 'wort' | 'teil';
+export type Treffermodus = 'wort' | 'teil';
 
-interface Vorschlagsregel {
+export interface Vorschlagsregel {
   /** id eines Eintrags aus FIELD_TYPE_CATALOG */
   feldtypId: string;
   modus: Treffermodus;
@@ -37,124 +37,6 @@ interface Vorschlagsregel {
    */
   validatorId?: string;
 }
-
-/**
- * Reihenfolge = Priorität: Die erste passende Regel gewinnt. Spezifische
- * Stichwörter stehen vor allgemeinen — „geburtsdatum" vor „datum", sonst
- * gewänne bei „Geburtsdatum" nicht die speziellere Regel.
- *
- * Neue Stichwörter werden hier eingeordnet, nicht angehängt.
- */
-const VORSCHLAGSREGELN: readonly Vorschlagsregel[] = [
-  // ── Zeitangaben ─────────────────────────────────────────────────────────
-  {
-    feldtypId: 'datetime',
-    modus: 'teil',
-    stichwoerter: ['zeitpunkt', 'datum und uhrzeit', 'datum/uhrzeit'],
-  },
-  {
-    feldtypId: 'date',
-    modus: 'teil',
-    stichwoerter: [
-      'geburtsdatum',
-      'geburtstag',
-      'datum',
-      'stichtag',
-      'frist',
-      'einzugsdatum',
-      'auszugsdatum',
-      'antragsdatum',
-      'gueltig ab',
-      'gültig ab',
-    ],
-  },
-  { feldtypId: 'time', modus: 'teil', stichwoerter: ['uhrzeit'] },
-
-  // ── Kontakt ─────────────────────────────────────────────────────────────
-  {
-    feldtypId: 'email',
-    modus: 'teil',
-    stichwoerter: ['e-mail', 'email', 'mailadresse', 'e-mail-adresse'],
-  },
-  {
-    feldtypId: 'tel',
-    modus: 'teil',
-    stichwoerter: ['telefon', 'telefonnummer', 'mobilnummer', 'handynummer'],
-  },
-  {
-    feldtypId: 'url',
-    modus: 'teil',
-    stichwoerter: ['webseite', 'website', 'internetadresse', 'homepage'],
-  },
-
-  // ── Datei ───────────────────────────────────────────────────────────────
-  // Vor Bank und Geld: „Nachweis über das Einkommen" ist ein Dokument, kein
-  // Betrag — das Wort „Nachweis" ist das stärkere Signal.
-  {
-    feldtypId: 'file-upload',
-    modus: 'teil',
-    stichwoerter: ['upload', 'nachweis', 'anlage', 'dokument', 'bescheinigung'],
-  },
-
-  // ── Bank und Geld ───────────────────────────────────────────────────────
-  {
-    feldtypId: 'iban',
-    modus: 'teil',
-    stichwoerter: ['iban', 'kontonummer'],
-  },
-  {
-    feldtypId: 'currency',
-    modus: 'teil',
-    stichwoerter: [
-      'betrag',
-      'einkommen',
-      'gehalt',
-      'miete',
-      'kosten',
-      'summe',
-      'entgelt',
-    ],
-  },
-
-  // ── Adresse ─────────────────────────────────────────────────────────────
-  {
-    feldtypId: 'text-short',
-    modus: 'teil',
-    stichwoerter: ['postleitzahl', 'plz'],
-    validatorId: 'oc-val-plz',
-  },
-
-  // ── Zahlen ──────────────────────────────────────────────────────────────
-  {
-    feldtypId: 'integer',
-    modus: 'wort',
-    stichwoerter: ['anzahl', 'stueckzahl', 'stückzahl', 'alter', 'kinderzahl'],
-  },
-
-  // ── Ja/Nein ─────────────────────────────────────────────────────────────
-  {
-    feldtypId: 'checkbox',
-    modus: 'wort',
-    stichwoerter: ['einverstanden', 'zustimmung', 'einwilligung', 'gelesen'],
-  },
-
-  // ── Längerer Text ───────────────────────────────────────────────────────
-  {
-    feldtypId: 'text-long',
-    modus: 'teil',
-    stichwoerter: [
-      'begruendung',
-      'begründung',
-      'bemerkung',
-      'anmerkung',
-      'erlaeuterung',
-      'erläuterung',
-      'beschreibung',
-      'freitext',
-      'mitteilung',
-    ],
-  },
-] as const;
 
 export interface Feldtypvorschlag {
   /** id aus FIELD_TYPE_CATALOG */
@@ -198,10 +80,13 @@ function trifft(
  * Stichwort passt. Eine leere oder sehr kurze Bezeichnung liefert nie einen
  * Vorschlag — beim Tippen soll kein Hinweis aufblitzen.
  */
-export function vorschlagFeldtyp(label: string): Feldtypvorschlag | undefined {
+export function vorschlagFeldtyp(
+  label: string,
+  regeln: readonly Vorschlagsregel[] = [],
+): Feldtypvorschlag | undefined {
   if (normalisiere(label).length < 3) return undefined;
 
-  for (const regel of VORSCHLAGSREGELN) {
+  for (const regel of regeln) {
     const ausloeser = regel.stichwoerter.find((w) =>
       trifft(label, w, regel.modus),
     );
@@ -223,13 +108,11 @@ export function vorschlagFeldtyp(label: string): Feldtypvorschlag | undefined {
 export function vorschlagWeichtAb(
   label: string,
   aktuellerFeldtypId: string | undefined,
+  regeln: readonly Vorschlagsregel[] = [],
 ): Feldtypvorschlag | undefined {
   if (!aktuellerFeldtypId) return undefined;
-  const vorschlag = vorschlagFeldtyp(label);
+  const vorschlag = vorschlagFeldtyp(label, regeln);
   if (!vorschlag || vorschlag.feldtypId === aktuellerFeldtypId)
     return undefined;
   return vorschlag;
 }
-
-/** Alle Stichwörter — Grundlage für Tests und für die Doku im Fachbereich. */
-export const VORSCHLAG_STICHWOERTER = VORSCHLAGSREGELN;

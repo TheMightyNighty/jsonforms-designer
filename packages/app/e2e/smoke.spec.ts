@@ -3,6 +3,8 @@
  * Produktions-Build ab — Laden, Drag & Drop (Kernfeature), Auto-Save,
  * Eigenschaften, Testmodus, Code-Modus (self-hosted Monaco) und Export.
  */
+import { fileURLToPath } from 'node:url';
+
 import { expect, type Locator, type Page, test } from '@playwright/test';
 
 const STORAGE_KEY = 'jfd_fieldState_v1';
@@ -551,4 +553,71 @@ test('Export-Dialog öffnet mit Schema- und XDF-Tab', async ({ page }) => {
   const dialog = page.getByRole('dialog');
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('tab', { name: 'XDF 2.0' })).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------
+// Erweiterungen (ADR 0007)
+// ---------------------------------------------------------------------------
+
+const PAKET_DATEI = fileURLToPath(
+  new URL('../../../beispiele/erweiterungen/musterstadt.json', import.meta.url),
+);
+
+test('Erweiterungspaket hinzufügen: Feldtyp, Baustein und Begriff wirken', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+
+  await ausBefehlsleiste(page, 'Ansicht', 'Erweiterungen');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByText('Noch keine Erweiterung')).toBeVisible();
+
+  await dialog.locator('input[type=file]').setInputFiles(PAKET_DATEI);
+
+  // Der Dialog muss offen bleiben: Das Hinzufügen ändert die Texte des
+  // Editors, und wenn davon die Kopfzeile neu eingehängt wird, verliert sie
+  // ihren Dialogzustand — die Redakteurin sähe ihr Paket nie in der Liste.
+  await expect(dialog.getByText('Musterstadt 1.0.0')).toBeVisible();
+
+  await dialog.getByRole('button', { name: 'Schließen' }).click();
+
+  // Begriff aus dem Paket ersetzt den Produktnamen in der Kopfzeile.
+  await expect(page.getByText('Antragsdesigner Musterstadt')).toBeVisible();
+
+  // Feldtyp aus dem Paket steht in der Palette und lässt sich einfügen.
+  await oeffneEinzelfelder(page);
+  await page.getByRole('button', { name: /Weitere Feldtypen/ }).click();
+  const neuerTyp = page.getByTestId('palette-item-kfz-kennzeichen');
+  await expect(neuerTyp).toHaveAttribute(
+    'aria-label',
+    'Kfz-Kennzeichen hinzufügen',
+  );
+  await neuerTyp.press('Enter');
+  // Das Feld steht im Formular; Label und Legende tragen denselben Text.
+  await expect(
+    page.getByRole('main').getByText('Kennzeichen', { exact: true }).first(),
+  ).toBeVisible();
+
+  // Baustein aus dem Paket steht neben denen des Dienstes.
+  await page.getByRole('tab', { name: 'Bausteine' }).click();
+  await expect(page.getByText('Fahrzeug', { exact: true })).toBeVisible();
+});
+
+test('Erweiterung abschalten nimmt ihre Beiträge wieder zurück', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+
+  await ausBefehlsleiste(page, 'Ansicht', 'Erweiterungen');
+  const dialog = page.getByRole('dialog');
+  await dialog.locator('input[type=file]').setInputFiles(PAKET_DATEI);
+  await expect(dialog.getByText('Musterstadt 1.0.0')).toBeVisible();
+
+  await dialog.getByRole('switch').first().click();
+  await dialog.getByRole('button', { name: 'Schließen' }).click();
+
+  await expect(page.getByText('Antragsdesigner Musterstadt')).toHaveCount(0);
+  await oeffneEinzelfelder(page);
+  await page.getByRole('button', { name: /Weitere Feldtypen/ }).click();
+  await expect(page.getByTestId('palette-item-kfz-kennzeichen')).toHaveCount(0);
 });
