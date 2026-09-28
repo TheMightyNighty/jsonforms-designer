@@ -88,6 +88,7 @@ describe('columnDropReducer()', () => {
       columnIndex: 0,
       fieldTypeId: 'text-short',
       propertyKey: 'textfeld',
+      label: 'Testfeld',
     });
     const next = columnDropReducer(state, action);
     const col = (
@@ -105,6 +106,7 @@ describe('columnDropReducer()', () => {
       columnIndex: 1,
       fieldTypeId: 'number',
       propertyKey: 'zahl',
+      label: 'Testfeld',
     });
     const next = columnDropReducer(state, action);
     expect(next.schema.properties?.['zahl']).toBeDefined();
@@ -120,6 +122,7 @@ describe('columnDropReducer()', () => {
         columnIndex: 0,
         fieldTypeId: 'text-short',
         propertyKey: 'textfeld',
+        label: 'Testfeld',
       }),
     );
     // Zweites Feld mit gleichem Key
@@ -130,6 +133,7 @@ describe('columnDropReducer()', () => {
         columnIndex: 1,
         fieldTypeId: 'text-short',
         propertyKey: 'textfeld',
+        label: 'Testfeld',
       }),
     );
     expect(next.schema.properties?.['textfeld']).toBeDefined();
@@ -143,6 +147,7 @@ describe('columnDropReducer()', () => {
       columnIndex: 0,
       fieldTypeId: 'label-text',
       propertyKey: '_label',
+      label: 'Testfeld',
     });
     const next = columnDropReducer(state, action);
     const col = (
@@ -179,6 +184,7 @@ describe('columnDropReducer()', () => {
       columnIndex: 0,
       fieldTypeId: 'text-short',
       propertyKey: 'textfeld',
+      label: 'Testfeld',
     });
     const next = columnDropReducer(state, action);
     const grp = next.uiSchema.elements[0] as Extract<
@@ -229,6 +235,7 @@ describe('columnDropReducer()', () => {
       columnIndex: 0,
       fieldTypeId: 'text-short',
       propertyKey: 'textfeld',
+      label: 'Testfeld',
     });
     const next = columnDropReducer(state, action);
     const col = next.uiSchema.elements[0] as Extract<
@@ -367,6 +374,7 @@ describe('columnDropReducer() — weitere Element-Arten', () => {
         columnIndex: 0,
         fieldTypeId: 'col-2',
         propertyKey: '_spalten',
+        label: 'Testfeld',
       }),
     );
     const innen = (
@@ -385,6 +393,7 @@ describe('columnDropReducer() — weitere Element-Arten', () => {
         columnIndex: 1,
         fieldTypeId: 'group',
         propertyKey: '_gruppe',
+        label: 'Testfeld',
       }),
     );
     const innen = (
@@ -402,6 +411,7 @@ describe('columnDropReducer() — weitere Element-Arten', () => {
         columnIndex: 0,
         fieldTypeId: 'fim:F60000227',
         propertyKey: 'familienname',
+        label: 'Testfeld',
         fimSchema: { type: 'string', title: 'Familienname' },
         fimUiOptions: { 'x-fim-id': 'F60000227' },
       }),
@@ -425,6 +435,7 @@ describe('columnDropReducer() — weitere Element-Arten', () => {
         columnIndex: 0,
         fieldTypeId: 'text-short',
         propertyKey: 'textfeld',
+        label: 'Testfeld',
       }),
     );
     expect(next.uiSchema.elements).toEqual(state.uiSchema.elements);

@@ -1,8 +1,12 @@
 import { Box, Tooltip, Typography } from '@mui/material';
 import { useDrag } from 'react-dnd';
 
+import { useEditorConfig } from '../config/EditorConfigContext';
 import { useDispatch, useFieldState } from '../core/context';
+import { fuelleVorlage } from '../core/util/textVorlage';
+import { feldtypTexte } from '../field-types/feldtypTexte';
 import { FieldTypeDefinition } from '../field-types/fieldTypes';
+import { useI18n } from '../i18n';
 import { createPaletteFieldAction } from './useFieldDrop';
 
 // ---------------------------------------------------------------------------
@@ -31,6 +35,9 @@ interface FieldPaletteItemProps {
 export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
   const dispatch = useDispatch();
   const fieldState = useFieldState();
+  const { t } = useI18n();
+  const { region } = useEditorConfig();
+  const texte = feldtypTexte(t, fieldType.id);
 
   const [{ isDragging }, dragRef] = useDrag<
     FieldTypeDragItem,
@@ -52,12 +59,20 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
   const addViaKeyboard = () => {
     const tabIndex =
       fieldState.tabs.length > 0 ? fieldState.activeTabIndex : undefined;
-    dispatch(createPaletteFieldAction(fieldType.id, undefined, tabIndex));
+    dispatch(
+      createPaletteFieldAction(
+        fieldType.id,
+        texte.label,
+        undefined,
+        tabIndex,
+        region,
+      ),
+    );
   };
 
   return (
     <Tooltip
-      title={`${fieldType.displayName} — Enter fügt das Feld am Ende ein`}
+      title={fuelleVorlage(t.palette.feldTooltip, { name: texte.name })}
       placement="right"
       enterDelay={600}
     >
@@ -66,7 +81,9 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
         data-testid={`palette-item-${fieldType.id}`}
         role="button"
         tabIndex={0}
-        aria-label={`${fieldType.displayName} hinzufügen`}
+        aria-label={fuelleVorlage(t.palette.feldHinzufuegen, {
+          name: texte.name,
+        })}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -114,7 +131,7 @@ export function FieldPaletteItem({ fieldType }: FieldPaletteItemProps) {
             textOverflow: 'ellipsis',
           }}
         >
-          {fieldType.displayName}
+          {texte.name}
         </Typography>
       </Box>
     </Tooltip>

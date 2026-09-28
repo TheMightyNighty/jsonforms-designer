@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { BEISPIEL_BAUSTEINE } from '../bausteine';
 import { FIELD_TYPE_CATALOG } from '../field-types/fieldTypes';
+import { de } from '../i18n/de';
 import { HAEUFIGE_FELDTYP_IDS } from './haeufigeFeldtypen';
 import {
   istSuchaktiv,
@@ -28,24 +29,27 @@ describe('istSuchaktiv', () => {
 });
 
 describe('sucheFeldtypen', () => {
+  // Gesucht wird in der Sprache der Palette; der Katalog kennt keine Namen.
+  const name = (id: string) => de.feldtypen[id].name;
+
   it('findet einen Feldtyp über einen Namensteil', () => {
     expect(
-      sucheFeldtypen(FIELD_TYPE_CATALOG, 'datum').map((f) => f.id),
+      sucheFeldtypen(FIELD_TYPE_CATALOG, 'datum', name).map((f) => f.id),
     ).toEqual(['date', 'datetime']);
   });
 
   it('ignoriert Groß-/Kleinschreibung', () => {
-    expect(sucheFeldtypen(FIELD_TYPE_CATALOG, 'IBAN').map((f) => f.id)).toEqual(
-      ['iban'],
-    );
+    expect(
+      sucheFeldtypen(FIELD_TYPE_CATALOG, 'IBAN', name).map((f) => f.id),
+    ).toEqual(['iban']);
   });
 
   it('liefert ohne aktive Suche nichts', () => {
-    expect(sucheFeldtypen(FIELD_TYPE_CATALOG, 'i')).toEqual([]);
+    expect(sucheFeldtypen(FIELD_TYPE_CATALOG, 'i', name)).toEqual([]);
   });
 
   it('liefert bei fehlendem Treffer eine leere Liste', () => {
-    expect(sucheFeldtypen(FIELD_TYPE_CATALOG, 'zzzzz')).toEqual([]);
+    expect(sucheFeldtypen(FIELD_TYPE_CATALOG, 'zzzzz', name)).toEqual([]);
   });
 });
 

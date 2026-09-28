@@ -24,7 +24,6 @@ import {
 } from './fieldTypes';
 
 /** Anzeigetext, wenn kein Katalog-Feldtyp passt — fachsprachlich, nie „string". */
-export const FELDTYP_FALLBACK_LABEL = 'Feld';
 
 /** Schema-Ausschnitt eines Feldes, angereichert um die x-Zusätze des Katalogs. */
 export type FeldSchema = JsonSchema7 & {
@@ -133,19 +132,6 @@ export function ermittleFeldtyp(
   if (!schema) return undefined;
   const regel = ERKENNUNGSREGELN.find((r) => r.passt(schema, uiOptionen));
   return regel ? getFieldType(regel.feldtypId) : undefined;
-}
-
-/**
- * Fachsprachliches Label eines gespeicherten Feldes für die Anzeige in der
- * Standardansicht — nie der JSON-Basistyp.
- */
-export function feldtypLabel(
-  schema: FeldSchema | undefined,
-  uiOptionen?: Record<string, unknown>,
-): string {
-  return (
-    ermittleFeldtyp(schema, uiOptionen)?.displayName ?? FELDTYP_FALLBACK_LABEL
-  );
 }
 
 /**

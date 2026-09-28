@@ -23,6 +23,7 @@ import Typography from '@mui/material/Typography';
 import { useMemo, useState } from 'react';
 
 import { useEditorConfig } from '../../config/EditorConfigContext';
+import { feldtypTexte } from '../../field-types/feldtypTexte';
 import { useI18n } from '../../i18n';
 import { useEditorContext } from '../context';
 import {
@@ -51,6 +52,9 @@ export function QualitaetsAmpel() {
     hinweisText(
       befund,
       t.header.qualitaet.regeln as Record<PruefRegelId, string>,
+      befund.feldtypId
+        ? { vorschlag: feldtypTexte(t, befund.feldtypId).name }
+        : undefined,
     );
   const { fehler, hinweise } = zaehleHinweise(befunde);
   const texte = t.header.qualitaet;

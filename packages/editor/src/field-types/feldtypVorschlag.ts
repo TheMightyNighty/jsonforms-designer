@@ -159,8 +159,6 @@ const VORSCHLAGSREGELN: readonly Vorschlagsregel[] = [
 export interface Feldtypvorschlag {
   /** id aus FIELD_TYPE_CATALOG */
   feldtypId: string;
-  /** Anzeigename des vorgeschlagenen Feldtyps. */
-  feldtypName: string;
   /** Das Stichwort, das den Vorschlag ausgelöst hat — erklärt den Hinweis. */
   ausloeser: string;
   /** Optionaler Validator, der zum Vorschlag gehört. */
@@ -208,11 +206,9 @@ export function vorschlagFeldtyp(label: string): Feldtypvorschlag | undefined {
       trifft(label, w, regel.modus),
     );
     if (!ausloeser) continue;
-    const definition = FIELD_TYPE_CATALOG.find((f) => f.id === regel.feldtypId);
-    if (!definition) continue;
+    if (!FIELD_TYPE_CATALOG.some((f) => f.id === regel.feldtypId)) continue;
     return {
       feldtypId: regel.feldtypId,
-      feldtypName: definition.displayName,
       ausloeser,
       validatorId: regel.validatorId,
     };

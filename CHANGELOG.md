@@ -7,12 +7,21 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert (Neutraler Kern)
+- **Der Kern enthält keine Sprache und keine Region mehr** (ADR 0007). Bisher steckten rund dreißig deutsche Feldtyp-Namen, deutsche Vorgabe-Beschriftungen, Platzhalter mit `+49` und `DE89` und eine Pflichtangabe nach deutschem Verwaltungsrecht fest im Code. Wer nicht auf Deutsch und nicht nach deutschem Recht arbeitet, konnte den Editor bisher nur forken.
+- **Feldtyp-Katalog trägt nur noch Struktur:** id, Gruppe, Symbol, Schema-Fragment. Name, Vorgabe-Label und Erläuterung stehen unter `i18n.feldtypen[<id>]`. Ein Test hält Katalog und Sprachdateien deckungsgleich in beide Richtungen — eine fehlende Übersetzung und ein verwaister Text fallen beide auf.
+- **`Regionsprofil`** als neue, rein datengetriebene Konfiguration: Platzhalter je Feldtyp, engere Schema-Muster und die regionalen Prüfregeln. Mitgeliefert sind `REGION_NEUTRAL` (Default des Kerns) und `REGION_DE`. Ein Profil, das Prüfregeln mitbringt, schaltet sie ein, ohne dass der Host sie zusätzlich in `pruefung` nennen muss.
+- **Die Demo-Anwendung ist das deutsche Profil,** nicht der Normalfall: `packages/app` setzt `region: REGION_DE` und bekommt damit die Platzhalter und die Regel zur Rechtsgrundlage zurück. Für die bisherige Nutzerin ändert sich nichts — mit einer Ausnahme: Der Feldtyp heißt jetzt „Betrag" statt „Betrag (€)", weil das Währungszeichen keine Eigenschaft des Feldtyps ist.
+- **`ADD_FIELD`, `COLUMN_DROP` und `CHANGE_FIELD_TYPE` tragen ihre Texte selbst.** Reducer sind reine Funktionen ohne Zugriff auf i18n, die auslösende Komponente kennt die Sprache — also reicht sie Label und Platzhalter in der Action mit. `createAddFieldAction` hat dafür einen dritten Parameter `label`.
+- **`feldtypLabel` und `FELDTYP_FALLBACK_LABEL` entfallen;** `vorschlagFeldtyp` liefert keinen `feldtypName` mehr, sondern nur die id, und `sucheFeldtypen` bekommt die Namensfunktion hereingereicht. Ein Prüfhinweis trägt statt eines fertigen Feldtypnamens das Feld `feldtypId`.
+- **`fuelleVorlage`** als gemeinsame Stelle für Platzhalter in Übersetzungstexten (`{name}`, `{anzahl}`); `hinweisText` baut darauf auf und nimmt zusätzliche Werte entgegen.
+
 ### Geändert (Werkzeugkette)
 - **Toolchain-Upgrade in einem Zug:** TypeScript 6.0.3, ESLint 10 (+ `eslint-config-prettier` 10, `simple-import-sort` 14, `react-hooks` 7), Vite 8, `@vitejs/plugin-react` 6, jsdom 30, Vitest 5, JSONForms 3.8, Monaco 0.57, `@types/node` 26, `@testing-library/jest-dom` 7. `@types/uuid` entfernt (uuid ist seit 0.3.0 keine Abhängigkeit mehr), `@eslint/js` ergänzt (ESLint 10 liefert es nicht mehr mit). **`npm audit`: 0 Findings** (vorher 13, davon 7 hoch).
 - **Zwei Upgrades sind gescheitert — mit Grund:**
   - **MUI 9** geht nicht: `@jsonforms/material-renderers@3.8.0` fordert `@mui/material ^7.0.0`. Das Upgrade erzeugt zwei MUI-Instanzen und damit zwei Theme-Kontexte; das KERN-Theme erreichte die gerenderten Formularfelder nicht mehr (ADR 0004). Zurückgenommen.
   - **TypeScript 7** geht nicht: `@typescript-eslint` unterstützt in 8.70.1 nur `<6.1.0`. TS 7 hieße, das gesamte TypeScript-Linting zu verlieren, inklusive `no-explicit-any`. Stattdessen TS 6.0.3, das die Plugins tragen.
-- **Vite 8 nutzt Rolldown statt Rollup** und löst einen bloßen Paketpfad mit `?worker`-Suffix nicht mehr auf — der Monaco-Worker-Import brach den Build. Behoben über einen Alias auf das Monaco-Paketverzeichnis, der unabhängig vom npm-Hoisting greift. Der E2E-Nachweis „Code-Modus lädt Monaco lokal, null CDN-Requests" läuft weiter grün.
+- **Monaco 0.57 bildet in seiner exports-Karte `"./*"` auf `./esm/vs/*.js` ab.** Die bisherigen Worker-Importe mit `esm/vs/` liefen dadurch ins Leere (`esm/vs/esm/vs/…`) — im Build als Fehler, im Dev-Server als weiße Seite. Die Pfade tragen das Präfix jetzt nicht mehr. Der E2E-Nachweis „Code-Modus lädt Monaco lokal, null CDN-Requests" läuft weiter grün.
 - **`react-hooks/set-state-in-effect`** (neu in Plugin 7) trifft an neun Stellen dasselbe Muster und steht vorerst auf `warn` — mit Begründung in der ESLint-Config und einem ROADMAP-Punkt. Der zugehörige Einzelbefund `static-components` ist behoben.
 
 ### Hinzugefügt (Formular-Verwaltung)

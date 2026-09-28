@@ -3,6 +3,7 @@ import { PruefEinstellungen } from '../core/util/formularPruefung';
 import { FieldGroup } from '../field-types/fieldTypes';
 import { FimService } from '../fim/fimService';
 import { OpenCodeService } from '../opencode/openCodeService';
+import { REGION_NEUTRAL, Regionsprofil } from '../region/regionsprofil';
 
 export interface FimModuleConfig {
   enabled: boolean;
@@ -68,6 +69,13 @@ export interface EditorConfig {
    * Verwaltungsrecht — sind im Kern aus und werden hier eingeschaltet.
    */
   pruefung?: PruefEinstellungen;
+  /**
+   * Regionsprofil: Platzhalter, engere Muster und die regionalen Prüfregeln
+   * (ADR 0007). Default ist `REGION_NEUTRAL` — der Kern setzt keine Region
+   * voraus. Ein Profil, das Prüfregeln mitbringt, schaltet sie ein, ohne
+   * dass der Host sie zusätzlich in `pruefung` nennen muss.
+   */
+  region?: Regionsprofil;
 }
 
 /** Vollständige Config mit allen Defaults. Wird beim Mergen als Basis verwendet. */
@@ -85,6 +93,7 @@ export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
   },
   // Neutraler Default: nur die überall gültigen Regeln.
   pruefung: {},
+  region: REGION_NEUTRAL,
 };
 
 /** Merged eine partielle Nutzer-Config mit den Defaults. */
@@ -116,9 +125,21 @@ export function mergeEditorConfig(partial?: EditorConfig): EditorConfig {
       ...DEFAULT_EDITOR_CONFIG.features,
       ...partial?.features,
     },
-    pruefung: {
-      ...DEFAULT_EDITOR_CONFIG.pruefung,
-      ...partial?.pruefung,
-    },
+    pruefung: mergePruefung(partial),
+    region: partial?.region ?? REGION_NEUTRAL,
+  };
+}
+
+/**
+ * Die regionalen Prüfregeln des Profils kommen zu den ausdrücklich genannten
+ * hinzu — wer ein Profil wählt, hat dessen Regeln gewählt.
+ */
+function mergePruefung(partial?: EditorConfig): PruefEinstellungen {
+  const ausProfil = partial?.region?.pruefRegeln ?? [];
+  const genannt = partial?.pruefung?.zusaetzlicheRegeln ?? [];
+  return {
+    ...DEFAULT_EDITOR_CONFIG.pruefung,
+    ...partial?.pruefung,
+    zusaetzlicheRegeln: [...new Set([...ausProfil, ...genannt])],
   };
 }

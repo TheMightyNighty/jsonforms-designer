@@ -31,9 +31,15 @@ export interface AddFieldAction {
   type: typeof ADD_FIELD;
   payload: AddFieldPayload;
 }
+/**
+ * `label` kommt von außen, nicht aus dem Katalog: Der Reducer ist eine reine
+ * Funktion ohne Zugriff auf i18n, die auslösende Komponente kennt dagegen die
+ * Sprache (ADR 0007).
+ */
 export function createAddFieldAction(
   fieldType: FieldTypeDefinition,
   propertyKey: string,
+  label: string,
   insertAfterScope?: string,
   tabIndex?: number,
 ): AddFieldAction {
@@ -42,10 +48,10 @@ export function createAddFieldAction(
     payload: {
       fieldTypeId: fieldType.id,
       propertyKey,
-      schemaFragment: { ...fieldType.schema, title: fieldType.defaults.label },
+      schemaFragment: { ...fieldType.schema, title: label },
       uiSchemaScope: buildScope(propertyKey),
       uiSchemaOptions: fieldType.uiSchema.options,
-      label: fieldType.defaults.label,
+      label,
       insertAfterScope,
       tabIndex,
       isStructural: fieldType.isStructural,
@@ -172,8 +178,12 @@ export interface ColumnDropPayload {
   fieldTypeId: string;
   /** Gewünschter Property-Key */
   propertyKey: string;
+  /** Vorgabe-Beschriftung, übersetzt — der Reducer kennt keine Sprache. */
+  label: string;
   /** Optional: nach welchem Element-ID einfügen */
   insertAfterId?: string;
+  /** Platzhalter aus dem Regionsprofil, falls es einen vorgibt. */
+  platzhalter?: string;
   /** Nur für FIM-Datenfelder: vollständiges Schema-Fragment */
   fimSchema?: JsonSchema7 & { title?: string };
   /** Nur für FIM-Datenfelder: UI-Schema-Optionen */

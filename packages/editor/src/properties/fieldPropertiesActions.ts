@@ -98,6 +98,8 @@ export interface ChangeFieldTypePayload {
   scope: string;
   /** id eines Eintrags aus FIELD_TYPE_CATALOG */
   feldtypId: string;
+  /** Platzhalter aus dem Regionsprofil, falls es einen vorgibt. */
+  platzhalter?: string;
 }
 
 export interface ChangeFieldTypeAction {
@@ -108,8 +110,12 @@ export interface ChangeFieldTypeAction {
 export function createChangeFieldTypeAction(
   scope: string,
   feldtypId: string,
+  platzhalter?: string,
 ): ChangeFieldTypeAction {
-  return { type: CHANGE_FIELD_TYPE, payload: { scope, feldtypId } };
+  return {
+    type: CHANGE_FIELD_TYPE,
+    payload: { scope, feldtypId, platzhalter },
+  };
 }
 
 /** Extrahiert den propertyKey aus einem scope: "#/properties/vorname" → "vorname" */

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  ermittleFeldtyp,
-  FeldSchema,
-  FELDTYP_FALLBACK_LABEL,
-  feldtypLabel,
-} from './feldtypErkennung';
+import { ermittleFeldtyp, FeldSchema } from './feldtypErkennung';
 import { FIELD_TYPE_CATALOG, FieldTypeDefinition } from './fieldTypes';
 
 /**
@@ -118,18 +113,5 @@ describe('ermittleFeldtyp — Negativfälle', () => {
   it('verwechselt ein fremdes Muster nicht mit IBAN oder Telefonnummer', () => {
     const erkannt = ermittleFeldtyp({ type: 'string', pattern: '^[0-9]{5}$' });
     expect(erkannt?.id).toBe('text-short');
-  });
-});
-
-describe('feldtypLabel', () => {
-  it('liefert das fachsprachliche Label statt des JSON-Basistyps', () => {
-    expect(feldtypLabel({ type: 'string', format: 'date' })).toBe('Datum');
-    expect(feldtypLabel({ type: 'boolean' })).toBe('Checkbox (Ja/Nein)');
-  });
-
-  it('fällt auf einen fachsprachlichen Text zurück, nie auf „string"', () => {
-    const label = feldtypLabel({ type: 'object' } as FeldSchema);
-    expect(label).toBe(FELDTYP_FALLBACK_LABEL);
-    expect(label).not.toMatch(/string|boolean|object/i);
   });
 });

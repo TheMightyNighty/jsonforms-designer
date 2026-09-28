@@ -146,7 +146,141 @@ export const de: EditorTranslations = {
     arbeitsflaeche: 'Formular',
     eigenschaften: 'Eigenschaften',
   },
+  /**
+   * Feldtyp-Texte, geschlüsselt nach Katalog-id (ADR 0007). `name` steht in
+   * der Palette, `label` ist die Vorgabe-Beschriftung des eingefügten Feldes,
+   * `beschreibung` die Erläuterung darunter.
+   */
+  feldtypen: {
+    'text-short': {
+      name: 'Textfeld (einzeilig)',
+      label: 'Textfeld',
+      beschreibung: '',
+    },
+    'text-long': {
+      name: 'Textfeld (mehrzeilig)',
+      label: 'Freitext',
+      beschreibung: '',
+    },
+    integer: { name: 'Ganzzahl', label: 'Ganzzahl', beschreibung: '' },
+    number: { name: 'Dezimalzahl', label: 'Zahl', beschreibung: '' },
+    currency: {
+      name: 'Betrag',
+      label: 'Betrag',
+      beschreibung: 'Geldbetrag mit zwei Nachkommastellen',
+    },
+    date: { name: 'Datum', label: 'Datum', beschreibung: '' },
+    time: { name: 'Uhrzeit', label: 'Uhrzeit', beschreibung: '' },
+    datetime: {
+      name: 'Datum + Uhrzeit',
+      label: 'Datum und Uhrzeit',
+      beschreibung: '',
+    },
+    email: {
+      name: 'E-Mail-Adresse',
+      label: 'E-Mail-Adresse',
+      beschreibung: '',
+    },
+    tel: { name: 'Telefonnummer', label: 'Telefonnummer', beschreibung: '' },
+    url: { name: 'Website-URL', label: 'Website', beschreibung: '' },
+    password: {
+      name: 'Passwort',
+      label: 'Passwort',
+      beschreibung: 'Mindestens 8 Zeichen',
+    },
+    iban: {
+      name: 'IBAN',
+      label: 'IBAN',
+      beschreibung: 'Internationale Bankkontonummer',
+    },
+    checkbox: {
+      name: 'Checkbox (Ja/Nein)',
+      label: 'Checkbox',
+      beschreibung: '',
+    },
+    'checkbox-group': {
+      name: 'Mehrfachauswahl',
+      label: 'Mehrfachauswahl',
+      beschreibung: '',
+    },
+    dropdown: { name: 'Dropdown', label: 'Auswahl', beschreibung: '' },
+    radio: { name: 'Radio-Gruppe', label: 'Optionen', beschreibung: '' },
+    slider: { name: 'Schieberegler', label: 'Wert', beschreibung: '0 – 100' },
+    'file-upload': {
+      name: 'Datei-Upload',
+      label: 'Datei',
+      beschreibung: 'Erlaubte Formate: PDF, JPG, PNG',
+    },
+    'repeat-group': {
+      name: 'Wiederholungsgruppe',
+      label: 'Wiederholungsgruppe',
+      beschreibung: 'Mehrere Einträge hinzufügen (z. B. Personen, Kinder)',
+    },
+    'label-heading': {
+      name: 'Überschrift',
+      label: 'Überschrift',
+      beschreibung: '',
+    },
+    'label-text': {
+      name: 'Hinweistext',
+      label: 'Hier steht ein Hinweistext.',
+      beschreibung: '',
+    },
+    'alert-info': { name: 'Infobox', label: 'ℹ Information', beschreibung: '' },
+    'alert-warning': {
+      name: 'Warnhinweis',
+      label: '⚠ Wichtiger Hinweis',
+      beschreibung: '',
+    },
+    'section-header': {
+      name: 'Abschnittskopf',
+      label: 'Abschnittstitel',
+      beschreibung: 'Dunkler Abschnittskopf wie in amtlichen Formularen',
+    },
+    annotation: {
+      name: 'Annotation (Hinweis rechts)',
+      label: 'Hinweistext (rechts)',
+      beschreibung: 'Kleiner Erläuterungstext neben Feldern',
+    },
+    'col-2': {
+      name: '2 Spalten',
+      label: '2 Spalten',
+      beschreibung: 'Zwei gleichbreite Spalten',
+    },
+    'col-3': {
+      name: '3 Spalten',
+      label: '3 Spalten',
+      beschreibung: 'Drei gleichbreite Spalten',
+    },
+    'col-1-2': {
+      name: 'Schmal + Breit',
+      label: 'Schmal + Breit (1:2)',
+      beschreibung: 'Z. B. PLZ + Ort',
+    },
+    'col-2-1': {
+      name: 'Breit + Schmal',
+      label: 'Breit + Schmal (2:1)',
+      beschreibung: 'Z. B. Straße + Hausnummer',
+    },
+    'col-4': {
+      name: '4 Spalten',
+      label: '4 Spalten',
+      beschreibung: 'Vier gleichbreite Spalten',
+    },
+    'col-custom': {
+      name: 'Spalten (frei)',
+      label: 'Spalten (frei konfigurierbar)',
+      beschreibung: 'Breiten z. B. 1:2:1',
+    },
+    group: {
+      name: 'Gruppe (benannt)',
+      label: 'Gruppe',
+      beschreibung: 'Benannter Abschnitt mit Rahmen',
+    },
+  },
   palette: {
+    feldTooltip: '{name} — Enter fügt das Feld am Ende ein',
+    feldHinzufuegen: '{name} hinzufügen',
     groups: {
       eingabe: 'Eingabe',
       auswahl: 'Auswahl',
@@ -202,6 +336,7 @@ export const de: EditorTranslations = {
     },
   },
   properties: {
+    feldtypUnbekannt: 'Feld',
     emptyHint: 'Feld auswählen,\num Eigenschaften zu bearbeiten',
     label: 'Bezeichnung (Label)',
     description: 'Hilfetext / Beschreibung',
@@ -280,6 +415,7 @@ export const de: EditorTranslations = {
       'Noch keine Felder vorhanden. Im visuellen Modus Felder aus der Palette hinzufügen.',
   },
   actions: {
+    kopieLabel: '{label} (Kopie)',
     duplicate: 'Duplizieren',
     remove: 'Entfernen',
     rename: 'Umbenennen',

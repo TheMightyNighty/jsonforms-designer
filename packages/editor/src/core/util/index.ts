@@ -8,5 +8,6 @@ export * from './legacyMetadataMigration';
 export * from './ofmExport';
 export * from './plainText';
 export * from './sanitizeJson';
+export * from './textVorlage';
 export * from './xdfExport';
 export * from './zipStored';

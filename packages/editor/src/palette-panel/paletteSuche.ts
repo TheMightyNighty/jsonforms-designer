@@ -37,14 +37,19 @@ export function istSuchaktiv(suchtext: string): boolean {
   return suchtext.trim().length >= SUCHE_MIN_LAENGE;
 }
 
-/** Feldtypen, deren Name auf den Suchtext passt. */
+/**
+ * Feldtypen, deren Name auf den Suchtext passt. Die Namen kommen von außen:
+ * Gesucht wird in der Sprache, in der die Palette beschriftet ist, und die
+ * kennt der Katalog nicht (ADR 0007).
+ */
 export function sucheFeldtypen(
   feldtypen: readonly FieldTypeDefinition[],
   suchtext: string,
+  name: (feldtypId: string) => string,
 ): FieldTypeDefinition[] {
   if (!istSuchaktiv(suchtext)) return [];
   const nadel = normalisiereSuchtext(suchtext);
-  return feldtypen.filter((ft) => enthaelt(ft.displayName, nadel));
+  return feldtypen.filter((ft) => enthaelt(name(ft.id), nadel));
 }
 
 /**
