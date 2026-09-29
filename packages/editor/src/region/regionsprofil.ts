@@ -40,6 +40,12 @@ export interface Regionsprofil {
    * raten.
    */
   typvorschlaege?: readonly Vorschlagsregel[];
+  /**
+   * Regionale Exportformate, die der Export-Dialog zusätzlich anbietet.
+   * OFM und XDF sind Standards der deutschen Verwaltung; wer nur
+   * JSON-Schema-Formulare baut, braucht keine Reiter dafür (ADR 0007).
+   */
+  exportformate?: readonly ('ofm' | 'xdf')[];
 }
 
 /** Default des Kerns: nichts Regionales. */
@@ -54,6 +60,7 @@ export const REGION_DE: Regionsprofil = {
   },
   pruefRegeln: ['formular-ohne-rechtsgrundlage'],
   typvorschlaege: TYPVORSCHLAEGE_DE,
+  exportformate: ['ofm', 'xdf'],
 };
 
 /** Mitgelieferte Profile, für eine Auswahl in der Oberfläche. */
