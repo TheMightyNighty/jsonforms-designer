@@ -7,8 +7,8 @@
  * unterscheidet datengetriebene von codegetriebenen Erweiterungen, die
  * Vertrauen und einen Build erfordern.
  *
- * Ein Paket kann **hinzufügen**: Feldtypen, Bausteine, ein Regionsprofil,
- * Begriffe. Es kann **keinen** Feldtyp des Kerns ersetzen: Eine id, die der
+ * Ein Paket kann **hinzufügen**: Feldtypen, Bausteine, Formularvorlagen, ein
+ * Regionsprofil, Begriffe. Es kann **keinen** Feldtyp des Kerns ersetzen: Eine id, die der
  * Katalog schon führt, wird verworfen. Sonst könnte eine Bibliothek
  * unbemerkt ändern, was „E-Mail-Adresse" bedeutet, und zwei Formulare
  * hießen dasselbe, ohne es zu sein.
@@ -20,6 +20,7 @@ import {
   FieldSchemaFragment,
   FieldUiSchemaFragment,
 } from '../field-types/fieldTypes';
+import { FormTemplate } from '../field-types/formTemplates';
 import { Regionsprofil } from '../region/regionsprofil';
 
 /**
@@ -46,6 +47,8 @@ export interface Erweiterungspaket {
   beschreibung?: string;
   feldtypen?: ErweiterungsFeldtyp[];
   bausteine?: Baustein[];
+  /** Fertige Formulare, die die Vorlagenauswahl zusätzlich anbietet. */
+  vorlagen?: FormTemplate[];
   region?: Regionsprofil;
   /**
    * Begriffe überschreiben, je Sprachkürzel und mit dem Pfad in den

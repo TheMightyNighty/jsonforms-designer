@@ -12,8 +12,9 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 
+import { useErweiterungen } from '../erweiterung/ErweiterungenProvider';
 import { useI18n } from '../i18n';
-import { FORM_TEMPLATES, FormTemplate } from './formTemplates';
+import { FormTemplate } from './formTemplates';
 
 interface TemplatePickerDialogProps {
   open: boolean;
@@ -27,10 +28,12 @@ export function TemplatePickerDialog({
   onSelect,
 }: TemplatePickerDialogProps) {
   const { t } = useI18n();
+  // Kern-Vorlagen plus die aktiver Erweiterungspakete (ADR 0007).
+  const vorlagen = useErweiterungen().aufgeloest.vorlagen;
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleConfirm = () => {
-    const tpl = FORM_TEMPLATES.find((t) => t.id === selected);
+    const tpl = vorlagen.find((t) => t.id === selected);
     if (tpl) {
       onSelect(tpl);
       onClose();
@@ -44,7 +47,7 @@ export function TemplatePickerDialog({
         <Box
           sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: 0.5 }}
         >
-          {FORM_TEMPLATES.map((tpl) => (
+          {vorlagen.map((tpl) => (
             <Card
               key={tpl.id}
               variant="outlined"

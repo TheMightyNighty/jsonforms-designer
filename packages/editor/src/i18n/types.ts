@@ -103,6 +103,14 @@ export interface EditorTranslations {
     { name: string; label: string; beschreibung: string }
   >;
   erweiterungen: {
+    vonUrl: string;
+    urlPlatzhalter: string;
+    laden: string;
+    ladeFehler: {
+      nichtErreichbar: string;
+      keinJson: string;
+      unbrauchbar: string;
+    };
     menue: string;
     titel: string;
     einleitung: string;

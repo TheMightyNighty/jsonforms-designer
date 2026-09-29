@@ -260,6 +260,16 @@ export const en: EditorTranslations = {
     },
   },
   erweiterungen: {
+    vonUrl: 'Or load from an address',
+    urlPlatzhalter: 'https://intranet.example/library.json',
+    laden: 'Load',
+    ladeFehler: {
+      nichtErreichbar:
+        'The address cannot be reached. This may be a typo, a server that is down, or a content policy blocking the request.',
+      keinJson: 'The response is not readable JSON.',
+      unbrauchbar:
+        'The response contains no usable extension package (id, name and at least one contribution are required).',
+    },
     menue: 'Extensions …',
     titel: 'Extensions',
     einleitung:

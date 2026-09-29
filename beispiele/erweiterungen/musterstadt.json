@@ -3,7 +3,6 @@
   "name": "Musterstadt",
   "version": "1.0.0",
   "beschreibung": "Beispiel-Bibliothek: ein eigener Feldtyp, ein Baustein, ein Begriff und ein Regionsprofil",
-
   "feldtypen": [
     {
       "id": "kfz-kennzeichen",
@@ -13,7 +12,11 @@
         "type": "string",
         "pattern": "^[A-ZÄÖÜ]{1,3}-[A-Z]{1,2}[0-9]{1,4}$"
       },
-      "uiSchema": { "options": { "placeholder": "M-AB123" } },
+      "uiSchema": {
+        "options": {
+          "placeholder": "M-AB123"
+        }
+      },
       "texte": {
         "de": {
           "name": "Kfz-Kennzeichen",
@@ -28,7 +31,6 @@
       }
     }
   ],
-
   "bausteine": [
     {
       "id": "musterstadt-fahrzeug",
@@ -40,8 +42,13 @@
         {
           "propertyKey": "kennzeichen",
           "label": "Kennzeichen",
-          "schemaFragment": { "type": "string", "title": "Kennzeichen" },
-          "uiSchemaOptions": { "placeholder": "M-AB123" }
+          "schemaFragment": {
+            "type": "string",
+            "title": "Kennzeichen"
+          },
+          "uiSchemaOptions": {
+            "placeholder": "M-AB123"
+          }
         },
         {
           "propertyKey": "halter",
@@ -63,14 +70,64 @@
       ]
     }
   ],
-
   "region": {
     "id": "de-by",
-    "platzhalter": { "tel": "+49 89 ...", "email": "name@musterstadt.de" }
+    "platzhalter": {
+      "tel": "+49 89 ...",
+      "email": "name@musterstadt.de"
+    }
   },
-
   "texte": {
-    "de": { "header.title": "Antragsdesigner Musterstadt" },
-    "en": { "header.title": "Musterstadt Form Designer" }
-  }
+    "de": {
+      "header.title": "Antragsdesigner Musterstadt"
+    },
+    "en": {
+      "header.title": "Musterstadt Form Designer"
+    }
+  },
+  "vorlagen": [
+    {
+      "id": "musterstadt-bewohnerparkausweis",
+      "displayName": "Bewohnerparkausweis",
+      "description": "Kennzeichen, Halterin oder Halter, Anschrift",
+      "icon": "car",
+      "state": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "kennzeichen": {
+              "type": "string",
+              "title": "Kennzeichen"
+            },
+            "halter": {
+              "type": "string",
+              "title": "Halterin oder Halter"
+            },
+            "strasse": {
+              "type": "string",
+              "title": "Straße und Hausnummer"
+            }
+          },
+          "required": ["kennzeichen", "halter"]
+        },
+        "uiSchema": {
+          "type": "VerticalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/kennzeichen"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/halter"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/strasse"
+            }
+          ]
+        }
+      }
+    }
+  ]
 }

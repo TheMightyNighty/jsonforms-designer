@@ -7,6 +7,7 @@ import {
   LocalStorageErweiterungsBibliothek,
 } from './erweiterungsBibliothek';
 import { Erweiterungspaket } from './erweiterungspaket';
+import { ladeErweiterungVonUrl } from './ladeErweiterung';
 import { normalisiereErweiterung } from './normalisiereErweiterung';
 
 // ---------------------------------------------------------------------------
@@ -285,5 +286,136 @@ describe('LocalStorageErweiterungsBibliothek', () => {
     expect(new LocalStorageErweiterungsBibliothek(speicher).liste()).toEqual(
       [],
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Vorlagen als fünfte Beitragsart
+// ---------------------------------------------------------------------------
+
+const vorlage = {
+  id: 'musterstadt-parkausweis',
+  displayName: 'Bewohnerparkausweis',
+  description: 'Antrag auf einen Bewohnerparkausweis',
+  icon: 'car',
+  state: {
+    schema: { type: 'object', properties: { kennzeichen: { type: 'string' } } },
+    uiSchema: { type: 'VerticalLayout', elements: [] },
+  },
+};
+
+describe('Vorlagen aus Erweiterungen', () => {
+  it('nimmt eine Vorlage mit Schema und uiSchema an', () => {
+    const paket = normalisiereErweiterung({
+      id: 'p',
+      name: 'P',
+      vorlagen: [vorlage],
+    });
+    expect(paket?.vorlagen).toHaveLength(1);
+    expect(paket?.vorlagen?.[0].displayName).toBe('Bewohnerparkausweis');
+  });
+
+  it('verwirft eine Vorlage ohne Formularzustand', () => {
+    const melder = vi.fn();
+    const paket = normalisiereErweiterung(
+      { id: 'p', name: 'P', vorlagen: [{ id: 'x', displayName: 'X' }] },
+      melder,
+    );
+    expect(paket).toBeUndefined();
+    expect(melder).toHaveBeenCalled();
+  });
+
+  it('hängt sie hinter die Kern-Vorlagen', () => {
+    const { vorlagen } = loeseErweiterungenAuf([
+      { id: 'p', name: 'P', vorlagen: [vorlage] },
+    ]);
+    expect(vorlagen.at(-1)?.id).toBe('musterstadt-parkausweis');
+    expect(vorlagen.length).toBeGreaterThan(1);
+  });
+
+  it('lässt eine Kern-Vorlage nicht ersetzen und meldet es', () => {
+    const { vorlagen, konflikte } = loeseErweiterungenAuf([
+      { id: 'p', name: 'P', vorlagen: [{ ...vorlage, id: 'kontakt' }] },
+    ]);
+    expect(vorlagen.filter((v) => v.id === 'kontakt')).toHaveLength(1);
+    expect(konflikte[0]).toContain('kontakt');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Von einer URL laden
+// ---------------------------------------------------------------------------
+
+function antwort(nutzlast: unknown, ok = true, status = 200): Response {
+  return {
+    ok,
+    status,
+    json: async () => nutzlast,
+  } as Response;
+}
+
+describe('ladeErweiterungVonUrl', () => {
+  const gueltig = { id: 'p', name: 'P', vorlagen: [vorlage] };
+
+  it('holt ein Paket und normalisiert es', async () => {
+    const paket = await ladeErweiterungVonUrl('https://example/bib.json', {
+      fetchFn: async () => antwort(gueltig),
+    });
+    expect(paket.id).toBe('p');
+    expect(paket.vorlagen).toHaveLength(1);
+  });
+
+  it('fragt als JSON und ohne fremde Anmeldedaten', async () => {
+    let gesehen: RequestInit | undefined;
+    await ladeErweiterungVonUrl('https://example/bib.json', {
+      fetchFn: async (_u, init) => {
+        gesehen = init;
+        return antwort(gueltig);
+      },
+    });
+    expect(gesehen?.headers).toMatchObject({ Accept: 'application/json' });
+    expect(gesehen?.credentials).toBe('same-origin');
+  });
+
+  it('meldet einen HTTP-Fehler als nicht erreichbar', async () => {
+    await expect(
+      ladeErweiterungVonUrl('https://example/weg.json', {
+        fetchFn: async () => antwort(null, false, 404),
+      }),
+    ).rejects.toMatchObject({ grund: 'nicht-erreichbar' });
+  });
+
+  it('meldet einen Netzwerk- oder CSP-Abbruch als nicht erreichbar', async () => {
+    await expect(
+      ladeErweiterungVonUrl('https://example/bib.json', {
+        fetchFn: async () => {
+          throw new TypeError('NetworkError');
+        },
+      }),
+    ).rejects.toMatchObject({ grund: 'nicht-erreichbar' });
+  });
+
+  it('meldet eine Antwort ohne JSON', async () => {
+    await expect(
+      ladeErweiterungVonUrl('https://example/bib.json', {
+        fetchFn: async () =>
+          ({
+            ok: true,
+            status: 200,
+            json: async () => {
+              throw new SyntaxError('kein JSON');
+            },
+          }) as Response,
+      }),
+    ).rejects.toMatchObject({ grund: 'kein-json' });
+  });
+
+  it('meldet ein Paket ohne verwertbaren Inhalt', async () => {
+    await expect(
+      ladeErweiterungVonUrl('https://example/bib.json', {
+        fetchFn: async () => antwort({ id: 'leer', name: 'Leer' }),
+        onEintragVerworfen: () => {},
+      }),
+    ).rejects.toMatchObject({ grund: 'unbrauchbar' });
   });
 });
