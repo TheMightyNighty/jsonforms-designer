@@ -435,6 +435,20 @@ export const de: EditorTranslations = {
     gruppenTitle: 'Gruppenüberschrift',
   },
   dialog: {
+    ofmHinweis:
+      'Exportiert das Formular als OFM-Paket (Offenes Formularmodell 1.0, Konformitätsklasse A): ein ZIP mit form.manifest.json, schema.json und uischema.json. Die Artefakt-Hashes (SHA-256) werden über die exportierten Dateien berechnet.',
+    ofmFehlend:
+      'Für ein gültiges Manifest fehlen folgende Angaben (Dialog „Formular-Metadaten"): {felder}',
+    ofmHerunterladen: 'OFM-Paket (ZIP) herunterladen',
+    ofmFussnote:
+      'Interne Editor-Optionen (Platzhalter, Varianten, Freitextfarben) werden nicht exportiert; Abschnittsfarben werden als ofm:sectionColor-Token, Spaltenbreiten als ofm:width (1–12) geschrieben.',
+    xdfHinweis:
+      'Exportiert das Formular als XDatenfelder 2.0 (XDF2) — dem bundesweit gültigen Standard für FIM-Bausteine. Die XML-Datei kann in FIM-Portal-kompatible Systeme importiert werden.',
+    xdfHerunterladen: 'XDF 2.0 herunterladen',
+    xdfFussnote:
+      'Enthält: alle Datenfelder des Formulars, Metadaten (Titel, Herausgeber, Rechtsgrundlage), Datentypen und Einschränkungen. FIM-Identifier (x-fim-id) werden übernommen.',
+    migrationHinweis:
+      'Formular-Metadaten (x-publisher u. a.) wurden aus dem Schema in das Manifest übernommen (OFM-R-304). Beim nächsten Export sind sie Teil von form.manifest.json.',
     speichern: 'Speichern',
     templateTitle: 'Vorlage auswählen',
     templateLoad: 'Vorlage laden',

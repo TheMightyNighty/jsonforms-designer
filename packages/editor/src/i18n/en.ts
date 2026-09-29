@@ -413,6 +413,20 @@ export const en: EditorTranslations = {
     gruppenTitle: 'Group heading',
   },
   dialog: {
+    ofmHinweis:
+      'Exports the form as an OFM package (Offenes Formularmodell 1.0, conformance class A): a ZIP containing form.manifest.json, schema.json and uischema.json. The artefact hashes (SHA-256) are computed over the exported files.',
+    ofmFehlend:
+      'The manifest is incomplete. Missing entries (dialog “Form metadata”): {felder}',
+    ofmHerunterladen: 'Download OFM package (ZIP)',
+    ofmFussnote:
+      'Editor-internal options (placeholders, variants, free-text colours) are not exported; section colours are written as ofm:sectionColor tokens, column widths as ofm:width (1–12).',
+    xdfHinweis:
+      'Exports the form as XDatenfelder 2.0 (XDF2) — the German federal standard for FIM components. The XML file can be imported into FIM-Portal-compatible systems.',
+    xdfHerunterladen: 'Download XDF 2.0',
+    xdfFussnote:
+      'Contains: all data fields of the form, metadata (title, publisher, legal basis), data types and constraints. FIM identifiers (x-fim-id) are carried over.',
+    migrationHinweis:
+      'Form metadata (x-publisher and others) has been moved from the schema into the manifest (OFM-R-304). From the next export on it is part of form.manifest.json.',
     speichern: 'Save',
     templateTitle: 'Select template',
     templateLoad: 'Load template',

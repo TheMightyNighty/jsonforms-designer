@@ -249,6 +249,14 @@ export interface EditorTranslations {
     gruppenTitle: string;
   };
   dialog: {
+    ofmHinweis: string;
+    ofmFehlend: string;
+    ofmHerunterladen: string;
+    ofmFussnote: string;
+    xdfHinweis: string;
+    xdfHerunterladen: string;
+    xdfFussnote: string;
+    migrationHinweis: string;
     speichern: string;
     templateTitle: string;
     templateLoad: string;

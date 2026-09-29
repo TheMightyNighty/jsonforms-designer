@@ -15,8 +15,9 @@ import {
   Tabs,
   Typography,
 } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
+import { useRegion } from '../../erweiterung/ErweiterungenProvider';
 import { useI18n } from '../../i18n';
 import { FieldAwareState } from '../model/addFieldReducer';
 import { emptyManifestMeta } from '../model/manifestMeta';
@@ -24,6 +25,7 @@ import { FlatElement, fromLegacy, UiElement } from '../model/uiElements';
 import { hasLegacySchemaMetadata } from '../util/legacyMetadataMigration';
 import { missingManifestFields, serializeOfmExport } from '../util/ofmExport';
 import { sanitizeParsedJson } from '../util/sanitizeJson';
+import { fuelleVorlage } from '../util/textVorlage';
 import { downloadXdf } from '../util/xdfExport';
 import { buildStoredZip } from '../util/zipStored';
 import { FormattedJson } from './Formatted';
@@ -85,10 +87,32 @@ export function ImportExportDialog({
   onImport,
 }: ImportExportDialogProps) {
   const { t } = useI18n();
+  const region = useRegion();
+
+  // Die Reiter stehen in einer Liste statt an festen Indizes: OFM und XDF
+  // sind Standards der deutschen Verwaltung und nur da, wenn das
+  // Regionsprofil sie nennt (ADR 0007).
+  const reiter = useMemo(() => {
+    const formate = region?.exportformate ?? [];
+    return [
+      { id: 'schema' as const, label: t.dialog.schemaTab },
+      { id: 'uischema' as const, label: t.dialog.uiSchemaTab },
+      ...(formate.includes('ofm')
+        ? [{ id: 'ofm' as const, label: 'OFM 1.0' }]
+        : []),
+      ...(formate.includes('xdf')
+        ? [{ id: 'xdf' as const, label: 'XDF 2.0' }]
+        : []),
+      { id: 'import' as const, label: t.dialog.importTab },
+    ];
+  }, [region, t]);
   const [tab, setTab] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
   const [migrationNotice, setMigrationNotice] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Schaltet ein Profil einen Reiter ab, während er gewählt ist, fällt die
+  // Anzeige auf den letzten vorhandenen zurück statt ins Leere.
+  const aktiv = reiter[Math.min(tab, reiter.length - 1)].id;
 
   const exportedUiSchema = buildExportUiSchema(fieldState);
   const ofmMissing = missingManifestFields(fieldState);
@@ -151,10 +175,10 @@ export function ImportExportDialog({
           setImportError(null);
           onClose();
         } else {
-          setImportError('Ungültiges Format. Erwartet: { schema, uiSchema }');
+          setImportError(t.dialog.importError);
         }
       } catch {
-        setImportError('Ungültige JSON-Datei.');
+        setImportError(t.dialog.invalidJson);
       }
     };
     reader.readAsText(file);
@@ -166,15 +190,17 @@ export function ImportExportDialog({
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
         <DialogTitle>{t.dialog.exportTitle}</DialogTitle>
         <DialogContent sx={{ height: '60vh' }}>
-          <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 1 }}>
-            <Tab label={t.dialog.schemaTab} />
-            <Tab label={t.dialog.uiSchemaTab} />
-            <Tab label="OFM 1.0" />
-            <Tab label="XDF 2.0" />
-            <Tab label={t.dialog.importTab} />
+          <Tabs
+            value={Math.min(tab, reiter.length - 1)}
+            onChange={(_, v) => setTab(v)}
+            sx={{ mb: 1 }}
+          >
+            {reiter.map((r) => (
+              <Tab key={r.id} label={r.label} />
+            ))}
           </Tabs>
 
-          {tab === 0 && (
+          {aktiv === 'schema' && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
                 <Button
@@ -182,13 +208,13 @@ export function ImportExportDialog({
                   startIcon={<DownloadIcon />}
                   onClick={() => downloadJson(fieldState.schema, 'schema.json')}
                 >
-                  Herunterladen
+                  {t.dialog.download}
                 </Button>
               </Box>
               <FormattedJson object={fieldState.schema} />
             </Box>
           )}
-          {tab === 1 && (
+          {aktiv === 'uischema' && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
                 <Button
@@ -198,27 +224,24 @@ export function ImportExportDialog({
                     downloadJson(exportedUiSchema, 'ui-schema.json')
                   }
                 >
-                  Herunterladen
+                  {t.dialog.download}
                 </Button>
               </Box>
               <FormattedJson object={exportedUiSchema} />
             </Box>
           )}
-          {tab === 2 && (
+          {aktiv === 'ofm' && (
             <Box
               sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}
             >
               <Alert severity="info" icon={<VerifiedIcon fontSize="inherit" />}>
-                Exportiert das Formular als <strong>OFM-Paket</strong> (Offenes
-                Formularmodell 1.0, Konformitätsklasse A): ein ZIP mit{' '}
-                <code>form.manifest.json</code>, <code>schema.json</code> und{' '}
-                <code>uischema.json</code>. Die Artefakt-Hashes (SHA-256) werden
-                über die exportierten Dateien berechnet.
+                {t.dialog.ofmHinweis}
               </Alert>
               {ofmMissing.length > 0 && (
                 <Alert severity="warning">
-                  Für ein gültiges Manifest fehlen folgende Angaben (Dialog
-                  „Formular-Metadaten"): {ofmMissing.join(', ')}
+                  {fuelleVorlage(t.dialog.ofmFehlend, {
+                    felder: ofmMissing.join(', '),
+                  })}
                 </Alert>
               )}
               <Box>
@@ -228,48 +251,37 @@ export function ImportExportDialog({
                   disabled={ofmMissing.length > 0}
                   onClick={() => void downloadOfmPackage()}
                 >
-                  OFM-Paket (ZIP) herunterladen
+                  {t.dialog.ofmHerunterladen}
                 </Button>
               </Box>
               <Typography variant="caption" color="text.secondary">
-                Interne Editor-Optionen (Platzhalter, Varianten, Freitextfarben)
-                werden nicht exportiert; Abschnittsfarben werden als
-                ofm:sectionColor-Token, Spaltenbreiten als ofm:width (1–12)
-                geschrieben.
+                {t.dialog.ofmFussnote}
               </Typography>
             </Box>
           )}
-          {tab === 3 && (
+          {aktiv === 'xdf' && (
             <Box
               sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}
             >
-              <Alert severity="info">
-                Exportiert das Formular als{' '}
-                <strong>XDatenfelder 2.0 (XDF2)</strong> — dem bundesweit
-                gültigen Standard für FIM-Bausteine. Die XML-Datei kann in
-                FIM-Portal-kompatible Systeme importiert werden.
-              </Alert>
+              <Alert severity="info">{t.dialog.xdfHinweis}</Alert>
               <Box>
                 <Button
                   variant="contained"
                   startIcon={<DownloadIcon />}
                   onClick={() => downloadXdf(fieldState)}
                 >
-                  XDF 2.0 herunterladen
+                  {t.dialog.xdfHerunterladen}
                 </Button>
               </Box>
               <Typography variant="caption" color="text.secondary">
-                Enthält: alle Datenfelder des Formulars, Metadaten (Titel,
-                Behörde, Rechtsgrundlage), Datentypen und Einschränkungen.
-                FIM-Identifier (x-fim-id) werden übernommen.
+                {t.dialog.xdfFussnote}
               </Typography>
             </Box>
           )}
-          {tab === 4 && (
+          {aktiv === 'import' && (
             <Box sx={{ pt: 1 }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                JSON-Datei hochladen mit <code>schema</code> und{' '}
-                <code>uiSchema</code>. Das aktuelle Formular wird überschrieben.
+                {t.dialog.importHint}
               </Typography>
               {importError && (
                 <Alert severity="error" sx={{ mb: 2 }}>
@@ -288,7 +300,7 @@ export function ImportExportDialog({
                 startIcon={<UploadIcon />}
                 onClick={() => fileRef.current?.click()}
               >
-                JSON-Datei auswählen
+                {t.dialog.selectFile}
               </Button>
             </Box>
           )}
@@ -306,9 +318,7 @@ export function ImportExportDialog({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert severity="info" onClose={() => setMigrationNotice(false)}>
-          Formular-Metadaten (x-publisher u. a.) wurden aus dem Schema in das
-          Manifest übernommen (OFM-R-304). Beim nächsten Export sind sie Teil
-          von form.manifest.json.
+          {t.dialog.migrationHinweis}
         </Alert>
       </Snackbar>
     </>
