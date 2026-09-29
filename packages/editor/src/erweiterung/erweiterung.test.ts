@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { FormTemplate } from '../field-types/formTemplates';
 import { de } from '../i18n/de';
+import { Regionsprofil } from '../region/regionsprofil';
 import { loeseErweiterungenAuf, wendeTexteAn } from './aufloesen';
 import {
   ERWEITERUNGEN_KEY,
@@ -420,5 +421,67 @@ describe('ladeErweiterungVonUrl', () => {
         onEintragVerworfen: () => {},
       }),
     ).rejects.toMatchObject({ grund: 'unbrauchbar' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Die Vereinigung der Regionsprofile darf kein Feld verlieren
+// ---------------------------------------------------------------------------
+
+describe('vereinigungIstVollstaendig', () => {
+  /**
+   * `Required<Regionsprofil>` zwingt diese Beispiele dazu, jedes Feld zu
+   * belegen. Kommt eines dazu, schlägt zuerst der Typecheck hier an — und
+   * wird es dann in der Vereinigung vergessen, fällt dieser Test.
+   *
+   * Der Anlass war echt: `typvorschlaege` und `exportformate` fehlten in
+   * der Vereinigung, und ein Paket mit eigenem Profil nahm dem deutschen
+   * Profil still seine Stichwörter und Exportformate weg.
+   */
+  const a: Required<Regionsprofil> = {
+    id: 'a',
+    platzhalter: { tel: 'A' },
+    muster: { tel: '^A' },
+    pruefRegeln: ['formular-ohne-rechtsgrundlage'],
+    typvorschlaege: [
+      { feldtypId: 'date', modus: 'teil', stichwoerter: ['datum'] },
+    ],
+    exportformate: ['ofm'],
+  };
+  const b: Required<Regionsprofil> = {
+    id: 'b',
+    platzhalter: { iban: 'B' },
+    muster: { iban: '^B' },
+    pruefRegeln: ['feld-ohne-label'],
+    typvorschlaege: [
+      { feldtypId: 'time', modus: 'teil', stichwoerter: ['uhrzeit'] },
+    ],
+    exportformate: ['xdf'],
+  };
+
+  it('trägt jedes Feld des Profils weiter', () => {
+    const { region } = loeseErweiterungenAuf(
+      [{ id: 'p', name: 'P', region: b }],
+      a,
+    );
+    for (const feld of Object.keys(a) as (keyof Regionsprofil)[]) {
+      const wert = region?.[feld];
+      expect(wert, `Feld „${feld}" fehlt in der Vereinigung`).toBeTruthy();
+      if (Array.isArray(wert)) expect(wert.length, feld).toBeGreaterThan(0);
+    }
+  });
+
+  it('behält die Beiträge beider Profile', () => {
+    const { region } = loeseErweiterungenAuf(
+      [{ id: 'p', name: 'P', region: b }],
+      a,
+    );
+    expect(region?.platzhalter).toEqual({ tel: 'A', iban: 'B' });
+    expect(region?.exportformate).toEqual(['ofm', 'xdf']);
+    expect(region?.typvorschlaege).toHaveLength(2);
+    expect(region?.pruefRegeln).toEqual([
+      'formular-ohne-rechtsgrundlage',
+      'feld-ohne-label',
+    ]);
   });
 });

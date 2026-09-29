@@ -39,10 +39,14 @@ export interface AufgeloesteErweiterungen {
 }
 
 /**
- * Vereinigt die Regionsprofile: Platzhalter und Muster werden gemischt,
- * Prüfregeln vereinigt. Ein späteres Paket überschreibt einen einzelnen
- * Platzhalter, wirft aber nicht das ganze Profil weg — sonst hinge das
- * Ergebnis an der Reihenfolge, in der jemand seine Pakete hinzugefügt hat.
+ * Vereinigt die Regionsprofile: Karten werden gemischt, Listen verkettet.
+ * Ein späteres Paket überschreibt einen einzelnen Platzhalter, wirft aber
+ * nicht das ganze Profil weg — sonst hinge das Ergebnis an der Reihenfolge,
+ * in der jemand seine Pakete hinzugefügt hat.
+ *
+ * **Jedes Feld von `Regionsprofil` muss hier vorkommen.** Wer eines
+ * vergisst, verliert es still, sobald ein Paket irgendein Profil mitbringt.
+ * `vereinigungIstVollstaendig` in den Tests hält das fest.
  */
 function vereinigeRegionen(
   profile: readonly Regionsprofil[],
@@ -54,6 +58,10 @@ function vereinigeRegionen(
     platzhalter: Object.assign({}, ...profile.map((p) => p.platzhalter ?? {})),
     muster: Object.assign({}, ...profile.map((p) => p.muster ?? {})),
     pruefRegeln: [...new Set(profile.flatMap((p) => p.pruefRegeln ?? []))],
+    // Reihenfolge zählt: Die erste passende Vorschlagsregel gewinnt, und das
+    // Grundprofil steht vorn.
+    typvorschlaege: profile.flatMap((p) => p.typvorschlaege ?? []),
+    exportformate: [...new Set(profile.flatMap((p) => p.exportformate ?? []))],
   };
 }
 
