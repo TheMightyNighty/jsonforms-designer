@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { FormTemplate } from '../field-types/formTemplates';
 import { de } from '../i18n/de';
 import { loeseErweiterungenAuf, wendeTexteAn } from './aufloesen';
 import {
@@ -293,6 +294,8 @@ describe('LocalStorageErweiterungsBibliothek', () => {
 // Vorlagen als fünfte Beitragsart
 // ---------------------------------------------------------------------------
 
+// `state` ist bewusst unvollständig: Die Normalisierung prüft nur Schema und
+// uiSchema, den Rest ergänzt normalizeFieldState beim Laden.
 const vorlage = {
   id: 'musterstadt-parkausweis',
   displayName: 'Bewohnerparkausweis',
@@ -302,7 +305,7 @@ const vorlage = {
     schema: { type: 'object', properties: { kennzeichen: { type: 'string' } } },
     uiSchema: { type: 'VerticalLayout', elements: [] },
   },
-};
+} as unknown as FormTemplate;
 
 describe('Vorlagen aus Erweiterungen', () => {
   it('nimmt eine Vorlage mit Schema und uiSchema an', () => {
@@ -351,7 +354,7 @@ function antwort(nutzlast: unknown, ok = true, status = 200): Response {
     ok,
     status,
     json: async () => nutzlast,
-  } as Response;
+  } as unknown as Response;
 }
 
 describe('ladeErweiterungVonUrl', () => {
@@ -405,7 +408,7 @@ describe('ladeErweiterungVonUrl', () => {
             json: async () => {
               throw new SyntaxError('kein JSON');
             },
-          }) as Response,
+          }) as unknown as Response,
       }),
     ).rejects.toMatchObject({ grund: 'kein-json' });
   });

@@ -13,7 +13,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useRegion } from '../../erweiterung/ErweiterungenProvider';
 import { useI18n } from '../../i18n';
@@ -66,9 +66,18 @@ export function MetadataDialog({
     readMeta(schema, manifestMeta),
   );
 
-  useEffect(() => {
+  // Beim Öffnen die Werte frisch aus Schema und Manifest lesen, damit der
+  // Dialog nicht zeigt, was beim letzten Mal drinstand. Angleichen im
+  // Render statt im Effekt: Ein Effekt zeigte kurz die alten Werte.
+  const [quelle, setQuelle] = useState({ open, schema, manifestMeta });
+  if (
+    quelle.open !== open ||
+    quelle.schema !== schema ||
+    quelle.manifestMeta !== manifestMeta
+  ) {
+    setQuelle({ open, schema, manifestMeta });
     if (open) setMeta(readMeta(schema, manifestMeta));
-  }, [open, schema, manifestMeta]);
+  }
 
   function set(key: keyof FormMetadata, value: string) {
     setMeta((prev) => ({ ...prev, [key]: value }));

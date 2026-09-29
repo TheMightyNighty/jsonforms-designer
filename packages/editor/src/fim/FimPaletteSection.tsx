@@ -437,6 +437,8 @@ export function FimPaletteSection({
 
   // Gruppen einmalig laden
   useEffect(() => {
+    // Der Ladezustand gehört zum Abruf und wird gesetzt, bevor er losläuft.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Außensynchronisation, kein abgeleiteter Zustand (siehe Kommentar darüber)
     setGruppenLoading(true);
     service.getDatenfeldgruppen().then((g) => {
       setGruppen(g);

@@ -127,8 +127,13 @@ export function ConditionEditor({
     existingRule?.effect ?? 'SHOW',
   );
 
-  // Sync wenn das selektierte Feld wechselt
-  useEffect(() => {
+  // Die Eingaben zeigen die Bedingung des gewählten Feldes. Wechselt das
+  // Feld oder ändert sich das uiSchema (auch durch Rückgängig), werden sie
+  // neu gelesen. Angleichen im Render statt im Effekt: Sonst stünde für
+  // einen Durchlauf die Bedingung des vorigen Feldes da.
+  const [quelle, setQuelle] = useState({ uiSchema, selectedScope });
+  if (quelle.uiSchema !== uiSchema || quelle.selectedScope !== selectedScope) {
+    setQuelle({ uiSchema, selectedScope });
     const r = findRule(uiSchema, selectedScope);
     const gelesen = leseBedingung(r);
     setEnabled(!!r);
@@ -136,7 +141,7 @@ export function ConditionEditor({
     setOperator(gelesen.operator);
     setCondValue(gelesen.wert);
     setEffect(r?.effect ?? 'SHOW');
-  }, [selectedScope, uiSchema]);
+  }
 
   function removeRule() {
     dispatch(createSetFieldRuleAction(selectedScope, null));

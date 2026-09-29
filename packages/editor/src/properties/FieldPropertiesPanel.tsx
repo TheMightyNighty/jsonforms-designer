@@ -35,7 +35,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { Dispatch, useEffect, useState } from 'react';
+import { Dispatch, useState } from 'react';
 
 import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
@@ -486,11 +486,15 @@ export function FieldPropertiesPanel({
   const { t } = useI18n();
   const [tab, setTab] = useState(0);
 
-  // Tab-Auswahl je Feld zurücksetzen — sonst bliebe man beim Wechsel zu
-  // einem anderen Feld z. B. auf "Übersetzung" stehen.
-  useEffect(() => {
+  // Reiterwahl je Feld zurücksetzen — sonst bliebe man beim Wechsel zu
+  // einem anderen Feld z. B. auf „Übersetzung" stehen. Angleichen im Render
+  // statt im Effekt: Sonst zeigte der erste Durchlauf noch den alten Reiter
+  // zum neuen Feld.
+  const [reiterScope, setReiterScope] = useState(selectedScope);
+  if (reiterScope !== selectedScope) {
+    setReiterScope(selectedScope);
     setTab(0);
-  }, [selectedScope]);
+  }
 
   if (!selectedScope) return <EmptyState />;
 

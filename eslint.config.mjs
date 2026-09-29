@@ -72,19 +72,17 @@ export default [
       // TS übernimmt die Undefined-Prüfung zuverlässiger als ESLint.
       'no-undef': 'off',
       /**
-       * Neu in eslint-plugin-react-hooks 7 (Upgrade 2026-09). Die Regel
-       * trifft an neun Stellen dasselbe, seit Jahren funktionierende
-       * Muster: lokalen Zustand angleichen, wenn sich eine Prop ändert
-       * (Reiter zurücksetzen beim Feldwechsel, Formularfelder aus dem
-       * Zustand nachziehen, asynchrone Hydration).
+       * Abgeleiteten Zustand gleicht man im Render an, nicht im Effekt: Ein
+       * Effekt läuft nach dem Malen, also sieht die Redakteurin für einen
+       * Durchlauf den alten Wert zum neuen Gegenstand — den Reiter des
+       * vorigen Feldes, die Bedingung der vorigen Auswahl.
        *
-       * Die Befunde sind berechtigt — React empfiehlt dafür `key` oder
-       * Ableiten im Render. Das ist aber ein Umbau mit Verhaltensrisiko an
-       * sieben Dateien und gehört in einen eigenen Durchgang mit eigenen
-       * Tests, nicht in ein Abhängigkeits-Update. Bis dahin: sichtbar als
-       * Warnung, nicht stumm abgeschaltet. ROADMAP-Punkt ist gesetzt.
+       * Echte Außensynchronisation ist etwas anderes und bleibt erlaubt:
+       * Ein Ladezustand, der zum Abruf gehört, oder ein Speicherstatus, der
+       * zum Schreibvorgang gehört. Diese Stellen tragen eine einzeilige
+       * Ausnahme mit Begründung — das sind vier, und sie sollen auffallen.
        */
-      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/set-state-in-effect': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       '@typescript-eslint/no-unused-vars': [
