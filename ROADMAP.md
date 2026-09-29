@@ -57,8 +57,11 @@ Voraussetzungen:
       hieße, das gesamte TypeScript-Linting zu verlieren (inkl.
       `no-explicit-any`). Wieder aufnehmen, sobald typescript-eslint
       nachzieht
-- [ ] **Docker-Image-Smoke-Test:** das Dockerfile wurde lokal nie gebaut
-      (kein Daemon verfügbar) — beim ersten Host-/CI-Build verifizieren
+- [x] ~~**Docker-Image-Smoke-Test**~~ (umgesetzt 2026-09): Image baut,
+      Container läuft, App bedienbar, Monaco lokal, keine
+      Fremd-Requests. Zwei Befunde dabei behoben — fehlende
+      Sicherheits-Header durch nginx' `add_header`-Vererbung und
+      Feldverlust beim Zusammenführen von Regionsprofilen
 
 ## Mittelfristig
 
