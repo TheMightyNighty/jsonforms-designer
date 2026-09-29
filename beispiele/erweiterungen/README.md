@@ -4,12 +4,17 @@ Ein Erweiterungspaket ist **eine JSON-Datei** (ADR 0007). Es braucht keinen
 Build und keine JavaScript-Kenntnisse: Wer eine Bibliothek weitergeben will,
 gibt diese Datei weiter — über ein Git-Repository, ein Laufwerk, eine E-Mail.
 
-Hinzugefügt wird sie im Editor unter **Ansicht → Erweiterungen …**. Der Editor
-lädt von sich aus nichts nach; was in der Bibliothek liegt, hat jemand
-ausdrücklich hineingelegt. Die Bibliothek ist lokal, sie liegt im Browser der
-Redakteurin.
+Hinzugefügt wird sie im Editor unter **Ansicht → Erweiterungen …** — als Datei
+oder über eine Adresse, etwa eine statische Datei im Intranet oder die
+Rohansicht einer Datei im Git-Repository. Der Editor ruft von sich aus nichts
+ab; was in der Bibliothek liegt, hat jemand ausdrücklich hineingelegt. Die
+Bibliothek ist lokal, sie liegt im Browser der Redakteurin.
 
-`musterstadt.json` in diesem Verzeichnis zeigt alle vier Beitragsarten.
+Beim Laden über eine Adresse muss die Inhaltsrichtlinie (CSP) der
+Host-Anwendung deren Origin in `connect-src` führen, sonst blockt der Browser
+den Abruf.
+
+`musterstadt.json` in diesem Verzeichnis zeigt alle fünf Beitragsarten.
 
 ## Aufbau
 
@@ -20,10 +25,11 @@ Redakteurin.
 | `version`, `beschreibung` | nein | Freitext; der Editor wertet sie nicht aus. |
 | `feldtypen` | nein | Zusätzliche Feldtypen samt ihren Texten. |
 | `bausteine` | nein | Vorgefertigte Feldgruppen, Format wie in ADR 0005. |
-| `region` | nein | Platzhalter, engere Muster, regionale Prüfregeln. |
+| `vorlagen` | nein | Fertige Formulare für die Vorlagenauswahl. |
+| `region` | nein | Platzhalter, engere Muster, regionale Prüfregeln, Exportformate. |
 | `texte` | nein | Einzelne Begriffe überschreiben, je Sprache. |
 
-Ein Paket muss mindestens eine dieser vier Arten beitragen — sonst stünde es
+Ein Paket muss mindestens eine dieser fünf Arten beitragen — sonst stünde es
 in der Bibliothek und täte nichts.
 
 ## Feldtypen
@@ -58,6 +64,24 @@ Formular überall „Antrag", ohne dass jemand den Editor neu baut:
 
 Ein Pfad, den es nicht gibt, wird verworfen und gemeldet; ein Tippfehler
 bleibt damit nicht unsichtbar.
+
+## Vorlagen
+
+Eine Vorlage ist ein fertiges Formular, das die Vorlagenauswahl zusätzlich
+anbietet:
+
+```jsonc
+{
+  "id": "musterstadt-bewohnerparkausweis",
+  "displayName": "Bewohnerparkausweis",
+  "description": "Kennzeichen, Halterin oder Halter, Anschrift",
+  "icon": "car",
+  "state": { "schema": { … }, "uiSchema": { … } }   // beides Pflicht
+}
+```
+
+Wie bei den Feldtypen gilt: Eine id, die der Kern schon führt, wird verworfen
+und gemeldet.
 
 ## Was ein Paket nicht kann
 

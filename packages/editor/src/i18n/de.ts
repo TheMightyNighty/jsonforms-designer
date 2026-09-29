@@ -279,6 +279,16 @@ export const de: EditorTranslations = {
     },
   },
   erweiterungen: {
+    vonUrl: 'Oder von einer Adresse laden',
+    urlPlatzhalter: 'https://intranet.example/bibliothek.json',
+    laden: 'Laden',
+    ladeFehler: {
+      nichtErreichbar:
+        'Die Adresse ist nicht erreichbar. Möglich sind ein Tippfehler, ein abgeschalteter Server oder eine Inhaltsrichtlinie, die den Abruf blockt.',
+      keinJson: 'Die Antwort ist kein lesbares JSON.',
+      unbrauchbar:
+        'Die Antwort enthält kein verwertbares Erweiterungspaket (id, Name und mindestens ein Beitrag sind nötig).',
+    },
     menue: 'Erweiterungen …',
     titel: 'Erweiterungen',
     einleitung:

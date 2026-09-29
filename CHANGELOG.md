@@ -17,6 +17,9 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - **Ein Paket kann nur hinzufügen:** Eine Feldtyp-id, die der Kern schon führt, wird verworfen und gemeldet. Begriffe und Regionsprofil sind ausdrücklich zum Überschreiben da; ein Textpfad, den es nicht gibt, wird gemeldet statt still zu verpuffen.
 - **`setzeZusatzFeldtypen` / `alleFeldtypen`** im Katalog: `getFieldType` findet auch Feldtypen aus Erweiterungen, damit die Reducer sie kennen. Bewusst Modulzustand — der Katalog gilt damit für die ganze Seite.
 
+- **Erweiterungspakete auch von einer Adresse:** `ladeErweiterungVonUrl` holt ein Paket per `fetch` und normalisiert es wie eine Datei; der Dialog hat dafür ein Adressfeld. Damit genügt eine statische Datei im Intranet oder die Rohansicht im Git-Repository. Fehler sind unterschieden — nicht erreichbar (auch: von der CSP geblockt), kein JSON, kein verwertbares Paket —, weil „geht nicht" der Redakteurin nicht sagt, was zu tun ist. Der Editor ruft weiterhin von sich aus nichts ab.
+- **Formularvorlagen als fünfte Beitragsart:** Ein Paket kann fertige Formulare mitbringen; sie stehen in der Vorlagenauswahl hinter den mitgelieferten. Eine id, die der Kern schon führt, wird verworfen und gemeldet — wie bei Feldtypen.
+
 ### Geändert (Modul-Defaults)
 - **FIM und Open CoDE sind im Kern aus** (`enabled: false`). Beides sind Einrichtungen der deutschen Verwaltung; wer nur JSON-Schema-Formulare bauen will, bekam bisher zwei Reiter, die er nicht zuordnen kann. `packages/app` schaltet sie als deutsches Profil ein. **Für einbettende Hosts eine Umstellung:** Wer FIM oder Open CoDE nutzt, setzt `modules.fim.enabled: true` bzw. `modules.openCode.enabled: true`. Bausteine bleiben an.
 

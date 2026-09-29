@@ -13,6 +13,7 @@ import { normalisiereBaustein } from '../bausteine/httpBausteinService';
 import { PRUEF_REGELN, PruefRegelId } from '../core/util/formularPruefung';
 import { sanitizeParsedJson } from '../core/util/sanitizeJson';
 import { FIELD_GROUPS, FieldGroup } from '../field-types/fieldTypes';
+import { FormTemplate } from '../field-types/formTemplates';
 import { Regionsprofil } from '../region/regionsprofil';
 import { ErweiterungsFeldtyp, Erweiterungspaket } from './erweiterungspaket';
 
@@ -75,6 +76,28 @@ function normalisiereFeldtyp(roh: unknown): ErweiterungsFeldtyp | undefined {
       ? (roh.uiSchema as ErweiterungsFeldtyp['uiSchema'])
       : undefined,
     texte,
+  };
+}
+
+/**
+ * Eine Vorlage ist ein fertiger Formularzustand. Geprüft wird nur, dass sie
+ * Schema und uiSchema mitbringt — den Inhalt normalisiert beim Laden ohnehin
+ * `normalizeFieldState`.
+ */
+function normalisiereVorlage(roh: unknown): FormTemplate | undefined {
+  if (!istObjekt(roh)) return undefined;
+  if (!istText(roh.id)) return undefined;
+  if (!istText(roh.displayName)) return undefined;
+  const zustand = roh.state;
+  if (!istObjekt(zustand)) return undefined;
+  if (!istObjekt(zustand.schema) || !istObjekt(zustand.uiSchema))
+    return undefined;
+  return {
+    id: roh.id,
+    displayName: roh.displayName,
+    description: istText(roh.description) ? roh.description : '',
+    icon: istText(roh.icon) ? roh.icon : 'file-text',
+    state: zustand as unknown as FormTemplate['state'],
   };
 }
 
@@ -162,11 +185,25 @@ export function normalisiereErweiterung(
     bausteine.push(baustein);
   }
 
+  const vorlagen: FormTemplate[] = [];
+  for (const eintrag of Array.isArray(roh.vorlagen) ? roh.vorlagen : []) {
+    const vorlage = normalisiereVorlage(eintrag);
+    if (!vorlage) {
+      verworfen('Vorlage ohne id, Namen, Schema oder uiSchema', eintrag);
+      continue;
+    }
+    vorlagen.push(vorlage);
+  }
+
   const region = normalisiereRegion(roh.region);
   const texte = normalisiereBegriffe(roh.texte);
 
   const traegtNichtsBei =
-    feldtypen.length === 0 && bausteine.length === 0 && !region && !texte;
+    feldtypen.length === 0 &&
+    bausteine.length === 0 &&
+    vorlagen.length === 0 &&
+    !region &&
+    !texte;
   if (traegtNichtsBei) {
     verworfen(`Paket „${roh.id}" trägt nichts bei`, rohwert);
     return undefined;
@@ -179,6 +216,7 @@ export function normalisiereErweiterung(
     beschreibung: istText(roh.beschreibung) ? roh.beschreibung : undefined,
     feldtypen: feldtypen.length > 0 ? feldtypen : undefined,
     bausteine: bausteine.length > 0 ? bausteine : undefined,
+    vorlagen: vorlagen.length > 0 ? vorlagen : undefined,
     region,
     texte,
   };

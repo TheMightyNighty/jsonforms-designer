@@ -19,12 +19,14 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { useRef, useState } from 'react';
 
 import { useI18n } from '../i18n';
 import { useErweiterungen } from './ErweiterungenProvider';
+import { ErweiterungLadefehler } from './ladeErweiterung';
 import { normalisiereErweiterung } from './normalisiereErweiterung';
 
 export function ErweiterungenDialog({
@@ -35,10 +37,18 @@ export function ErweiterungenDialog({
   onSchliessen: () => void;
 }) {
   const { t } = useI18n();
-  const { eintraege, aufgeloest, hinzufuegen, entfernen, setzeAktiv } =
-    useErweiterungen();
+  const {
+    eintraege,
+    aufgeloest,
+    hinzufuegen,
+    entfernen,
+    setzeAktiv,
+    ladenVonUrl,
+  } = useErweiterungen();
   const dateiRef = useRef<HTMLInputElement>(null);
   const [meldung, setMeldung] = useState<string | null>(null);
+  const [url, setUrl] = useState('');
+  const [laedt, setLaedt] = useState(false);
   const texte = t.erweiterungen;
 
   const lese = async (datei: File) => {
@@ -59,6 +69,27 @@ export function ErweiterungenDialog({
       if (verworfen.length > 0) setMeldung(verworfen.join(' · '));
     } catch {
       setMeldung(texte.keinJson);
+    }
+  };
+
+  const vonUrl = async () => {
+    setMeldung(null);
+    setLaedt(true);
+    try {
+      await ladenVonUrl(url.trim());
+      setUrl('');
+    } catch (fehler) {
+      const grund =
+        fehler instanceof ErweiterungLadefehler ? fehler.grund : 'kein-json';
+      setMeldung(
+        grund === 'nicht-erreichbar'
+          ? texte.ladeFehler.nichtErreichbar
+          : grund === 'unbrauchbar'
+            ? texte.ladeFehler.unbrauchbar
+            : texte.ladeFehler.keinJson,
+      );
+    } finally {
+      setLaedt(false);
     }
   };
 
@@ -145,6 +176,29 @@ export function ErweiterungenDialog({
         <Button variant="outlined" onClick={() => dateiRef.current?.click()}>
           {texte.hinzufuegen}
         </Button>
+
+        <Box sx={{ display: 'flex', gap: 1, mt: 2, alignItems: 'flex-start' }}>
+          <TextField
+            label={texte.vonUrl}
+            placeholder={texte.urlPlatzhalter}
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && url.trim()) void vonUrl();
+            }}
+            size="small"
+            fullWidth
+            disabled={laedt}
+            slotProps={{ htmlInput: { spellCheck: false } }}
+          />
+          <Button
+            onClick={() => void vonUrl()}
+            disabled={laedt || url.trim() === ''}
+            sx={{ mt: 0.25 }}
+          >
+            {texte.laden}
+          </Button>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onSchliessen}>{t.dialog.close}</Button>

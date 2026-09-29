@@ -29,11 +29,14 @@ import {
   LocalStorageErweiterungsBibliothek,
 } from './erweiterungsBibliothek';
 import { ErweiterungsEintrag, Erweiterungspaket } from './erweiterungspaket';
+import { ladeErweiterungVonUrl } from './ladeErweiterung';
 
 interface ErweiterungenContext {
   eintraege: ErweiterungsEintrag[];
   aufgeloest: AufgeloesteErweiterungen;
   hinzufuegen: (paket: Erweiterungspaket, herkunft?: string) => void;
+  /** Holt ein Paket von einer URL und legt es ab. Wirft ErweiterungLadefehler. */
+  ladenVonUrl: (url: string) => Promise<void>;
   entfernen: (id: string) => void;
   setzeAktiv: (id: string, aktiv: boolean) => void;
 }
@@ -44,6 +47,7 @@ export const ErweiterungenCtx = createContext<ErweiterungenContext>({
   eintraege: [],
   aufgeloest: LEER,
   hinzufuegen: () => {},
+  ladenVonUrl: async () => {},
   entfernen: () => {},
   setzeAktiv: () => {},
 });
@@ -87,6 +91,10 @@ export function ErweiterungenProvider({
       aufgeloest,
       hinzufuegen: (paket, herkunft) =>
         nachSchreiben(() => ablage.hinzufuegen(paket, herkunft)),
+      ladenVonUrl: async (url) => {
+        const paket = await ladeErweiterungVonUrl(url);
+        nachSchreiben(() => ablage.hinzufuegen(paket, url));
+      },
       entfernen: (id) => nachSchreiben(() => ablage.entfernen(id)),
       setzeAktiv: (id, aktiv) =>
         nachSchreiben(() => ablage.setzeAktiv(id, aktiv)),

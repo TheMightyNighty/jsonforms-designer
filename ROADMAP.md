@@ -41,12 +41,12 @@ Voraussetzungen:
 - [x] ~~**Erweiterungsarchitektur, Stufe 1**~~ (umgesetzt 2026-09):
       Erweiterungspakete als JSON, lokale Bibliothek unter
       Ansicht → Erweiterungen, Normalisierung unvertrauter Eingabe
-- [ ] **Erweiterungsarchitektur, Stufe 2:** Pakete auch von einer URL
-      laden (wie `HttpBausteinService`, ADR 0005) und Formularvorlagen als
-      Beitragsart ergänzen. Bisher kommt ein Paket nur als Datei herein
-- [ ] **Restliche Dialoge übersetzen:** `ImportExportDialog` und die
-      Hilfe-Dialoge tragen ihre Texte noch fest im Code. Der
-      Metadaten-Dialog ist durch; dieselbe Arbeit steht dort noch aus
+- [x] ~~**Erweiterungsarchitektur, Stufe 2**~~ (umgesetzt 2026-09): Pakete
+      auch von einer Adresse laden, Formularvorlagen als fünfte
+      Beitragsart, OFM und XDF als regionale Exportformate
+- [x] ~~**Restliche Dialoge übersetzen**~~ (umgesetzt 2026-09): Der
+      Export-Dialog nutzt jetzt die i18n-Schlüssel, die längst dastanden.
+      Die Hilfe-Dialoge waren entgegen dieser Notiz schon übersetzt
 - [ ] **`set-state-in-effect` auflösen** (9 Stellen, 7 Dateien): Neu in
       eslint-plugin-react-hooks 7 und vorerst auf `warn` gesetzt. Es geht
       überall um dasselbe Muster — lokalen Zustand angleichen, wenn sich

@@ -13,6 +13,7 @@ import {
   FIELD_TYPE_CATALOG,
   FieldTypeDefinition,
 } from '../field-types/fieldTypes';
+import { FORM_TEMPLATES, FormTemplate } from '../field-types/formTemplates';
 import { EditorTranslations } from '../i18n/types';
 import { Regionsprofil } from '../region/regionsprofil';
 import { Erweiterungspaket } from './erweiterungspaket';
@@ -25,6 +26,8 @@ export interface AufgeloesteErweiterungen {
   /** Texte der ergänzten Feldtypen, je Sprachkürzel. */
   feldtypTexte: Record<string, Record<string, FeldtypTexte>>;
   bausteine: Baustein[];
+  /** Kern-Vorlagen plus die der Pakete. */
+  vorlagen: FormTemplate[];
   region: Regionsprofil | undefined;
   /** Überschriebene Begriffe je Sprachkürzel, Pfad → Text. */
   begriffe: Record<string, Record<string, string>>;
@@ -62,6 +65,7 @@ export function loeseErweiterungenAuf(
   const zusatzFeldtypen: FieldTypeDefinition[] = [];
   const feldtypTexte: Record<string, Record<string, FeldtypTexte>> = {};
   const bausteine: Baustein[] = [];
+  const vorlagen: FormTemplate[] = [...FORM_TEMPLATES];
   const begriffe: Record<string, Record<string, string>> = {};
   const regionen: Regionsprofil[] = basisRegion ? [basisRegion] : [];
 
@@ -106,6 +110,16 @@ export function loeseErweiterungenAuf(
       bausteine.push(baustein);
     }
 
+    for (const vorlage of paket.vorlagen ?? []) {
+      if (vorlagen.some((v) => v.id === vorlage.id)) {
+        konflikte.push(
+          `„${paket.name}": Vorlage „${vorlage.id}" gibt es bereits und wurde nicht übernommen.`,
+        );
+        continue;
+      }
+      vorlagen.push(vorlage);
+    }
+
     if (paket.region) regionen.push(paket.region);
 
     for (const [sprache, karte] of Object.entries(paket.texte ?? {})) {
@@ -118,6 +132,7 @@ export function loeseErweiterungenAuf(
     zusatzFeldtypen,
     feldtypTexte,
     bausteine,
+    vorlagen,
     region: vereinigeRegionen(regionen),
     begriffe,
     konflikte,
