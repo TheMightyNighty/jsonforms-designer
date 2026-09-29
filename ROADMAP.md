@@ -47,11 +47,11 @@ Voraussetzungen:
 - [x] ~~**Restliche Dialoge übersetzen**~~ (umgesetzt 2026-09): Der
       Export-Dialog nutzt jetzt die i18n-Schlüssel, die längst dastanden.
       Die Hilfe-Dialoge waren entgegen dieser Notiz schon übersetzt
-- [ ] **`set-state-in-effect` auflösen** (9 Stellen, 7 Dateien): Neu in
-      eslint-plugin-react-hooks 7 und vorerst auf `warn` gesetzt. Es geht
-      überall um dasselbe Muster — lokalen Zustand angleichen, wenn sich
-      eine Prop ändert. React empfiehlt `key` oder Ableiten im Render;
-      das ist ein Umbau mit Verhaltensrisiko und braucht eigene Tests
+- [x] ~~**`set-state-in-effect` auflösen**~~ (umgesetzt 2026-09): Fünf der
+      neun Stellen waren abgeleiteter Zustand und werden jetzt im Render
+      angeglichen; vier sind Synchronisation mit einem äußeren System und
+      tragen eine begründete Ausnahme. Die Regel steht auf `error`, Lint
+      läuft ohne Fehler und ohne Warnung
 - [ ] **TypeScript 7** — blockiert: `@typescript-eslint` unterstützt in
       8.70.1 nur `<6.1.0`. Ein Sprung auf TS 7 ohne passendes Plugin
       hieße, das gesamte TypeScript-Linting zu verlieren (inkl.

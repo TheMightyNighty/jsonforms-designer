@@ -7,6 +7,12 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert (Zustand im Render statt im Effekt)
+- **`react-hooks/set-state-in-effect` aufgelöst** und von `warn` auf **`error`** gehoben. Fünf der neun Stellen waren abgeleiteter Zustand und werden jetzt im Render angeglichen: Reiterwahl beim Feldwechsel, Bedingung des gewählten Feldes, Werte des Metadaten-Dialogs beim Öffnen, Fehlermeldung beim Reiterwechsel im Code-Modus, und die Selektion, die auf ein gelöschtes Element zeigt. Ein Effekt läuft nach dem Malen — die Redakteurin sah für einen Durchlauf den alten Wert zum neuen Gegenstand.
+- **Die Selektion wird abgeleitet statt zurückgesetzt:** Der Zustand bleibt stehen, wenn das Element verschwindet, und Rückgängig bringt die Auswahl wieder mit. Nach außen gilt sie nur, solange es das Element gibt.
+- **Vier Stellen bleiben Effekt** — Baustein- und FIM-Katalog laden, Ablage beim Start lesen, Auto-Save-Status: Das ist Synchronisation mit einem äußeren System, keine Ableitung. Sie tragen eine einzeilige Ausnahme mit Begründung; mehrzeilig greift `eslint-disable-next-line` stillschweigend daneben.
+- **Latenter Endlos-Effekt entschärft:** Ein Host darf `onError` inline übergeben; dann wechselte `reportError` bei jedem Render die Identität, und ein davon abhängiger Lade-Effekt liefe endlos. Die Lade-Effekte melden jetzt über eine stabile Fassade. Damit ist auch `exhaustive-deps` erfüllt — **Lint läuft ohne Fehler und ohne Warnung** (vorher 11 Warnungen).
+
 ### Behoben
 - **Die Kopfzeile wurde bei jedem Render abgehängt und neu eingehängt:** `HeaderWithMode` war eine im Render erzeugte Komponente, damit bei jedem Durchlauf ein neuer Komponententyp. Sichtbar wurde es erst mit den Erweiterungen — ein hinzugefügtes Paket ändert die Texte, die Kopfzeile wurde neu eingehängt, und der offene Dialog verschwand, bevor die Redakteurin ihr Paket in der Liste sah. Jetzt `useCallback`; zwei E2E-Tests halten den Pfad fest.
 

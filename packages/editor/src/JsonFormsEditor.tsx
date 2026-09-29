@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
 } from 'react';
 import { DndProvider } from 'react-dnd';
@@ -75,6 +76,21 @@ export interface JsonFormsEditorProps {
   fieldStateStorage?: FieldStateStorageService;
 }
 
+/** Steckt der Scope irgendwo im Baum — auch in Spalten und Gruppen? */
+function existiertImUiSchema(elements: UiElement[], key: string): boolean {
+  for (const el of elements) {
+    if (matchesElementKey(el, key)) return true;
+    if (el.type === 'ColumnContainer')
+      for (const col of el.columns) {
+        if (existiertImUiSchema(col, key)) return true;
+      }
+    if (el.type === 'GroupContainer') {
+      if (existiertImUiSchema(el.children, key)) return true;
+    }
+  }
+  return false;
+}
+
 export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   schemaService = defaultSchemaService,
   header,
@@ -87,6 +103,18 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     (error: unknown, context: string) =>
       (onError ?? defaultOnError)(error, context),
     [onError],
+  );
+  // Ein Host darf `onError` inline übergeben. Dann wechselt `reportError`
+  // bei jedem Render die Identität, und ein Effekt, der davon abhängt,
+  // liefe endlos. Die Lade-Effekte melden deshalb über diese stabile
+  // Fassade und hängen nicht am Fehlerkanal.
+  const reportErrorRef = useRef(reportError);
+  useEffect(() => {
+    reportErrorRef.current = reportError;
+  }, [reportError]);
+  const meldeFehler = useCallback(
+    (error: unknown, context: string) => reportErrorRef.current(error, context),
+    [],
   );
   // Gespeicherten Zustand genau einmal laden. Synchrone Adapter (localStorage)
   // fließen ohne Zwischenrender in den Initial-State; asynchrone Adapter
@@ -153,6 +181,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
   // schreibt den Index, und vorher gelesen wäre er stets einen Schritt
   // hinterher.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Außensynchronisation, kein abgeleiteter Zustand (siehe Kommentar darüber)
     void ablageAuffrischen();
   }, [ablageAuffrischen]);
 
@@ -244,12 +273,12 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
         }
       })
       .catch((err) =>
-        reportError(err, 'Formular-Zustand konnte nicht geladen werden'),
+        meldeFehler(err, 'Formular-Zustand konnte nicht geladen werden'),
       );
     return () => {
       cancelled = true;
     };
-  }, [initialLoad, dispatch]);
+  }, [initialLoad, dispatch, meldeFehler]);
 
   // Sichtbarer Stand des Auto-Saves für die Kopfzeile. Der erste Lauf des
   // Effekts speichert den unveränderten Startzustand — deshalb beginnt der
@@ -276,6 +305,8 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
     try {
       const ergebnis = fieldStateStorage.save(fieldState);
       if (ergebnis instanceof Promise) {
+        // Der Speicherstatus gehört zum Schreibvorgang selbst.
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Außensynchronisation, kein abgeleiteter Zustand (siehe Kommentar darüber)
         setSpeicherStatus({ art: 'speichert' });
         void ergebnis.then(gespeichert).catch(fehlgeschlagen);
       } else {
@@ -308,34 +339,22 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
         }
       })
       .catch((err) =>
-        reportError(err, 'SchemaService konnte nicht geladen werden'),
+        meldeFehler(err, 'SchemaService konnte nicht geladen werden'),
       );
     return () => {
       cancelled = true;
     };
-  }, [schemaService, dispatch]);
+  }, [schemaService, dispatch, meldeFehler]);
 
-  // Selektion aufräumen, wenn das Element nicht mehr existiert
-  useEffect(() => {
-    if (!selectedScope) return;
-    function existsInUiSchema(elements: UiElement[], key: string): boolean {
-      for (const el of elements) {
-        if (matchesElementKey(el, key)) return true;
-        if (el.type === 'ColumnContainer')
-          for (const col of el.columns) {
-            if (existsInUiSchema(col, key)) return true;
-          }
-        if (el.type === 'GroupContainer') {
-          if (existsInUiSchema(el.children, key)) return true;
-        }
-      }
-      return false;
-    }
-    const stillExists = existsInUiSchema(
-      fieldState.uiSchema.elements,
-      selectedScope,
-    );
-    if (!stillExists) setSelectedScope(null);
+  // Eine Selektion gilt nur, solange es das Element noch gibt. Abgeleitet
+  // statt im Effekt zurückgesetzt: Der Zustand selbst bleibt stehen, damit
+  // Rückgängig die Auswahl wieder mitbringt, und die Oberfläche sieht
+  // zwischendurch nie einen Verweis ins Leere.
+  const wirksamerScope = useMemo(() => {
+    if (!selectedScope) return null;
+    return existiertImUiSchema(fieldState.uiSchema.elements, selectedScope)
+      ? selectedScope
+      : null;
   }, [fieldState, selectedScope]);
 
   const headerComponent = header === null ? undefined : header;
@@ -353,7 +372,7 @@ export const JsonFormsEditor: React.FC<JsonFormsEditorProps> = ({
                 fieldState,
                 speicherStatus,
                 formularAblage,
-                selectedScope,
+                selectedScope: wirksamerScope,
                 setSelectedScope,
                 undo,
                 redo,

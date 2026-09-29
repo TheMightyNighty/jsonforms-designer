@@ -65,12 +65,12 @@ function useBausteinKatalog(): {
   const [zustand, setZustand] = useState<Ladezustand>('laedt');
 
   useEffect(() => {
-    if (!aktiv) {
-      setBausteine([]);
-      setZustand('geladen');
-      return;
-    }
+    // Modul aus: gar nicht erst laden. Was dann angezeigt wird, steht
+    // weiter unten und ist abgeleitet, nicht gesetzt.
+    if (!aktiv) return;
     let verworfen = false;
+    // Der Ladezustand gehört zum Abruf und wird gesetzt, bevor er losläuft.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Außensynchronisation, kein abgeleiteter Zustand (siehe Kommentar darüber)
     setZustand('laedt');
     service
       .getBausteine()
@@ -91,12 +91,13 @@ function useBausteinKatalog(): {
 
   const zusatz = useErweiterungen().aufgeloest.bausteine;
   // Bausteine aus Erweiterungspaketen stehen hinter denen des Dienstes.
+  // Ist das Modul aus, bleibt nur, was die Pakete mitbringen.
   const alle = useMemo(
-    () => (zusatz.length === 0 ? bausteine : [...bausteine, ...zusatz]),
-    [bausteine, zusatz],
+    () => [...(aktiv ? bausteine : []), ...zusatz],
+    [aktiv, bausteine, zusatz],
   );
 
-  return { bausteine: alle, zustand };
+  return { bausteine: alle, zustand: aktiv ? zustand : 'geladen' };
 }
 
 // ---------------------------------------------------------------------------
