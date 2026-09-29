@@ -9,17 +9,57 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
-  Step,
-  StepLabel,
-  Stepper,
+  MenuItem,
+  Select,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { FieldAwareState, FormTab } from '../../core/model/addFieldReducer';
+import { sectionColorDisplay } from '../../core/model/sectionColorTokens';
 import { toJsonForms, UiElement } from '../../core/model/uiElements';
+import { jsonFormsI18n } from '../../core/util/jsonFormsI18n';
+import { buildOfmSchema, buildOfmUiSchema } from '../../core/util/ofmExport';
+import { useI18n } from '../../i18n';
+import { PREVIEW_VARIANTS, PreviewVariant } from '../../preview-variants';
+import { KERN_FARBEN } from '../../theme/kernTokens';
+import { FormStepperSidebar } from './FormStepperSidebar';
+
+const PREVIEW_VARIANT_STORAGE_KEY = 'jfd_previewVariant_v1';
+
+function isValidVariantId(value: unknown): value is PreviewVariant['id'] {
+  return PREVIEW_VARIANTS.some((v) => v.id === value);
+}
+
+function readStoredVariantId(): PreviewVariant['id'] {
+  try {
+    const stored = sessionStorage.getItem(PREVIEW_VARIANT_STORAGE_KEY);
+    if (isValidVariantId(stored)) return stored;
+  } catch {
+    // sessionStorage kann in eingeschränkten Umgebungen fehlen — Fallback.
+  }
+  return 'standard';
+}
+
+/** Kürzt einen Hex-Hash für die Fußzeile: erste 4 + letzte 2 Zeichen. */
+function shortHash(hex: string): string {
+  if (hex.length <= 6) return hex;
+  return `${hex.slice(0, 4)}…${hex.slice(-2)}`;
+}
+
+function serializeJson(value: unknown): string {
+  return JSON.stringify(value, null, 2) + '\n';
+}
+
+async function sha256Hex(content: string): Promise<string> {
+  const bytes = new TextEncoder().encode(content);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 // ---------------------------------------------------------------------------
 // Konverter internes → JSONForms
@@ -57,6 +97,27 @@ function buildPreviewUiSchema(fieldState: FieldAwareState): object {
       elements: [{ type: 'VerticalLayout', elements: tabBuckets[i] ?? [] }],
     })),
   };
+}
+
+// ---------------------------------------------------------------------------
+// buildTabUiSchemas — pro Schritt ein eigenständiges VerticalLayout, damit
+// die Vorschau die Schrittnavigation selbst steuert statt sie dem
+// materialRenderers-Categorization-Widget zu überlassen.
+// ---------------------------------------------------------------------------
+function buildTabUiSchemas(fieldState: FieldAwareState): object[] {
+  const { uiSchema, tabs, tabAssignments } = fieldState;
+  if (tabs.length === 0) return [];
+  const buckets: object[][] = tabs.map(() => []);
+  uiSchema.elements.forEach((el) => {
+    const id = 'scope' in el ? (el.scope ?? el.id) : el.id;
+    const idx = Math.min(tabAssignments[id] ?? 0, buckets.length - 1);
+    const jfEl = convertEl(el);
+    if (jfEl) buckets[idx].push(jfEl);
+  });
+  return tabs.map((_, i) => ({
+    type: 'VerticalLayout',
+    elements: buckets[i] ?? [],
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -131,11 +192,15 @@ function PreviewWrapper({
   sectionColors,
 }: PreviewWrapperProps) {
   const theme = useTheme();
+  const { locale } = useI18n();
   return (
     <Box>
       {elements.map((el, idx: number) => {
         const id = 'scope' in el ? (el.scope ?? el.id) : el.id;
-        const bgColor = sectionColors[id] ?? undefined;
+        const storedColor = sectionColors[id];
+        const bgColor = storedColor
+          ? sectionColorDisplay(storedColor)
+          : undefined;
         const numColor = bgColor ? getContrastColor(bgColor) : undefined;
         const isHeader =
           el.type === 'Label' && el.options?.variant === 'section-header';
@@ -143,7 +208,7 @@ function PreviewWrapper({
           el.type === 'Label' && el.options?.variant === 'annotation';
 
         if (isHeader) {
-          const hBg = (el.options?.bgColor as string) ?? '#004A99';
+          const hBg = (el.options?.bgColor as string) ?? KERN_FARBEN.aktion;
           const hText = (el.options?.textColor as string) ?? '#ffffff';
           return (
             <Box
@@ -277,6 +342,8 @@ function PreviewWrapper({
                     data={{}}
                     renderers={materialRenderers}
                     cells={materialCells}
+                    // Deutsche Validierungsmeldungen statt AJV-Englisch.
+                    i18n={jsonFormsI18n(locale)}
                     onChange={() => {}}
                   />
                 </ThemeProvider>
@@ -287,6 +354,8 @@ function PreviewWrapper({
                   data={{}}
                   renderers={materialRenderers}
                   cells={materialCells}
+                  // Deutsche Validierungsmeldungen statt AJV-Englisch.
+                  i18n={jsonFormsI18n(locale)}
                   onChange={() => {}}
                 />
               )}
@@ -310,8 +379,69 @@ export function PreviewPanel({
   fieldState,
   initialData = {},
 }: PreviewPanelProps) {
+  const { locale } = useI18n();
   const [data, setData] = useState<Record<string, unknown>>(initialData);
   const [activeStep, setActiveStep] = useState(0);
+  const [variantId, setVariantId] = useState<PreviewVariant['id']>(() =>
+    readStoredVariantId(),
+  );
+  const [hashLabel, setHashLabel] = useState<string>('');
+
+  const selectedVariant =
+    PREVIEW_VARIANTS.find((v) => v.id === variantId) ?? PREVIEW_VARIANTS[0];
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(PREVIEW_VARIANT_STORAGE_KEY, variantId);
+    } catch {
+      // sessionStorage kann in eingeschränkten Umgebungen fehlen.
+    }
+  }, [variantId]);
+
+  // Tastaturkürzel 1/2/3 für den Varianten-Wechsel — nur außerhalb von
+  // Eingabefeldern, damit Ziffern in Formularfeldern der Vorschau nicht
+  // abgefangen werden.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const active = document.activeElement;
+      const isEditable =
+        active instanceof HTMLElement &&
+        (['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName) ||
+          active.isContentEditable);
+      if (isEditable) return;
+      const index = ['1', '2', '3'].indexOf(e.key);
+      if (index === -1) return;
+      const variant = PREVIEW_VARIANTS[index];
+      if (variant) setVariantId(variant.id);
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Hash der tatsächlich exportierten OFM-Artefakte (schema.json/
+  // uischema.json) — hängt bewusst nur von fieldState ab, NICHT von der
+  // gewählten Variante: der Hash beweist, dass der Variantenwechsel die
+  // Artefakte nicht verändert.
+  useEffect(() => {
+    let cancelled = false;
+    async function computeHash() {
+      const schemaContent = serializeJson(buildOfmSchema(fieldState));
+      const uischemaContent = serializeJson(buildOfmUiSchema(fieldState));
+      const [schemaHash, uischemaHash] = await Promise.all([
+        sha256Hex(schemaContent),
+        sha256Hex(uischemaContent),
+      ]);
+      if (!cancelled) {
+        setHashLabel(
+          `schema.json: ${shortHash(schemaHash)} · uischema.json: ${shortHash(uischemaHash)}`,
+        );
+      }
+    }
+    computeHash();
+    return () => {
+      cancelled = true;
+    };
+  }, [fieldState]);
 
   const hasContent =
     Object.keys(fieldState.schema.properties ?? {}).length > 0 ||
@@ -325,12 +455,22 @@ export function PreviewPanel({
     () => buildPreviewUiSchema(fieldState),
     [fieldState],
   );
+  const tabUiSchemas = useMemo(
+    () => buildTabUiSchemas(fieldState),
+    [fieldState],
+  );
   const showLineNumbers = fieldState.lineNumbersEnabled;
   const hasColors = Object.keys(fieldState.sectionColors).length > 0;
   const hasTabs = fieldState.tabs.length > 1;
   const formTitle = (fieldState.schema as JsonSchema7).title;
+  const clampedStep = Math.min(
+    activeStep,
+    Math.max(fieldState.tabs.length - 1, 0),
+  );
 
-  // Toolbar (Print + Formular-Titel)
+  // Schlanke Werkzeugleiste — der Formulartitel wandert als Überschrift in
+  // den Inhaltsbereich, damit die Vorschau wie ein eigenständiges Formular
+  // wirkt statt wie ein Editor-Werkzeug.
   const toolbar = (
     <Box
       className="no-print"
@@ -344,14 +484,24 @@ export function PreviewPanel({
         gap: 1,
       }}
     >
-      {formTitle && (
-        <Chip
-          label={formTitle}
+      <Tooltip title={selectedVariant.description}>
+        <Select
           size="small"
-          variant="outlined"
-          sx={{ fontWeight: 600 }}
-        />
-      )}
+          value={selectedVariant.id}
+          onChange={(e) => setVariantId(e.target.value as PreviewVariant['id'])}
+          aria-label="Design-Variante"
+          sx={{ minWidth: 200 }}
+        >
+          {PREVIEW_VARIANTS.map((variant, i) => (
+            <MenuItem key={variant.id} value={variant.id}>
+              {variant.name} ({i + 1})
+            </MenuItem>
+          ))}
+        </Select>
+      </Tooltip>
+      <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
+        {selectedVariant.description}
+      </Typography>
       <Box sx={{ flex: 1 }} />
       <Tooltip title="Formular drucken (Strg+P)">
         <Button
@@ -365,6 +515,31 @@ export function PreviewPanel({
       </Tooltip>
     </Box>
   );
+
+  const hashFooter = (
+    <Box
+      className="no-print"
+      sx={{
+        px: 2,
+        py: 0.5,
+        borderTop: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{ color: 'text.secondary', fontFamily: 'monospace' }}
+      >
+        {hashLabel}
+      </Typography>
+    </Box>
+  );
+
+  const headline = formTitle ? (
+    <Typography variant="h4" sx={{ mb: 3 }}>
+      {formTitle}
+    </Typography>
+  ) : null;
 
   if (!hasContent) {
     return (
@@ -380,33 +555,12 @@ export function PreviewPanel({
     );
   }
 
-  // Seitenumbruch-Stepper (mehrstufige Formulare)
-  const stepper = hasTabs ? (
-    <Box
-      className="no-print"
-      sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}
-    >
-      <Stepper activeStep={activeStep} alternativeLabel>
-        {fieldState.tabs.map((tab, i) => (
-          <Step
-            key={i}
-            completed={i < activeStep}
-            onClick={() => setActiveStep(i)}
-            sx={{ cursor: 'pointer' }}
-          >
-            <StepLabel>{tab.label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-    </Box>
-  ) : null;
-
   if (showLineNumbers || hasColors) {
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {toolbar}
-        {stepper}
-        <Box sx={{ flex: 1, p: 2, overflowY: 'auto' }} className="print-area">
+        <Box sx={{ flex: 1, p: 4, overflowY: 'auto' }} className="print-area">
+          {headline}
           <PreviewWrapper
             elements={fieldState.uiSchema.elements}
             schema={previewSchema}
@@ -414,6 +568,41 @@ export function PreviewPanel({
             sectionColors={fieldState.sectionColors}
           />
         </Box>
+        {hashFooter}
+      </Box>
+    );
+  }
+
+  if (hasTabs) {
+    return (
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {toolbar}
+        <Box
+          sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}
+          className="print-area"
+        >
+          <FormStepperSidebar
+            steps={fieldState.tabs}
+            activeStep={clampedStep}
+            onStepClick={setActiveStep}
+          />
+          <Box sx={{ flex: 1, overflowY: 'auto', p: 4 }}>
+            {headline}
+            <selectedVariant.ThemeProvider>
+              <JsonForms
+                schema={previewSchema as JsonSchema7}
+                uischema={tabUiSchemas[clampedStep] as UISchemaElement}
+                data={data}
+                renderers={selectedVariant.renderers}
+                cells={selectedVariant.cells}
+                // Deutsche Validierungsmeldungen statt AJV-Englisch.
+                i18n={jsonFormsI18n(locale)}
+                onChange={({ data: d }) => setData(d)}
+              />
+            </selectedVariant.ThemeProvider>
+          </Box>
+        </Box>
+        {hashFooter}
       </Box>
     );
   }
@@ -421,17 +610,22 @@ export function PreviewPanel({
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {toolbar}
-      {stepper}
-      <Box sx={{ flex: 1, p: 2, overflowY: 'auto' }} className="print-area">
-        <JsonForms
-          schema={previewSchema as JsonSchema7}
-          uischema={previewUiSchema as UISchemaElement}
-          data={data}
-          renderers={materialRenderers}
-          cells={materialCells}
-          onChange={({ data: d }) => setData(d)}
-        />
+      <Box sx={{ flex: 1, p: 4, overflowY: 'auto' }} className="print-area">
+        {headline}
+        <selectedVariant.ThemeProvider>
+          <JsonForms
+            schema={previewSchema as JsonSchema7}
+            uischema={previewUiSchema as UISchemaElement}
+            data={data}
+            renderers={selectedVariant.renderers}
+            cells={selectedVariant.cells}
+            // Deutsche Validierungsmeldungen statt AJV-Englisch.
+            i18n={jsonFormsI18n(locale)}
+            onChange={({ data: d }) => setData(d)}
+          />
+        </selectedVariant.ThemeProvider>
       </Box>
+      {hashFooter}
     </Box>
   );
 }

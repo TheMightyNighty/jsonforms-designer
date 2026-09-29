@@ -1,4 +1,5 @@
 import { FieldStateInput } from '../core/model/addFieldReducer';
+import { emptyManifestMeta } from '../core/model/manifestMeta';
 
 export interface FormTemplate {
   id: string;
@@ -42,7 +43,9 @@ export const FORM_TEMPLATES: FormTemplate[] = [
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     },
   },
   {
@@ -85,7 +88,9 @@ export const FORM_TEMPLATES: FormTemplate[] = [
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     },
   },
   {
@@ -128,7 +133,9 @@ export const FORM_TEMPLATES: FormTemplate[] = [
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     },
   },
 ];

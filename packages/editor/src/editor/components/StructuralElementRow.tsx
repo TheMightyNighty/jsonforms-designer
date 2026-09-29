@@ -12,7 +12,9 @@ import { Dispatch } from 'react';
 import { useEditorContext } from '../../core/context';
 import { EditorAction } from '../../core/model/actions';
 import { createRemoveFieldAction } from '../../core/model/addFieldActions';
+import { sectionColorDisplay } from '../../core/model/sectionColorTokens';
 import { useI18n } from '../../i18n';
+import { KERN_FARBEN } from '../../theme/kernTokens';
 
 export interface StructuralElement {
   scope: string;
@@ -41,7 +43,8 @@ export function StructuralElementRow({
 
   const { fieldState } = useEditorContext();
   const { t } = useI18n();
-  const bgColor = fieldState.sectionColors[el.scope] ?? undefined;
+  const storedColor = fieldState.sectionColors[el.scope];
+  const bgColor = storedColor ? sectionColorDisplay(storedColor) : undefined;
 
   const baseSx = {
     borderRadius: 1,
@@ -52,8 +55,10 @@ export function StructuralElementRow({
     '&:hover': { borderColor: 'primary.light' },
   };
 
-  // Löschen-Button
-  const DeleteBtn = () => (
+  // Löschen-Button. Bewusst ein Element, keine im Render definierte
+  // Komponente: Letztere bekäme bei jedem Render eine neue Identität und
+  // würde samt Zustand neu aufgebaut (react-hooks/static-components).
+  const deleteBtn = (
     <Tooltip title={t.actions.remove}>
       <IconButton
         size="small"
@@ -103,7 +108,7 @@ export function StructuralElementRow({
             size="small"
             sx={{ height: 16, fontSize: '0.6rem' }}
           />
-          <DeleteBtn />
+          {deleteBtn}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {colLabels.map((lbl, i) => (
@@ -165,7 +170,7 @@ export function StructuralElementRow({
             size="small"
             sx={{ height: 16, fontSize: '0.6rem' }}
           />
-          <DeleteBtn />
+          {deleteBtn}
         </Box>
       </Box>
     );
@@ -196,7 +201,7 @@ export function StructuralElementRow({
                 transform: 'translateY(-50%)',
               }}
             >
-              <DeleteBtn />
+              {deleteBtn}
             </Box>
           </Alert>
         </Box>
@@ -225,7 +230,7 @@ export function StructuralElementRow({
                 transform: 'translateY(-50%)',
               }}
             >
-              <DeleteBtn />
+              {deleteBtn}
             </Box>
           </Alert>
         </Box>
@@ -267,7 +272,7 @@ export function StructuralElementRow({
           variant="outlined"
           sx={{ height: 16, fontSize: '0.6rem' }}
         />
-        <DeleteBtn />
+        {deleteBtn}
       </Box>
     );
   }
@@ -302,7 +307,7 @@ export function StructuralElementRow({
             size="small"
             sx={{ height: 16, fontSize: '0.6rem' }}
           />
-          <DeleteBtn />
+          {deleteBtn}
         </Box>
       </Box>
     );
@@ -310,11 +315,13 @@ export function StructuralElementRow({
 
   // Abschnittskopf (section-header)
   if (el.type === 'Label' && el.options?.variant === 'section-header') {
+    const headerToken = fieldState.sectionColors[el.scope];
     const bgColor =
       (el.options?.bgColor as string) ??
-      fieldState.sectionColors[el.scope] ??
-      '#004A99';
-    const textColor = (el.options?.textColor as string) ?? '#ffffff';
+      (headerToken ? sectionColorDisplay(headerToken) : undefined) ??
+      KERN_FARBEN.aktion;
+    const textColor =
+      (el.options?.textColor as string) ?? KERN_FARBEN.aufAktion;
     return (
       <Box
         onClick={() => onSelect(el.scope)}
@@ -360,7 +367,7 @@ export function StructuralElementRow({
               color: isSelected ? 'text.primary' : textColor,
             }}
           />
-          <DeleteBtn />
+          {deleteBtn}
         </Box>
       </Box>
     );
@@ -409,7 +416,7 @@ export function StructuralElementRow({
           variant="outlined"
           sx={{ height: 16, fontSize: '0.6rem' }}
         />
-        <DeleteBtn />
+        {deleteBtn}
       </Box>
     );
   }

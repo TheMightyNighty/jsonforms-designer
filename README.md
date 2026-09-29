@@ -83,6 +83,114 @@ Beim Ablegen einer **Datenfeldgruppe** wird ein benannter `GroupContainer` mit v
 
 ---
 
+## Formular-Verwaltung
+
+Der Editor verwaltet mehrere benannte Formulare (ADR 0006). Der
+Formularname in der Kopfzeile ist zugleich das Menü: **Neues Formular**,
+**Formular öffnen …**, **Umbenennen …**, **Speichern unter …**. Der Name
+eines Formulars ist sein Titel (`schema.title`) — kein zweiter, davon
+unabhängiger Name.
+
+Die Verwaltung hängt an einer **optionalen** Erweiterung des
+Persistenz-Adapters:
+
+```ts
+interface FieldStateStorageService {
+  load(): …;
+  save(state): …;
+  /** Optional. Fehlt sie, bleibt es beim Ein-Dokument-Betrieb. */
+  readonly ablage?: FormularAblage;
+}
+
+interface FormularAblage {
+  liste(): FormularEintrag[] | Promise<FormularEintrag[]>;
+  oeffnen(id: string): FieldAwareState | undefined | Promise<…>;
+  speichernAls(name: string, state: FieldAwareState): FormularEintrag | Promise<…>;
+  umbenennen(id: string, name: string): void | Promise<void>;
+  loeschen(id: string): void | Promise<void>;
+  aktuelleId(): string | undefined;
+  setzeAktuelleId(id: string | undefined): void;
+}
+```
+
+Bringt der Adapter des Hosts keine Ablage mit, arbeitet der Editor
+unverändert mit genau einem Formular und blendet die Menüpunkte nicht ein
+— bestehende Einbettungen brechen nicht.
+
+Der Default `LocalStorageFieldStateService` bringt
+`LocalStorageFormularAblage` mit: ein Index (`jfd_formulare_v1`) plus je
+Formular ein eigener Schlüssel (`jfd_formular_<id>`). Ein vorhandener
+Stand unter dem alten Ein-Dokument-Schlüssel `jfd_fieldState_v1` wird beim
+ersten Laden einmalig als erstes Formular übernommen; der alte Schlüssel
+wird weiter mitgeschrieben.
+
+`HttpFieldStateService` bringt bewusst **keine** Ablage mit: Wie mehrere
+Formulare auf einem Server abgelegt und berechtigt werden, hängt am
+Fachverfahren.
+
+---
+
+## Baustein-Bibliothek
+
+Bausteine sind vorgefertigte Feldgruppen, die als benannter Abschnitt in einem
+Schritt eingefügt werden — „Antragsteller", „Anschrift", „Bankverbindung". Sie
+sind der Standard-Reiter der Palette, weil die Formularredakteurin in
+Abschnitten denkt und nicht in Feldtypen.
+
+**Der Katalog liegt nicht im Editor** (ADR 0005). Er kommt über den
+austauschbaren `BausteinService`, damit eine Behörde ihre eigene Bibliothek
+pflegen kann, ohne den Editor neu zu bauen. Ohne Konfiguration liefert der
+`MockBausteinService` drei Bausteine, die in der Palette sichtbar als
+**Beispiel** gekennzeichnet sind.
+
+Der mitgelieferte `HttpBausteinService` liest den Katalog als JSON — entweder
+ein Array oder `{ items: [...] }`:
+
+```json
+[
+  {
+    "id": "anschrift-inland",
+    "name": "Anschrift",
+    "beschreibung": "Straße, Hausnummer, Postleitzahl und Ort",
+    "icon": "home",
+    "istBeispiel": false,
+    "felder": [
+      {
+        "propertyKey": "strasse",
+        "label": "Straße",
+        "schemaFragment": { "type": "string", "title": "Straße" },
+        "uiSchemaOptions": { "required": true }
+      },
+      {
+        "propertyKey": "plz",
+        "label": "Postleitzahl",
+        "schemaFragment": {
+          "type": "string",
+          "title": "Postleitzahl",
+          "pattern": "^[0-9]{5}$",
+          "description": "Fünfstellig"
+        }
+      }
+    ]
+  }
+]
+```
+
+Pflicht sind `id`, `name` und mindestens ein Feld mit `propertyKey`, `label`
+und einem `schemaFragment` mit `type`. Fehlt `icon`, wird ein neutrales Symbol
+gesetzt; ohne ausdrückliches `istBeispiel: false` gilt ein Baustein als
+Beispiel. Einträge, die diese Anforderungen nicht erfüllen, werden übersprungen
+und über `onEintragVerworfen` gemeldet — ein fehlerhafter Eintrag legt nicht
+den ganzen Katalog lahm. Bausteine werden über dieselbe Action eingefügt wie
+FIM-Datenfeldgruppen und sind wie diese auch per Tastatur erreichbar
+(Enter/Leertaste).
+
+> **Sicherheit:** Der Katalog ist unvertraute Eingabe. `url` und `headers`
+> müssen aus vertrauenswürdiger Konfiguration stammen, und der Origin gehört
+> in die `connect-src`-Direktive der CSP.
+
+---
+
 ## OpenCode-Integration
 
 Validatoren und UI-Bausteine aus dem OpenCode-Ökosystem werden per Drag aus der Palette auf Felder angewendet. Die Anbindung erfolgt über das austauschbare `OpenCodeService`-Interface — im Entwicklungsmodus ist ein Mock-Provider aktiv.
@@ -99,6 +207,7 @@ Alle Module werden über den `config`-Prop am `<JsonFormsEditor>`-Component konf
 import {
   JsonFormsEditor,
   FimApiService,
+  HttpBausteinService,
   EditorConfig,
 } from '@jsonforms-designer/editor';
 
@@ -128,6 +237,20 @@ const config: EditorConfig = {
       enabled: true,
       // service: new MyOpenCodeService(),  // eigene Implementierung
     },
+
+    bausteine: {
+      enabled: true,
+
+      // Eigener Baustein-Katalog, z. B. als statische JSON-Datei im
+      // Intranet oder aus einem Fachverfahren:
+      service: new HttpBausteinService('/api/bausteine', {
+        // headers: { Authorization: 'Bearer <token>' },
+        // onEintragVerworfen: (grund, roh) => logger.warn(grund, roh),
+      }),
+
+      // Default ohne Angabe: MockBausteinService mit drei als Beispiel
+      // gekennzeichneten Bausteinen
+    },
   },
 
   palette: {
@@ -149,6 +272,10 @@ function MyApp() {
 | `modules.fim.service` | `FimService` | `MockFimService` | Service-Implementierung für FIM-Daten |
 | `modules.openCode.enabled` | `boolean` | `true` | OpenCode-Sektion in der Palette aktivieren |
 | `modules.openCode.service` | `OpenCodeService` | `MockOpenCodeService` | Service-Implementierung für OpenCode-Daten |
+| `modules.bausteine.enabled` | `boolean` | `true` | Reiter „Bausteine" in der Palette aktivieren |
+| `modules.bausteine.service` | `BausteinService` | `MockBausteinService` | Katalog der vorgefertigten Feldgruppen |
+| `features.canvasGeraeteAnsicht` | `boolean` | `false` | Prototyp: Umschalter Desktop/Handy auf der Arbeitsfläche (ADR 0003) |
+| `produktName` | `string` | `„JSONForms Designer"` | Produktname in der Kopfzeile |
 | `palette.collapsedByDefault` | `FieldGroup[]` | `['struktur', 'layout']` | Feldtyp-Gruppen, die initial zugeklappt sind |
 
 ### FimApiService-Parameter
@@ -202,6 +329,14 @@ Die Sichtbarkeit und Interaktivität von Feldern wird im Properties-Panel unter 
 ```
 
 Unterstützte Effekte: `SHOW` · `HIDE` · `DISABLE`
+
+---
+
+## Design-Varianten
+
+Die Vorschau kann zwischen drei vollständig eigenständigen JSONForms-Renderer-Sets umschalten (Tastaturkürzel `1`/`2`/`3`, Dropdown in der Vorschau-Toolbar): **Standard (Material)**, **Bundesportal-Stil** und **KERN-Stil**. Der Wechsel tauscht Renderer und Zellen vollständig aus — kein Stylesheet-Overlay. Eingegebene Formulardaten und die exportierten Artefakte (`schema.json`, `uischema.json`) bleiben dabei unverändert; die Vorschau zeigt dazu den SHA-256-Hash beider Dateien in der Fußzeile, der beim Variantenwechsel gleich bleibt.
+
+**Claim-Hygiene:** Design-Demonstration auf Basis der jeweiligen Gestaltungsprinzipien — keine zertifizierte Umsetzung des Design-Systems. Nirgends wird „BITV-konform" oder „offizielles Bundesportal-Design" behauptet.
 
 ---
 
@@ -407,6 +542,10 @@ interface FimService {
 interface OpenCodeService {
   getBausteine(): Promise<OpenCodeBaustein[]>;
   getBausteineByKategorie(kategorie: OpenCodeBausteinKategorie): Promise<OpenCodeBaustein[]>;
+}
+
+interface BausteinService {
+  getBausteine(): Promise<Baustein[]>;
 }
 ```
 

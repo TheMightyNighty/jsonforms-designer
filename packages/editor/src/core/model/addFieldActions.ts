@@ -31,9 +31,15 @@ export interface AddFieldAction {
   type: typeof ADD_FIELD;
   payload: AddFieldPayload;
 }
+/**
+ * `label` kommt von außen, nicht aus dem Katalog: Der Reducer ist eine reine
+ * Funktion ohne Zugriff auf i18n, die auslösende Komponente kennt dagegen die
+ * Sprache (ADR 0007).
+ */
 export function createAddFieldAction(
   fieldType: FieldTypeDefinition,
   propertyKey: string,
+  label: string,
   insertAfterScope?: string,
   tabIndex?: number,
 ): AddFieldAction {
@@ -42,10 +48,10 @@ export function createAddFieldAction(
     payload: {
       fieldTypeId: fieldType.id,
       propertyKey,
-      schemaFragment: { ...fieldType.schema, title: fieldType.defaults.label },
+      schemaFragment: { ...fieldType.schema, title: label },
       uiSchemaScope: buildScope(propertyKey),
       uiSchemaOptions: fieldType.uiSchema.options,
-      label: fieldType.defaults.label,
+      label,
       insertAfterScope,
       tabIndex,
       isStructural: fieldType.isStructural,
@@ -172,8 +178,12 @@ export interface ColumnDropPayload {
   fieldTypeId: string;
   /** Gewünschter Property-Key */
   propertyKey: string;
+  /** Vorgabe-Beschriftung, übersetzt — der Reducer kennt keine Sprache. */
+  label: string;
   /** Optional: nach welchem Element-ID einfügen */
   insertAfterId?: string;
+  /** Platzhalter aus dem Regionsprofil, falls es einen vorgibt. */
+  platzhalter?: string;
   /** Nur für FIM-Datenfelder: vollständiges Schema-Fragment */
   fimSchema?: JsonSchema7 & { title?: string };
   /** Nur für FIM-Datenfelder: UI-Schema-Optionen */
@@ -281,10 +291,13 @@ export const SET_FORM_METADATA = 'SET_FORM_METADATA' as const;
 export interface FormMetadata {
   title?: string;
   description?: string;
-  publisher?: string; // x-publisher
-  legalBasis?: string; // x-legal-basis
-  version?: string; // x-version
-  validFrom?: string; // x-valid-from (ISO date)
+  /** Formular-ID als URN — Manifest form.id (OFM-R-202). */
+  id?: string;
+  publisher?: string;
+  legalBasis?: string;
+  version?: string;
+  validFrom?: string; // ISO date
+  language?: string;
   /** Beliebige weitere x-*-Felder (z. B. x-translations) werden durchgereicht. */
   [key: string]: unknown;
 }
@@ -336,6 +349,23 @@ export interface ToggleLineNumbersAction {
 }
 export function createToggleLineNumbersAction(): ToggleLineNumbersAction {
   return { type: TOGGLE_LINE_NUMBERS };
+}
+
+/**
+ * Typvorschlag für ein Feld ignorieren oder die Entscheidung zurücknehmen
+ * (ADR 0002, Arbeitspaket 5). Landet in FieldAwareState.typvorschlagIgnoriert
+ * und damit im gespeicherten Stand, nicht im Export.
+ */
+export const IGNORIERE_TYPVORSCHLAG = 'IGNORIERE_TYPVORSCHLAG' as const;
+export interface IgnoriereTypvorschlagAction {
+  type: typeof IGNORIERE_TYPVORSCHLAG;
+  payload: { scope: string; ignoriert: boolean };
+}
+export function createIgnoriereTypvorschlagAction(
+  scope: string,
+  ignoriert: boolean,
+): IgnoriereTypvorschlagAction {
+  return { type: IGNORIERE_TYPVORSCHLAG, payload: { scope, ignoriert } };
 }
 
 export const SET_SECTION_COLOR = 'SET_SECTION_COLOR' as const;

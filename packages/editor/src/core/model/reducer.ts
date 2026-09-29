@@ -1,14 +1,19 @@
 /**
  * Editor-Reducer für den Form-First-Zustand (FieldAwareState).
  */
-import { SET_FIELD_RULE } from '../../properties/fieldPropertiesActions';
+import {
+  CHANGE_FIELD_TYPE,
+  SET_FIELD_RULE,
+} from '../../properties/fieldPropertiesActions';
 import { fieldPropertiesReducer } from '../../properties/fieldPropertiesReducer';
+import { stripHtml } from '../util/plainText';
 import {
   ADD_FIELD,
   ADD_FIM_GRUPPE,
   ADD_TAB,
   COLUMN_DROP,
   EditorAction,
+  IGNORIERE_TYPVORSCHLAG,
   LOAD_TEMPLATE,
   MOVE_ELEMENT,
   REMOVE_FIELD,
@@ -38,6 +43,7 @@ import {
   moveElementReducer,
   reorderInColumnReducer,
 } from './columnReducer';
+import { emptyManifestMeta } from './manifestMeta';
 
 // ---------------------------------------------------------------------------
 // State
@@ -54,7 +60,9 @@ export const emptyFieldState: FieldAwareState = {
   activeTabIndex: 0,
   tabAssignments: {},
   lineNumbersEnabled: false,
+  typvorschlagIgnoriert: {},
   sectionColors: {},
+  manifestMeta: { ...emptyManifestMeta },
 };
 
 // ---------------------------------------------------------------------------
@@ -112,6 +120,17 @@ export const editorReducer = (
       },
     };
   }
+  // IGNORIERE_TYPVORSCHLAG — Redaktionsgedächtnis, kein Exportinhalt.
+  if (action.type === IGNORIERE_TYPVORSCHLAG) {
+    const { scope, ignoriert } = action.payload;
+    const naechste = { ...state.fieldState.typvorschlagIgnoriert };
+    if (ignoriert) naechste[scope] = true;
+    else delete naechste[scope];
+    return {
+      ...state,
+      fieldState: { ...state.fieldState, typvorschlagIgnoriert: naechste },
+    };
+  }
   // SET_SECTION_COLOR
   if (action.type === SET_SECTION_COLOR) {
     const { elementId, color } = action.payload;
@@ -160,30 +179,42 @@ export const editorReducer = (
     };
   }
 
-  // SET_FORM_METADATA
+  // SET_FORM_METADATA — Titel/Beschreibung in schema.json, alle übrigen
+  // Formular-Metadaten in den Manifest-Datenhalter (OFM-R-205/OFM-R-304).
   if (action.type === SET_FORM_METADATA) {
     const payload = action.payload;
     const patch: Record<string, unknown> = {};
-    if (payload.title !== undefined) patch['title'] = payload.title;
+    if (payload.title !== undefined) patch['title'] = stripHtml(payload.title);
     if (payload.description !== undefined)
-      patch['description'] = payload.description;
-    if (payload.publisher !== undefined)
-      patch['x-publisher'] = payload.publisher;
-    if (payload.legalBasis !== undefined)
-      patch['x-legal-basis'] = payload.legalBasis;
-    if (payload.version !== undefined) patch['x-version'] = payload.version;
-    if (payload.validFrom !== undefined)
-      patch['x-valid-from'] = payload.validFrom;
+      patch['description'] = stripHtml(payload.description);
     // Durchreichen beliebiger x-* Felder (z. B. x-translations)
     for (const [k, v] of Object.entries(payload)) {
       if (k.startsWith('x-') && !(k in patch)) patch[k] = v;
     }
     const schema = { ...state.fieldState.schema, ...patch };
-    return { ...state, fieldState: { ...state.fieldState, schema } };
+
+    const meta = state.fieldState.manifestMeta;
+    const manifestMeta = {
+      ...meta,
+      id: payload.id ?? meta.id,
+      version: payload.version ?? meta.version,
+      publisher: payload.publisher ?? meta.publisher,
+      legalBasis: payload.legalBasis ?? meta.legalBasis,
+      validFrom: payload.validFrom ?? meta.validFrom,
+      language: payload.language ?? meta.language,
+    };
+    return {
+      ...state,
+      fieldState: { ...state.fieldState, schema, manifestMeta },
+    };
   }
 
-  // SET_FIELD_RULE + UPDATE_FIELD_PROPERTY
-  if (action.type === SET_FIELD_RULE || action.type === UPDATE_FIELD_PROPERTY) {
+  // SET_FIELD_RULE + UPDATE_FIELD_PROPERTY + CHANGE_FIELD_TYPE
+  if (
+    action.type === SET_FIELD_RULE ||
+    action.type === UPDATE_FIELD_PROPERTY ||
+    action.type === CHANGE_FIELD_TYPE
+  ) {
     return {
       ...state,
       fieldState: fieldPropertiesReducer(state.fieldState, action),

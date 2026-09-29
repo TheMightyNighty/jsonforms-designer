@@ -18,7 +18,17 @@ export interface UISchemaRule {
   effect: RuleEffect;
   condition: {
     scope: string;
-    schema: { const?: unknown; enum?: unknown[] };
+    /**
+     * Bedingungs-Schema der JSONForms-Rule. `const`/`enum` gab es von
+     * Anfang an; `not: { const }` kam mit dem Satz-Editor dazu („ist nicht
+     * gleich"). Alle drei Formen sind gültige JSON-Schema-Bedingungen —
+     * das Ausgabeformat ändert sich dadurch nicht (ADR 0002/V3).
+     */
+    schema: {
+      const?: unknown;
+      enum?: unknown[];
+      not?: { const?: unknown };
+    };
   };
 }
 
@@ -50,10 +60,7 @@ export function createSetFieldRuleAction(
 export const UPDATE_FIELD_PROPERTY = 'UPDATE_FIELD_PROPERTY' as const;
 
 export type FieldPropertyKey =
-  | 'label'
-  | 'description'
-  | 'placeholder'
-  | 'required';
+  'label' | 'description' | 'placeholder' | 'required';
 
 export interface UpdateFieldPropertyPayload {
   /** scope des Controls, z. B. "#/properties/vorname" */
@@ -77,6 +84,37 @@ export function createUpdateFieldPropertyAction(
   return {
     type: UPDATE_FIELD_PROPERTY,
     payload: { scope, property, value },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// CHANGE_FIELD_TYPE — Feldtyp eines bestehenden Feldes wechseln
+// ---------------------------------------------------------------------------
+
+export const CHANGE_FIELD_TYPE = 'CHANGE_FIELD_TYPE' as const;
+
+export interface ChangeFieldTypePayload {
+  /** scope des Controls, z. B. "#/properties/vorname" */
+  scope: string;
+  /** id eines Eintrags aus FIELD_TYPE_CATALOG */
+  feldtypId: string;
+  /** Platzhalter aus dem Regionsprofil, falls es einen vorgibt. */
+  platzhalter?: string;
+}
+
+export interface ChangeFieldTypeAction {
+  type: typeof CHANGE_FIELD_TYPE;
+  payload: ChangeFieldTypePayload;
+}
+
+export function createChangeFieldTypeAction(
+  scope: string,
+  feldtypId: string,
+  platzhalter?: string,
+): ChangeFieldTypeAction {
+  return {
+    type: CHANGE_FIELD_TYPE,
+    payload: { scope, feldtypId, platzhalter },
   };
 }
 

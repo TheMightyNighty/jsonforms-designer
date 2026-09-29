@@ -1,0 +1,23 @@
+{
+  "formatVersion": "1.0.0",
+  "form": {
+    "id": "urn:de:stadt-bonn:formular:bewohnerparkausweis-fehler",
+    "version": "1.0.0",
+    "title": "Antrag auf Bewohnerparkausweis (Demo-Fehler)",
+    "publisher": "Stadt Bonn — Straßenverkehrsamt",
+    "legalBasis": "§ 45 Abs. 1b StVO",
+    "validFrom": "2026-08-01",
+    "language": "de"
+  },
+  "conformanceClass": "A",
+  "artifacts": {
+    "schema": {
+      "path": "schema.json",
+      "sha256": "be9bfda2e5b7a4c3c0b6a8cc6adad702d423b9b6944ccdcc50d07392f693fd71"
+    },
+    "uischema": {
+      "path": "uischema.json",
+      "sha256": "11a41ccec9061e073d56c2c0f32bb05f2d57095bc09add2f0d564f5cc7c3f68e"
+    }
+  }
+}

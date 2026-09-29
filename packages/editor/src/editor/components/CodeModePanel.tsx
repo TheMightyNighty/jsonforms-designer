@@ -4,7 +4,7 @@ import './monacoSetup';
 
 import Editor from '@monaco-editor/react';
 import { Alert, Box, Tab, Tabs, useTheme } from '@mui/material';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { FieldAwareState } from '../../core/model/addFieldReducer';
 import { FlatElement, fromLegacy } from '../../core/model/uiElements';
@@ -104,9 +104,14 @@ export function CodeModePanel({
     [tab, fieldState, onFieldStateChange, onPreviewDataChange],
   );
 
-  useEffect(() => {
+  // Beim Reiterwechsel die Fehlermeldung fallen lassen: Sie gehört zum
+  // Text, den man gerade verlassen hat. Angleichen im Render statt im
+  // Effekt — ein Effekt würde den Fehler noch einmal mit anzeigen.
+  const [fehlerReiter, setFehlerReiter] = useState(tab);
+  if (fehlerReiter !== tab) {
+    setFehlerReiter(tab);
     setError(null);
-  }, [tab]);
+  }
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

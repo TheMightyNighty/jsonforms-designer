@@ -21,13 +21,27 @@ export const I18nCtx = createContext<I18nContext>({
 export function I18nProvider({
   children,
   defaultLocale = 'de',
+  ueberschreiben,
 }: {
   children: React.ReactNode;
   defaultLocale?: Locale;
+  /**
+   * Letzter Griff in die Texte, bevor sie gelten — hier legen
+   * Erweiterungspakete ihre Feldtyp-Namen und Begriffe darüber (ADR 0007).
+   * Der Sprachkatalog selbst bleibt unverändert.
+   */
+  ueberschreiben?: (
+    basis: EditorTranslations,
+    locale: Locale,
+  ) => EditorTranslations;
 }) {
   const [locale, setLocale] = useState<Locale>(defaultLocale);
+  const t = React.useMemo(() => {
+    const basis = TRANSLATIONS[locale];
+    return ueberschreiben ? ueberschreiben(basis, locale) : basis;
+  }, [locale, ueberschreiben]);
   return (
-    <I18nCtx.Provider value={{ locale, t: TRANSLATIONS[locale], setLocale }}>
+    <I18nCtx.Provider value={{ locale, t, setLocale }}>
       {children}
     </I18nCtx.Provider>
   );

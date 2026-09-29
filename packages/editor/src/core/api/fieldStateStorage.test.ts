@@ -5,6 +5,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { FieldAwareState } from '../model/addFieldReducer';
+import { emptyManifestMeta } from '../model/manifestMeta';
 import {
   FIELD_STATE_STORAGE_KEY,
   HttpFieldStateService,
@@ -33,7 +34,9 @@ function sampleState(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: { '#/properties/vorname': 0 },
     lineNumbersEnabled: true,
-    sectionColors: { col_1: '#004A99' },
+    sectionColors: { col_1: 'blue' },
+    manifestMeta: { ...emptyManifestMeta },
+    typvorschlagIgnoriert: {},
   };
 }
 
@@ -43,6 +46,7 @@ function fakeStorage(initial?: Record<string, string>) {
   return {
     getItem: (key: string) => map.get(key) ?? null,
     setItem: (key: string, value: string) => void map.set(key, value),
+    removeItem: (key: string) => void map.delete(key),
     dump: () => Object.fromEntries(map),
   };
 }
@@ -72,8 +76,68 @@ describe('normalizeFieldState()', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     });
+  });
+
+  /**
+   * Persistenzformat-Garantie (ADR 0002/V2): Ein Stand, der vor den
+   * UX-Arbeitspaketen gespeichert wurde, muss unverändert laden — ohne
+   * manifestMeta, mit einer const-Bedingung und ohne die neuen Felder.
+   */
+  it('lädt einen Stand aus der Zeit vor den UX-Arbeitspaketen', () => {
+    const alterStand = {
+      schema: {
+        type: 'object',
+        title: 'Antrag',
+        properties: {
+          land: { type: 'string', title: 'Land' },
+          grund: { type: 'string', title: 'Begründung' },
+        },
+        required: ['land'],
+      },
+      uiSchema: {
+        type: 'VerticalLayout',
+        elements: [
+          { type: 'Control', scope: '#/properties/land' },
+          {
+            type: 'Control',
+            scope: '#/properties/grund',
+            rule: {
+              effect: 'SHOW',
+              condition: {
+                scope: '#/properties/land',
+                schema: { const: 'DE' },
+              },
+            },
+          },
+        ],
+      },
+      tabs: [],
+      activeTabIndex: 0,
+      tabAssignments: {},
+      lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
+      sectionColors: {},
+    };
+
+    const result = normalizeFieldState(alterStand);
+
+    expect(result).toBeDefined();
+    expect(result!.schema.required).toEqual(['land']);
+    expect(Object.keys(result!.schema.properties ?? {})).toEqual([
+      'land',
+      'grund',
+    ]);
+    // Die Bedingung überlebt unverändert
+    expect(result!.uiSchema.elements[1].rule).toEqual({
+      effect: 'SHOW',
+      condition: { scope: '#/properties/land', schema: { const: 'DE' } },
+    });
+    // Neue Felder werden ergänzt, nicht verlangt
+    expect(result!.manifestMeta).toEqual({ ...emptyManifestMeta });
   });
 
   it('entfernt Prototype-Pollution-Schlüssel rekursiv', () => {
@@ -109,7 +173,7 @@ describe('LocalStorageFieldStateService', () => {
     const storage = fakeStorage();
     const service = new LocalStorageFieldStateService(undefined, storage);
     service.save(sampleState());
-    expect(Object.keys(storage.dump())).toEqual([FIELD_STATE_STORAGE_KEY]);
+    expect(Object.keys(storage.dump())).toContain(FIELD_STATE_STORAGE_KEY);
   });
 
   it('load() liefert undefined wenn nichts gespeichert ist', () => {
@@ -137,6 +201,9 @@ describe('LocalStorageFieldStateService', () => {
       setItem: () => {
         throw new Error('QuotaExceededError');
       },
+      removeItem: () => {
+        throw new Error('QuotaExceededError');
+      },
     });
     expect(() => service.save(sampleState())).not.toThrow();
   });
@@ -151,7 +218,10 @@ describe('LocalStorageFieldStateService', () => {
     const storage = fakeStorage();
     const service = new LocalStorageFieldStateService('mein_key', storage);
     service.save(sampleState());
-    expect(Object.keys(storage.dump())).toEqual(['mein_key']);
+    // Neben dem eigenen Schlüssel legt der Adapter die Ablage an
+    // (ADR 0006); der Ein-Dokument-Schlüssel wird weiter mitgeschrieben,
+    // damit Hosts, die direkt darauf zugreifen, nichts verlieren.
+    expect(Object.keys(storage.dump())).toContain('mein_key');
     expect(service.load()).toBeDefined();
   });
 });

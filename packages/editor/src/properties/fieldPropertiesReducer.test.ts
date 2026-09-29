@@ -2,10 +2,15 @@
  * F-4: Tests für fieldPropertiesReducer und fieldPropertiesActions
  */
 
+import { JsonSchema7 } from '@jsonforms/core';
 import { describe, expect, it } from 'vitest';
 
 import { FieldAwareState } from '../core/model/addFieldReducer';
+import { emptyManifestMeta } from '../core/model/manifestMeta';
+import { kompatibleFeldtypen } from '../field-types/feldtypErkennung';
+import { REGION_DE } from '../region/regionsprofil';
 import {
+  createChangeFieldTypeAction,
   createUpdateFieldPropertyAction,
   propertyKeyFromScope,
 } from './fieldPropertiesActions';
@@ -39,7 +44,9 @@ function stateWithField(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
   };
 }
 
@@ -150,7 +157,9 @@ describe('UPDATE_FIELD_PROPERTY placeholder', () => {
       activeTabIndex: 0,
       tabAssignments: {},
       lineNumbersEnabled: false,
+      typvorschlagIgnoriert: {},
       sectionColors: {},
+      manifestMeta: { ...emptyManifestMeta },
     };
     const action = createUpdateFieldPropertyAction(
       '#/properties/x',
@@ -230,5 +239,181 @@ describe('fieldPropertiesReducer() — Robustheit', () => {
     const next = fieldPropertiesReducer(state, rawAction);
     // kein Crash, Properties unverändert
     expect(next.schema.properties).toEqual(state.schema.properties);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CHANGE_FIELD_TYPE — Wechsel der Art des Feldes
+// ---------------------------------------------------------------------------
+
+describe('fieldPropertiesReducer — CHANGE_FIELD_TYPE', () => {
+  const scope = '#/properties/vorname';
+
+  function feldSchema(state: FieldAwareState) {
+    return state.schema.properties?.['vorname'] as JsonSchema7 & {
+      title?: string;
+      description?: string;
+    };
+  }
+  function controlOptionen(state: FieldAwareState) {
+    return state.uiSchema.elements[0].options ?? {};
+  }
+
+  it('wechselt Text zu E-Mail und behält die Bezeichnung', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'email'),
+    );
+    expect(feldSchema(next).format).toBe('email');
+    expect(feldSchema(next).title).toBe('Vorname');
+  });
+
+  it('übernimmt den Platzhalter des Regionsprofils', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(
+        scope,
+        'email',
+        REGION_DE.platzhalter?.['email'],
+      ),
+    );
+    expect(controlOptionen(next).placeholder).toBe('name@behoerde.de');
+  });
+
+  it('setzt ohne Regionsprofil keinen Beispieltext', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'email'),
+    );
+    expect(controlOptionen(next).placeholder).toBe('');
+  });
+
+  it('behält einen selbst gesetzten Platzhalter', () => {
+    const start = stateWithField();
+    start.uiSchema.elements[0].options = { placeholder: 'Bitte eintragen' };
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'email'),
+    );
+    expect(controlOptionen(next).placeholder).toBe('Bitte eintragen');
+  });
+
+  it('behält den Hilfetext', () => {
+    const start = stateWithField();
+    start.schema.properties!['vorname'].description = 'Bitte ausfüllen';
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'tel'),
+    );
+    expect(feldSchema(next).description).toBe('Bitte ausfüllen');
+  });
+
+  it('lässt scope und Property-Schlüssel unberührt', () => {
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'date'),
+    );
+    expect(Object.keys(next.schema.properties ?? {})).toEqual(['vorname']);
+    const control = next.uiSchema.elements[0];
+    expect('scope' in control && control.scope).toBe(scope);
+  });
+
+  it('führt auch einen Wechsel über Basistypgrenzen hinweg aus', () => {
+    // Text → Ja/Nein. Nicht verlustfrei, aber erlaubt — die Oberfläche
+    // fragt vorher nach (siehe wechselFolgen).
+    const next = fieldPropertiesReducer(
+      stateWithField(),
+      createChangeFieldTypeAction(scope, 'checkbox'),
+    );
+    expect(feldSchema(next).type).toBe('boolean');
+    expect(feldSchema(next).title).toBe('Vorname');
+  });
+
+  it('wirft einen Platzhalter weg, wenn der neue Typ keiner ist', () => {
+    const start = stateWithField();
+    start.uiSchema.elements[0].options = { placeholder: 'Bitte eintragen' };
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'checkbox'),
+    );
+    expect(controlOptionen(next).placeholder).toBeUndefined();
+  });
+
+  it('entfernt Prüfungen, die zum neuen Typ nicht mehr passen', () => {
+    const start = stateWithField();
+    (
+      start.schema.properties!['vorname'] as JsonSchema7 & {
+        'x-opencode-validators'?: string[];
+      }
+    )['x-opencode-validators'] = ['oc-val-plz', 'oc-val-tax-id'];
+
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'date'),
+    );
+    // Beide hängen an text-short und passen am Datumsfeld nicht mehr.
+    expect(
+      (
+        feldSchema(next) as JsonSchema7 & {
+          'x-opencode-validators'?: string[];
+        }
+      )['x-opencode-validators'],
+    ).toBeUndefined();
+  });
+
+  it('behält Prüfungen, die weiterhin passen', () => {
+    const start = stateWithField();
+    (
+      start.schema.properties!['vorname'] as JsonSchema7 & {
+        'x-opencode-validators'?: string[];
+      }
+    )['x-opencode-validators'] = ['oc-val-phone'];
+
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'tel'),
+    );
+    expect(
+      (
+        feldSchema(next) as JsonSchema7 & {
+          'x-opencode-validators'?: string[];
+        }
+      )['x-opencode-validators'],
+    ).toEqual(['oc-val-phone']);
+  });
+
+  it('lässt den Zustand unverändert bei unbekannter Feldtyp-id', () => {
+    const start = stateWithField();
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'gibt-es-nicht'),
+    );
+    expect(next).toBe(start);
+  });
+
+  it('lehnt einen Wechsel auf ein Strukturelement ab', () => {
+    const start = stateWithField();
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction(scope, 'label-heading'),
+    );
+    expect(next).toBe(start);
+  });
+
+  it('lässt den Zustand unverändert, wenn das Feld nicht existiert', () => {
+    const start = stateWithField();
+    const next = fieldPropertiesReducer(
+      start,
+      createChangeFieldTypeAction('#/properties/gibtesnicht', 'email'),
+    );
+    expect(next).toBe(start);
+  });
+
+  it('nennt als verlustfreie Alternativen nur Feldtypen mit gleichem Basistyp', () => {
+    const ids = kompatibleFeldtypen('email').map((f) => f.id);
+    expect(ids).toContain('text-short');
+    expect(ids).toContain('date');
+    expect(ids).not.toContain('checkbox');
+    expect(ids).not.toContain('integer');
   });
 });

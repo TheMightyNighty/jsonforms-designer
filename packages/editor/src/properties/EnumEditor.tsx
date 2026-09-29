@@ -28,20 +28,12 @@ import { useI18n } from '../i18n';
 interface EnumEditorProps {
   selectedScope: string;
   schema: FieldAwareState['schema'];
-  uiSchema: FieldAwareState['uiSchema'];
-  tabs: FieldAwareState['tabs'];
-  activeTabIndex: FieldAwareState['activeTabIndex'];
-  tabAssignments: FieldAwareState['tabAssignments'];
   dispatch: Dispatch<EditorAction>;
 }
 
 export function EnumEditor({
   selectedScope,
   schema,
-  uiSchema,
-  tabs,
-  activeTabIndex,
-  tabAssignments,
   dispatch,
 }: EnumEditorProps) {
   const { fieldState: ctx } = useEditorContext();
@@ -62,17 +54,9 @@ export function EnumEditor({
         [key]: { ...fieldDef, enum: newEnum },
       },
     };
-    dispatch(
-      createSetFieldStateAction({
-        schema: updatedSchema,
-        uiSchema,
-        tabs,
-        activeTabIndex,
-        tabAssignments,
-        lineNumbersEnabled: ctx.lineNumbersEnabled,
-        sectionColors: ctx.sectionColors,
-      }),
-    );
+    // Bestehenden Zustand übernehmen und nur das Geänderte überschreiben —
+    // eine Aufzählung der Felder verlöre bei jedem neuen State-Feld etwas.
+    dispatch(createSetFieldStateAction({ ...ctx, schema: updatedSchema }));
   };
 
   const handleChange = (idx: number, value: string) => {

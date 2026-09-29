@@ -4,6 +4,14 @@
  * UI-Baustein-Items sind drag-fähig (werden als Custom-Renderer-Referenz ins fieldState eingefügt).
  *
  * DnD-Typ: 'OPENCODE_BAUSTEIN' — getrennt von 'FIELD_TYPE'.
+ *
+ * Kein Tastatur-Alternativpfad: Die Einträge sind zwar ziehbar, aber es gibt
+ * im Editor keine Drop-Zone, die 'OPENCODE_BAUSTEIN' annimmt — auch der
+ * Maus-Pfad führt also zu nichts. Ein Enter/Leertaste-Pfad bräuchte zuerst
+ * eine Festlegung, was beim Einfügen passieren soll.
+ * [RÜCKFRAGE AN FABLE: Was soll das Ablegen eines OpenCode-UI-Bausteins im
+ * Formular bewirken, und wohin gehören die Validatoren jetzt, wo sie im
+ * Reiter „Prüfung" der Eigenschaften kontextsensitiv angeboten werden?]
  */
 import {
   Box,
@@ -120,13 +128,21 @@ export function OpenCodePaletteSection({
 
       {/* Einklappbarer Header */}
       <Box
+        component="button"
+        type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
         sx={{
           display: 'flex',
           alignItems: 'center',
           gap: 0.5,
+          width: '100%',
           px: 1.5,
-          py: 0.5,
+          py: 0.75,
+          border: 'none',
+          background: 'none',
+          font: 'inherit',
+          textAlign: 'left',
           cursor: 'pointer',
           userSelect: 'none',
           borderRadius: 1,
@@ -136,12 +152,12 @@ export function OpenCodePaletteSection({
         <Box
           component="i"
           className={`ti ti-chevron-${open ? 'down' : 'right'}`}
-          sx={{ fontSize: 12, color: 'text.disabled', flexShrink: 0 }}
+          sx={{ fontSize: 12, color: 'text.secondary', flexShrink: 0 }}
         />
         <Typography
           variant="caption"
           sx={{
-            color: 'text.disabled',
+            color: 'text.secondary',
             fontWeight: 500,
             textTransform: 'uppercase',
             letterSpacing: '0.06em',
@@ -153,7 +169,7 @@ export function OpenCodePaletteSection({
         {!loading && (
           <Typography
             variant="caption"
-            sx={{ color: 'text.disabled', fontSize: '0.68rem' }}
+            sx={{ color: 'text.secondary', fontSize: '0.68rem' }}
           >
             ({bausteine.length})
           </Typography>

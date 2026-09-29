@@ -25,6 +25,16 @@ export default [
   },
   js.configs.recommended,
   {
+    // Werkzeug-Skripte laufen in Node, nicht im Browser (z. B. das
+    // KERN-Vendoring, siehe ADR 0004).
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { console: 'readonly', process: 'readonly' },
+    },
+  },
+  {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: tsParser,
@@ -61,6 +71,18 @@ export default [
       ...reactHooks.configs.recommended.rules,
       // TS übernimmt die Undefined-Prüfung zuverlässiger als ESLint.
       'no-undef': 'off',
+      /**
+       * Abgeleiteten Zustand gleicht man im Render an, nicht im Effekt: Ein
+       * Effekt läuft nach dem Malen, also sieht die Redakteurin für einen
+       * Durchlauf den alten Wert zum neuen Gegenstand — den Reiter des
+       * vorigen Feldes, die Bedingung der vorigen Auswahl.
+       *
+       * Echte Außensynchronisation ist etwas anderes und bleibt erlaubt:
+       * Ein Ladezustand, der zum Abruf gehört, oder ein Speicherstatus, der
+       * zum Schreibvorgang gehört. Diese Stellen tragen eine einzeilige
+       * Ausnahme mit Begründung — das sind vier, und sie sollen auffallen.
+       */
+      'react-hooks/set-state-in-effect': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       '@typescript-eslint/no-unused-vars': [

@@ -1,0 +1,26 @@
+/* Getrimmtes @font-face-CSS aus @kern-ux/native@2.8.2 (EUPL-1.2).
+   Nur die drei Schnitte, die der Designer nutzt, nur woff2 — erzeugt von
+   scripts/vendor-kern.mjs. */
+@font-face {
+  font-family: 'Fira Sans';
+  src: url('./fira-sans/FiraSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fira Sans';
+  src: url('./fira-sans/FiraSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fira Sans';
+  src: url('./fira-sans/FiraSans-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}

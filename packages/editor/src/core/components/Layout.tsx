@@ -27,9 +27,17 @@ export const Layout: React.FC<LayoutProps> = ({
         gridTemplateRows: 'auto 1fr auto',
       }}
     >
-      <header>{HeaderComponent ? <HeaderComponent /> : null}</header>
+      {/*
+        Kein eigenes <header> um die Kopfzeile: Die AppBar rendert selbst
+        ein <header> und damit eine banner-Landmark. Zwei ineinander
+        verschachtelte banner-Landmarks sind ungültig und verwirren die
+        Landmark-Navigation von Screenreadern.
+      */}
+      {HeaderComponent ? <HeaderComponent /> : null}
       <Box
         component="main"
+        id="main-content"
+        aria-label="Formular-Editor"
         sx={{ marginTop: 0, marginBottom: 0, minHeight: 0 }}
       >
         {children}

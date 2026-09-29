@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -57,3 +57,66 @@ jobs:
 
       - name: Dependency-Audit (production)
         run: npm audit --omit=dev --audit-level=high
+
+  ofm-dogfooding:
+    # Produzenten-Konformität (AUFTRAG 2.4, DoD 1+3): der Referenz-Validator
+    # aus ofm-spec muss das grüne Demo-Fixture als KONFORM Klasse A
+    # akzeptieren und das absichtlich fehlerhafte Fixture wegen OFM-R-320
+    # zurückweisen.
+    #
+    # Setzt voraus, dass ofm-spec unter demselben Account veröffentlicht ist
+    # (OPEN-CODE-CHECKLISTE.md, AUFTRAG 2.2). Solange es das nicht ist, wird
+    # der Job übersprungen statt rot: Ein Check, der dauerhaft fehlschlägt,
+    # gewöhnt einem das Hinsehen ab, und dann fällt der echte Befund nicht
+    # mehr auf. Die Meldung im Lauf sagt, warum übersprungen wurde.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ist ofm-spec veröffentlicht?
+        id: spec
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh repo view "${{ github.repository_owner }}/ofm-spec" >/dev/null 2>&1; then
+            echo "vorhanden=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "vorhanden=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=OFM-Dogfooding übersprungen::ofm-spec ist unter diesem Account nicht erreichbar (AUFTRAG 2.2). Sobald es veröffentlicht ist, läuft der Job ohne weitere Änderung."
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.spec.outputs.vorhanden == 'true'
+        with:
+          path: jsonforms-designer
+
+      - uses: actions/checkout@v7
+        if: steps.spec.outputs.vorhanden == 'true'
+        with:
+          repository: ${{ github.repository_owner }}/ofm-spec
+          path: ofm-spec
+
+      - uses: actions/setup-node@v7
+        if: steps.spec.outputs.vorhanden == 'true'
+        with:
+          node-version-file: jsonforms-designer/.nvmrc
+          cache: npm
+          cache-dependency-path: ofm-spec/package-lock.json
+
+      - name: ofm-validate installieren
+        if: steps.spec.outputs.vorhanden == 'true'
+        run: npm ci
+        working-directory: ofm-spec
+
+      - name: Demo-Fixture "bewohnerparkausweis" muss KONFORM Klasse A sein
+        if: steps.spec.outputs.vorhanden == 'true'
+        run: node ../ofm-spec/bin/ofm-validate.js demo/bewohnerparkausweis --class A
+        working-directory: jsonforms-designer
+
+      - name: Demo-Fixture "demo-fehler" muss wegen OFM-R-320 zurückgewiesen werden
+        if: steps.spec.outputs.vorhanden == 'true'
+        run: |
+          if node ../ofm-spec/bin/ofm-validate.js demo/demo-fehler; then
+            echo "demo-fehler wurde fälschlich als konform akzeptiert." >&2
+            exit 1
+          fi
+        working-directory: jsonforms-designer

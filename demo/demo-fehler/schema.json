@@ -1,0 +1,104 @@
+{
+  "type": "object",
+  "title": "Antrag auf Bewohnerparkausweis",
+  "description": "Beantragung eines Bewohnerparkausweises für ein Bewohnerparkgebiet der Stadt Bonn.",
+  "additionalProperties": false,
+  "required": [
+    "vorname",
+    "nachname",
+    "strasse",
+    "hausnummer",
+    "plz",
+    "ort",
+    "kennzeichen",
+    "parkzone"
+  ],
+  "if": {
+    "properties": { "fahrzeughalter": { "const": false } }
+  },
+  "then": {
+    "required": ["nutzungsberechtigung"]
+  },
+  "properties": {
+    "anrede": {
+      "type": "string",
+      "title": "Anrede",
+      "oneOf": [
+        { "const": "frau", "title": "Frau" },
+        { "const": "herr", "title": "Herr" },
+        { "const": "divers", "title": "Divers" }
+      ]
+    },
+    "vorname": {
+      "type": "string",
+      "title": "Vorname",
+      "minLength": 1,
+      "x-fim-id": "F60000227"
+    },
+    "nachname": {
+      "type": "string",
+      "title": "Nachname",
+      "minLength": 1,
+      "x-fim-id": "F60000228"
+    },
+    "geburtsdatum": {
+      "type": "string",
+      "title": "Geburtsdatum",
+      "format": "date"
+    },
+    "email": {
+      "type": "string",
+      "title": "E-Mail-Adresse",
+      "format": "email"
+    },
+    "strasse": {
+      "type": "string",
+      "title": "Straße",
+      "minLength": 1
+    },
+    "hausnummer": {
+      "type": "string",
+      "title": "Hausnummer",
+      "minLength": 1,
+      "maxLength": 10
+    },
+    "plz": {
+      "type": "string",
+      "title": "Postleitzahl",
+      "pattern": "^[0-9]{5}$"
+    },
+    "ort": {
+      "type": "string",
+      "title": "Ort",
+      "minLength": 1
+    },
+    "kennzeichen": {
+      "type": "string",
+      "title": "Amtliches Kennzeichen",
+      "pattern": "^[A-ZÄÖÜ]{1,3}-[A-ZÄÖÜ]{1,2} [0-9]{1,4}[EH]?$"
+    },
+    "fahrzeughalter": {
+      "type": "boolean",
+      "title": "Ich bin Halterin/Halter des Fahrzeugs",
+      "default": true
+    },
+    "nutzungsberechtigung": {
+      "type": "string",
+      "title": "Art der Nutzungsberechtigung",
+      "description": "Nur erforderlich, wenn Sie nicht selbst Halterin/Halter sind.",
+      "oneOf": [
+        { "const": "dienstwagen", "title": "Dienstwagen / Firmenfahrzeug" },
+        {
+          "const": "dauerhaft-ueberlassen",
+          "title": "Dauerhaft überlassenes Fahrzeug"
+        },
+        { "const": "carsharing", "title": "Carsharing-Fahrzeug" }
+      ]
+    },
+    "parkzone": {
+      "type": "string",
+      "title": "Bewohnerparkgebiet",
+      "enum": ["Altstadt", "Nordstadt", "Südstadt", "Weststadt"]
+    }
+  }
+}

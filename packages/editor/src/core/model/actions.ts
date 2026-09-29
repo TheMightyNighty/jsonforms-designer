@@ -3,6 +3,7 @@
  * über `fieldStateFromSchemas()` + SET_FIELD_STATE.
  */
 import type {
+  ChangeFieldTypeAction,
   SetFieldRuleAction,
   UpdateFieldPropertyAction,
 } from '../../properties/fieldPropertiesActions';
@@ -15,6 +16,7 @@ import type { ColumnDropAction } from './addFieldActions';
 import type { MoveElementAction } from './addFieldActions';
 import type { ReorderInColumnAction } from './addFieldActions';
 import type { ToggleLineNumbersAction } from './addFieldActions';
+import type { IgnoriereTypvorschlagAction } from './addFieldActions';
 import type { SetSectionColorAction } from './addFieldActions';
 import type { ReorderElementAction } from './addFieldActions';
 import type {
@@ -37,10 +39,15 @@ export type EditorAction =
   | AddFimGruppeAction
   | SetFormMetadataAction
   | UpdateFieldPropertyAction
-  | SetFieldRuleAction;
+  | SetFieldRuleAction
+  | ChangeFieldTypeAction
+  | IgnoriereTypvorschlagAction;
 
 // Re-exports für bequemen Import aus ./actions
-export { UPDATE_FIELD_PROPERTY } from '../../properties/fieldPropertiesActions';
+export {
+  CHANGE_FIELD_TYPE,
+  UPDATE_FIELD_PROPERTY,
+} from '../../properties/fieldPropertiesActions';
 export { ADD_FIELD } from './addFieldActions';
 export { REMOVE_FIELD } from './addFieldActions';
 export { LOAD_TEMPLATE } from './addFieldActions';
@@ -54,6 +61,7 @@ export {
   REORDER_TABS,
   SET_ACTIVE_TAB,
 } from './addFieldActions';
+export { IGNORIERE_TYPVORSCHLAG } from './addFieldActions';
 export {
   COLUMN_DROP,
   MOVE_ELEMENT,

@@ -23,6 +23,7 @@ import {
   resolveKey,
   tabReducer,
 } from './addFieldReducer';
+import { emptyManifestMeta } from './manifestMeta';
 import { UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
@@ -43,7 +44,9 @@ function emptyState(): FieldAwareState {
     activeTabIndex: 0,
     tabAssignments: {},
     lineNumbersEnabled: false,
+    typvorschlagIgnoriert: {},
     sectionColors: {},
+    manifestMeta: { ...emptyManifestMeta },
   };
 }
 
@@ -107,24 +110,36 @@ describe('insertControl()', () => {
 describe('addFieldReducer()', () => {
   it('fügt eine Schema-Property ein', () => {
     const state = emptyState();
-    const action = createAddFieldAction(getFieldType('text-short'), 'vorname');
+    const action = createAddFieldAction(
+      getFieldType('text-short'),
+      'vorname',
+      'Testfeld',
+    );
     const next = addFieldReducer(state, action);
 
     expect(next.schema.properties).toHaveProperty('vorname');
     expect(next.schema.properties!['vorname'].type).toBe('string');
   });
 
-  it('setzt title aus defaults.label', () => {
+  it('setzt title aus dem übergebenen Label', () => {
     const state = emptyState();
-    const action = createAddFieldAction(getFieldType('text-short'), 'vorname');
+    const action = createAddFieldAction(
+      getFieldType('text-short'),
+      'vorname',
+      'Testfeld',
+    );
     const next = addFieldReducer(state, action);
 
-    expect(next.schema.properties!['vorname'].title).toBe('Textfeld');
+    expect(next.schema.properties!['vorname'].title).toBe('Testfeld');
   });
 
   it('fügt ein Control ins UI Schema ein', () => {
     const state = emptyState();
-    const action = createAddFieldAction(getFieldType('text-short'), 'vorname');
+    const action = createAddFieldAction(
+      getFieldType('text-short'),
+      'vorname',
+      'Testfeld',
+    );
     const next = addFieldReducer(state, action);
 
     expect(next.uiSchema.elements).toHaveLength(1);
@@ -140,6 +155,7 @@ describe('addFieldReducer()', () => {
     const action = createAddFieldAction(
       getFieldType('text-long'),
       'beschreibung',
+      'Testfeld',
     );
     const next = addFieldReducer(state, action);
 
@@ -148,7 +164,11 @@ describe('addFieldReducer()', () => {
 
   it('überträgt format: "radio" bei radio-Typ', () => {
     const state = emptyState();
-    const action = createAddFieldAction(getFieldType('radio'), 'geschlecht');
+    const action = createAddFieldAction(
+      getFieldType('radio'),
+      'geschlecht',
+      'Testfeld',
+    );
     const next = addFieldReducer(state, action);
 
     expect(next.uiSchema.elements[0].options).toMatchObject({
@@ -158,7 +178,11 @@ describe('addFieldReducer()', () => {
 
   it('ist immutabel — der Original-State bleibt unverändert', () => {
     const state = emptyState();
-    const action = createAddFieldAction(getFieldType('number'), 'alter');
+    const action = createAddFieldAction(
+      getFieldType('number'),
+      'alter',
+      'Testfeld',
+    );
     addFieldReducer(state, action);
 
     expect(state.schema.properties).toEqual({});
@@ -173,8 +197,16 @@ describe('addFieldReducer()', () => {
 describe('addFieldReducer() — Kollisionserkennung', () => {
   it('benennt den Key um bei Kollision', () => {
     let state = emptyState();
-    const action1 = createAddFieldAction(getFieldType('text-short'), 'feld');
-    const action2 = createAddFieldAction(getFieldType('text-short'), 'feld');
+    const action1 = createAddFieldAction(
+      getFieldType('text-short'),
+      'feld',
+      'Testfeld',
+    );
+    const action2 = createAddFieldAction(
+      getFieldType('text-short'),
+      'feld',
+      'Testfeld',
+    );
 
     state = addFieldReducer(state, action1);
     state = addFieldReducer(state, action2);
@@ -187,7 +219,11 @@ describe('addFieldReducer() — Kollisionserkennung', () => {
   it('zählt korrekt hoch bei mehrfacher Kollision', () => {
     let state = emptyState();
     for (let i = 0; i < 3; i++) {
-      const action = createAddFieldAction(getFieldType('text-short'), 'feld');
+      const action = createAddFieldAction(
+        getFieldType('text-short'),
+        'feld',
+        'Testfeld',
+      );
       state = addFieldReducer(state, action);
     }
 
@@ -208,16 +244,17 @@ describe('addFieldReducer() — Einfügeposition', () => {
     let state = emptyState();
     state = addFieldReducer(
       state,
-      createAddFieldAction(getFieldType('text-short'), 'a'),
+      createAddFieldAction(getFieldType('text-short'), 'a', 'Testfeld'),
     );
     state = addFieldReducer(
       state,
-      createAddFieldAction(getFieldType('text-short'), 'b'),
+      createAddFieldAction(getFieldType('text-short'), 'b', 'Testfeld'),
     );
 
     const action = createAddFieldAction(
       getFieldType('text-short'),
       'zwischen',
+      'Testfeld',
       '#/properties/a', // insertAfterScope
     );
     state = addFieldReducer(state, action);
@@ -253,7 +290,11 @@ describe('addFieldReducer() — alle Katalog-Feldtypen', () => {
     it(`verarbeitet Feldtyp "${id}" ohne Fehler`, () => {
       const fieldType = getFieldType(id);
       const state = emptyState();
-      const action = createAddFieldAction(fieldType, id.replace('-', '_'));
+      const action = createAddFieldAction(
+        fieldType,
+        id.replace('-', '_'),
+        'Testfeld',
+      );
       const next = addFieldReducer(state, action);
 
       // Strukturelle Elemente (z. B. "group") erzeugen keine schema.property,
@@ -386,7 +427,7 @@ describe('reorderElementReducer()', () => {
     for (const key of ['a', 'b', 'c']) {
       state = addFieldReducer(
         state,
-        createAddFieldAction(getFieldType('text-short'), key),
+        createAddFieldAction(getFieldType('text-short'), key, 'Testfeld'),
       );
     }
     return state;

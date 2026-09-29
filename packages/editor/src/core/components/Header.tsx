@@ -1,74 +1,110 @@
+/**
+ * Kopfzeile des Editors — zwei Zeilen.
+ *
+ * Oben steht, woran gearbeitet wird (Produktname, Formularname,
+ * Speicherstatus) und rechts die Hauptaktion „Ausprobieren" samt
+ * Qualitäts-Ampel und Rückgängig/Wiederholen. Darunter die
+ * **Befehlsleiste** mit Datei · Bearbeiten · Ansicht · Formular.
+ *
+ * ADR 0002 / Arbeitspaket 2 sah dafür genau eine Sammelklappe „Weitere"
+ * vor. Die Erprobung hat gezeigt, dass dort niemand nach „Öffnen" oder
+ * „Speichern unter" sucht — die Befehle liegen jetzt da, wo man sie aus
+ * einem Schreibprogramm kennt.
+ */
 import { JsonSchema7 } from '@jsonforms/core';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import CodeIcon from '@mui/icons-material/Code';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import EditIcon from '@mui/icons-material/Edit';
-import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import LanguageIcon from '@mui/icons-material/Language';
-import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import RedoIcon from '@mui/icons-material/Redo';
 import UndoIcon from '@mui/icons-material/Undo';
-import PreviewIcon from '@mui/icons-material/Visibility';
+import TestModeIcon from '@mui/icons-material/Visibility';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { useEditorConfig } from '../../config/EditorConfigContext';
 import { EditorMode } from '../../editor/editorMode';
-import { FormTemplate } from '../../field-types/formTemplates';
-import { TemplatePickerDialog } from '../../field-types/TemplatePickerDialog';
 import { useI18n } from '../../i18n';
 import { EDITOR_VERSION } from '../../version';
 import { useEditorContext, useUndoRedo } from '../context';
 import {
-  createLoadTemplateAction,
-  createSetFieldStateAction,
-  createSetFormMetadataAction,
-  createToggleLineNumbersAction,
-} from '../model/addFieldActions';
-import { copyToClipBoard } from '../util/clipboard';
-import { ImportExportDialog } from './ImportExportDialog';
-import { MetadataDialog } from './MetadataDialog';
+  formatiereSpeicherStatus,
+  istSpeicherFehler,
+  STATUS_AKTUALISIERUNG_MS,
+} from '../model/speicherStatus';
+import { Befehlsleiste } from './Befehlsleiste';
+import { FormularNameDialog } from './FormularAblageDialog';
+import { QualitaetsAmpel } from './QualitaetsAmpel';
 
 interface HeaderProps {
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
+  testMode: boolean;
+  onTestModeChange: (testMode: boolean) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
-  const { dispatch, fieldState } = useEditorContext();
-  const { undo, redo, canUndo, canRedo } = useUndoRedo();
-  const { t, locale, setLocale } = useI18n();
-  const [exportOpen, setExportOpen] = useState(false);
-  const [templateOpen, setTemplateOpen] = useState(false);
-  const [metaOpen, setMetaOpen] = useState(false);
+/**
+ * Statuszeile neben der Befehlsleiste. Der relative Zeitpunkt wird im Takt
+ * von STATUS_AKTUALISIERUNG_MS neu gerechnet, damit aus „gerade eben" ohne
+ * Zutun „vor 2 min" wird.
+ */
+function SpeicherStatusZeile() {
+  const { speicherStatus } = useEditorContext();
+  const { t } = useI18n();
+  const [jetzt, setJetzt] = useState(() => Date.now());
 
-  const handleTemplateSelect = (tpl: FormTemplate) => {
-    dispatch(createLoadTemplateAction(tpl.state));
-  };
-
-  const handleCopySchema = () => {
-    copyToClipBoard(
-      JSON.stringify(
-        { schema: fieldState.schema, uiSchema: fieldState.uiSchema },
-        null,
-        2,
-      ),
+  useEffect(() => {
+    const id = setInterval(
+      () => setJetzt(Date.now()),
+      STATUS_AKTUALISIERUNG_MS,
     );
-  };
+    return () => clearInterval(id);
+  }, []);
 
-  const lineNumbers = fieldState.lineNumbersEnabled;
-  const isCode = mode === 'code';
-  const isPreview = mode === 'preview';
+  return (
+    <Typography
+      variant="caption"
+      noWrap
+      // aria-live: Der Wechsel auf „Speichern fehlgeschlagen" muss auch
+      // ohne Blick auf die Kopfzeile ankommen.
+      aria-live="polite"
+      sx={{
+        color: istSpeicherFehler(speicherStatus)
+          ? 'error.main'
+          : 'text.secondary',
+      }}
+    >
+      {formatiereSpeicherStatus(speicherStatus, t.header.status, jetzt)}
+    </Typography>
+  );
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  mode,
+  onModeChange,
+  testMode,
+  onTestModeChange,
+}) => {
+  const { fieldState, formularAblage } = useEditorContext();
+  const { undo, redo, canUndo, canRedo } = useUndoRedo();
+  const { t } = useI18n();
+  const config = useEditorConfig();
+  const [umbenennenOffen, setUmbenennenOffen] = useState(false);
+
+  const formularName = (fieldState.schema as JsonSchema7).title ?? '';
+  const produktName = config.produktName ?? t.header.title;
 
   return (
     <AppBar position="static" elevation={0}>
-      <Toolbar>
+      {/* ── Zeile 1: Woran wird gearbeitet, und die Hauptaktion ───────── */}
+      <Toolbar
+        variant="dense"
+        sx={{ flexWrap: 'wrap', rowGap: 0.5, minHeight: '44px !important' }}
+      >
         <Box
           sx={{
             display: 'flex',
@@ -76,6 +112,7 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
             gap: 1,
             flexGrow: 1,
             minWidth: 0,
+            mr: 1,
           }}
         >
           <Typography
@@ -87,173 +124,151 @@ export const Header: React.FC<HeaderProps> = ({ mode, onModeChange }) => {
               letterSpacing: '-0.02em',
             }}
           >
-            {t.header.title}
+            {produktName}
           </Typography>
-          {(fieldState.schema as JsonSchema7).title && (
-            <Typography
-              variant="body2"
-              noWrap
-              sx={{ color: 'text.secondary', fontStyle: 'italic' }}
+
+          {formularAblage ? (
+            // Der Formularname ist anklickbar und dort änderbar, wo er
+            // steht — vorher führte dorthin nur der Metadaten-Dialog.
+            <Button
+              size="small"
+              onClick={() => setUmbenennenOffen(true)}
+              endIcon={<ArrowDropDownIcon />}
+              data-testid="formular-menue"
+              aria-label={t.header.ablage.umbenennen}
+              sx={{
+                color: 'text.secondary',
+                fontWeight: 400,
+                textTransform: 'none',
+                minWidth: 0,
+                maxWidth: 320,
+                '& .MuiButton-endIcon': { ml: 0.25 },
+              }}
             >
-              — {(fieldState.schema as JsonSchema7).title}
-            </Typography>
+              <Box
+                component="span"
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {formularName || t.header.ablage.unbenannt}
+              </Box>
+            </Button>
+          ) : (
+            formularName && (
+              <Typography
+                variant="body2"
+                noWrap
+                sx={{ color: 'text.secondary' }}
+              >
+                — {formularName}
+              </Typography>
+            )
           )}
+
           <Typography
             variant="caption"
             aria-label="Editor-Version"
-            sx={{ color: 'text.disabled', fontSize: '0.65rem', flexShrink: 0 }}
+            sx={{ color: 'text.secondary', fontSize: '0.65rem', flexShrink: 0 }}
           >
             v{EDITOR_VERSION}
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-          <Tooltip title={locale === 'de' ? 'English' : 'Deutsch'}>
-            <IconButton
-              color="inherit"
-              onClick={() => setLocale(locale === 'de' ? 'en' : 'de')}
-              aria-label="Sprache wechseln"
-            >
-              <LanguageIcon />
-              <Typography
-                variant="caption"
-                sx={{ ml: 0.25, fontSize: '0.65rem' }}
-              >
-                {locale.toUpperCase()}
-              </Typography>
-            </IconButton>
-          </Tooltip>
+        <SpeicherStatusZeile />
+      </Toolbar>
 
+      {/* ── Zeile 2: Befehlsleiste ────────────────────────────────────── */}
+      <Toolbar
+        variant="dense"
+        sx={{
+          minHeight: '36px !important',
+          borderTop: 1,
+          borderColor: 'divider',
+          gap: 1,
+        }}
+      >
+        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Befehlsleiste mode={mode} onModeChange={onModeChange} />
+        </Box>
+
+        {/*
+          Rückgängig/Wiederholen, Qualitäts-Ampel und die Hauptaktion
+          stehen in derselben Zeile wie die Menüs — dort sucht man sie,
+          und die Titelzeile darüber bleibt frei für das, woran gearbeitet
+          wird.
+        */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            flexWrap: 'wrap',
+            rowGap: 0.5,
+            gap: 0.5,
+          }}
+        >
           <Tooltip title={t.header.undo}>
             <span>
-              <IconButton
+              <Button
                 color="inherit"
+                size="small"
                 onClick={undo}
                 disabled={!canUndo}
-                aria-label="Rückgängig"
+                aria-label={t.header.undo}
+                sx={{ color: 'text.secondary', minWidth: 40 }}
               >
-                <UndoIcon />
-              </IconButton>
+                <UndoIcon fontSize="small" />
+              </Button>
             </span>
           </Tooltip>
           <Tooltip title={t.header.redo}>
             <span>
-              <IconButton
+              <Button
                 color="inherit"
+                size="small"
                 onClick={redo}
                 disabled={!canRedo}
-                aria-label="Wiederholen"
+                aria-label={t.header.redo}
+                sx={{ color: 'text.secondary', minWidth: 40 }}
               >
-                <RedoIcon />
-              </IconButton>
+                <RedoIcon fontSize="small" />
+              </Button>
             </span>
           </Tooltip>
 
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-
-          <Tooltip title={t.header.template}>
-            <IconButton
-              color="inherit"
-              onClick={() => setTemplateOpen(true)}
-              aria-label="Vorlage laden"
-            >
-              <LibraryBooksIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title={t.header.copySchema}>
-            <IconButton
-              color="inherit"
-              onClick={handleCopySchema}
-              aria-label="Schema kopieren"
-            >
-              <ContentCopyIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-
-          <Tooltip title={isCode ? t.header.codeModeOff : t.header.codeModeOn}>
-            <IconButton
-              color="inherit"
-              onClick={() => onModeChange(isCode ? 'visual' : 'code')}
-              aria-label={isCode ? 'Visueller Modus' : 'Code-Modus'}
-              sx={{ color: isCode ? 'primary.main' : 'text.secondary' }}
-            >
-              <CodeIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title={isPreview ? t.header.previewOff : t.header.previewOn}>
-            <IconButton
-              color="inherit"
-              onClick={() => onModeChange(isPreview ? 'visual' : 'preview')}
-              aria-label={isPreview ? 'Bearbeiten' : 'Vorschau'}
-              sx={{ color: isPreview ? 'primary.main' : 'text.secondary' }}
-            >
-              {isPreview ? <EditIcon /> : <PreviewIcon />}
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip
-            title={
-              lineNumbers
-                ? 'Zeilennummern ausblenden'
-                : 'Zeilennummern einblenden'
-            }
+          <Box
+            data-testid="header-slot-qualitaet"
+            sx={{ display: 'flex', alignItems: 'center' }}
           >
-            <IconButton
-              color="inherit"
-              onClick={() => dispatch(createToggleLineNumbersAction())}
-              aria-label="Zeilennummern umschalten"
-              sx={{ color: lineNumbers ? 'primary.main' : 'text.secondary' }}
-            >
-              <FormatListNumberedIcon />
-            </IconButton>
-          </Tooltip>
+            <QualitaetsAmpel />
+          </Box>
 
-          <Tooltip title="Formular-Metadaten">
-            <IconButton
-              onClick={() => setMetaOpen(true)}
-              aria-label="Formular-Metadaten bearbeiten"
-            >
-              <InfoOutlinedIcon />
-            </IconButton>
-          </Tooltip>
+          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
-          <Tooltip title={t.header.exportImport}>
-            <IconButton
-              onClick={() => setExportOpen(true)}
-              aria-label="Export / Import"
-            >
-              <CloudDownloadIcon />
-            </IconButton>
-          </Tooltip>
+          <Button
+            variant="contained"
+            size="small"
+            disableElevation
+            onClick={() => onTestModeChange(!testMode)}
+            startIcon={testMode ? <EditIcon /> : <TestModeIcon />}
+          >
+            {testMode ? t.header.bearbeiten : t.header.ausprobieren}
+          </Button>
         </Box>
       </Toolbar>
 
-      <ImportExportDialog
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        fieldState={fieldState}
-        onImport={(state) => {
-          dispatch(createSetFieldStateAction(state));
-          setExportOpen(false);
-        }}
-      />
-
-      <TemplatePickerDialog
-        open={templateOpen}
-        onClose={() => setTemplateOpen(false)}
-        onSelect={handleTemplateSelect}
-      />
-
-      <MetadataDialog
-        open={metaOpen}
-        onClose={() => setMetaOpen(false)}
-        schema={fieldState.schema}
-        onSave={(meta) => dispatch(createSetFormMetadataAction(meta))}
-      />
+      {formularAblage && (
+        <FormularNameDialog
+          open={umbenennenOffen}
+          titel={t.header.ablage.umbenennen}
+          startwert={formularName}
+          onClose={() => setUmbenennenOffen(false)}
+          onBestaetigen={(name) => formularAblage.umbenennen(name)}
+        />
+      )}
     </AppBar>
   );
 };

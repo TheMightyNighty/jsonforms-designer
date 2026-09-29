@@ -28,11 +28,40 @@ Voraussetzungen:
       `packages/app/vite.config.ts` und `docs/BETRIEB.md`)
 - [x] ~~**Bundle-Optimierung (Monaco lazy)**~~ (umgesetzt: Initial-Bundle
       0,48 MB gzip, Code-Modus-Chunk lädt on demand)
-- [ ] **Upgrade-Session Dev-Toolchain:** TypeScript 6, ESLint 10,
-      eslint-plugin-react-hooks 7 — als gemeinsames Paket prüfen
-      (offene Dependabot-PRs #7/#8/#10; mögliche Regel-/Codeanpassungen)
-- [ ] **Docker-Image-Smoke-Test:** das Dockerfile wurde lokal nie gebaut
-      (kein Daemon verfügbar) — beim ersten Host-/CI-Build verifizieren
+- [x] ~~**Upgrade-Session Dev-Toolchain**~~ (umgesetzt 2026-09):
+      TypeScript 6.0.3, ESLint 10, eslint-plugin-react-hooks 7,
+      simple-import-sort 14, eslint-config-prettier 10, Vite 8,
+      @vitejs/plugin-react 6, jsdom 30, Vitest 5, JSONForms 3.8,
+      Monaco 0.57, @types/node 26, jest-dom 7. `npm audit`: 0 Findings
+      (vorher 13)
+- [x] ~~**Neutraler Kern** (ADR 0007)~~ (umgesetzt 2026-09): Feldtyp-Texte
+      nach i18n, Regionsprofile, Property-Schlüssel aus der Beschriftung
+      statt aus einer deutschen Tabelle, Typvorschlag-Stichwörter ins
+      Profil, Metadaten-Dialog übersetzt, FIM und Open CoDE im Kern aus
+- [x] ~~**Erweiterungsarchitektur, Stufe 1**~~ (umgesetzt 2026-09):
+      Erweiterungspakete als JSON, lokale Bibliothek unter
+      Ansicht → Erweiterungen, Normalisierung unvertrauter Eingabe
+- [x] ~~**Erweiterungsarchitektur, Stufe 2**~~ (umgesetzt 2026-09): Pakete
+      auch von einer Adresse laden, Formularvorlagen als fünfte
+      Beitragsart, OFM und XDF als regionale Exportformate
+- [x] ~~**Restliche Dialoge übersetzen**~~ (umgesetzt 2026-09): Der
+      Export-Dialog nutzt jetzt die i18n-Schlüssel, die längst dastanden.
+      Die Hilfe-Dialoge waren entgegen dieser Notiz schon übersetzt
+- [x] ~~**`set-state-in-effect` auflösen**~~ (umgesetzt 2026-09): Fünf der
+      neun Stellen waren abgeleiteter Zustand und werden jetzt im Render
+      angeglichen; vier sind Synchronisation mit einem äußeren System und
+      tragen eine begründete Ausnahme. Die Regel steht auf `error`, Lint
+      läuft ohne Fehler und ohne Warnung
+- [ ] **TypeScript 7** — blockiert: `@typescript-eslint` unterstützt in
+      8.70.1 nur `<6.1.0`. Ein Sprung auf TS 7 ohne passendes Plugin
+      hieße, das gesamte TypeScript-Linting zu verlieren (inkl.
+      `no-explicit-any`). Wieder aufnehmen, sobald typescript-eslint
+      nachzieht
+- [x] ~~**Docker-Image-Smoke-Test**~~ (umgesetzt 2026-09): Image baut,
+      Container läuft, App bedienbar, Monaco lokal, keine
+      Fremd-Requests. Zwei Befunde dabei behoben — fehlende
+      Sicherheits-Header durch nginx' `add_header`-Vererbung und
+      Feldverlust beim Zusammenführen von Regionsprofilen
 
 ## Mittelfristig
 
@@ -53,18 +82,33 @@ Voraussetzungen:
 - [ ] **Komponenten-Sandbox** (Storybook o. ä.) evaluieren — bewusst noch
       nicht eingeführt (E2E + Screenshot-Generator decken die visuelle
       Verifikation derzeit ab)
-- [ ] **vitest 4** (gemeinsam mit `@vitest/coverage-v8` 4 — Dependabot-PR
-      #11 wegen Peer-Konflikt geschlossen, kommt nach dem Upgrade wieder)
-- [ ] **MUI 9** (material + icons-material gemeinsam — Dependabot-PR #9
-      wegen Peer-Konflikt geschlossen)
-- [ ] **Tastatur-Hinzufügen auch für FIM-/OpenCode-Paletteneinträge**
-      (der Enter/Leertaste-Pfad deckt bisher die Katalog-Feldtypen ab)
+- [x] ~~**vitest 4**~~ (übersprungen; direkt auf **Vitest 5**, 2026-09.
+      Achtung: Der v8-Provider wertet seitdem AST-genau aus — die
+      Coverage-Schwellwerte sind neu kalibriert, die Zahlen sind mit den
+      alten nicht vergleichbar)
+- [ ] **MUI 9** — **weiterhin blockiert** (2026-09 erneut geprüft):
+      `@jsonforms/material-renderers@3.8.0` fordert `@mui/material ^7.0.0`
+      als Peer. Ein Upgrade führt zu zwei MUI-Instanzen im Baum und damit
+      zu zwei Theme-Kontexten — das KERN-Theme (ADR 0004) würde die
+      gerenderten Formularfelder nicht mehr erreichen. Wartet darauf, dass
+      JSONForms MUI 8/9 unterstützt
+- [x] ~~**Tastatur-Hinzufügen auch für FIM-Paletteneinträge**~~ (umgesetzt:
+      Enter/Leertaste auf FIM-Gruppen, FIM-Einzelfeldern und Bausteinen,
+      über dieselbe Action wie der Drop-Pfad). **OpenCode-Einträge bleiben
+      offen:** Für ihren DnD-Typ existiert im Editor gar keine Drop-Zone —
+      auch der Maus-Pfad bewirkt nichts. Was das Ablegen bewirken soll, ist
+      erst zu klären (Rückfrage im Modulkopf von `OpenCodePaletteSection`)
 - [ ] **Async-Hydration ohne History-Schritt:** nach dem Laden über einen
       Server-Adapter ist aktuell ein Undo zum leeren Formular möglich
       (dokumentierte Einschränkung in JsonFormsEditor)
 - [ ] **Komponenten-Testabdeckung ausbauen** (FieldFormPreview,
       PreviewPanel) und Coverage-Schwellwerte entsprechend anheben
       (Nur-anheben-Politik, siehe vitest.config)
+- [ ] **Gemeinsames Renderer-Paket in der Arbeitsfläche** (ADR 0003, Entwurf):
+      Der Canvas rendert bereits mit den Material-Renderern und legt die
+      Bearbeitung als Overlay darüber; der Wechsel auf das gemeinsame Paket
+      steht aus, solange es dieses nicht gibt. Prototyp der Geräte-Ansicht
+      liegt hinter `features.canvasGeraeteAnsicht` (Default aus)
 - [ ] **WebKit als dritter E2E-Browser** evaluieren
 
 ## Langfristig / zu bewerten

@@ -5,8 +5,12 @@
  * Code-Modus (editor/components/monacoSetup.ts) — kein CDN-Zugriff.
  * dompurify-Override für monaco-editor: siehe package.json "overrides".
  */
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+// Pfade ohne `esm/vs/`: Monaco 0.57 bildet in seiner exports-Karte
+// `"./*"` auf `./esm/vs/*.js` ab. Der frühere Pfad mit `esm/vs/` löste
+// dadurch ins Leere (`esm/vs/esm/vs/...`) — sichtbar erst als
+// Build-Fehler, im Dev-Server als weiße Seite.
+import editorWorker from 'monaco-editor/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/language/json/json.worker?worker';
 
 self.MonacoEnvironment = {
   getWorker(_workerId: string, label: string): Worker {

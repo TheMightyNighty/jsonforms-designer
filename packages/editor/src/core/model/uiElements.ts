@@ -4,10 +4,7 @@
  */
 
 export type UiElementType =
-  | 'Control'
-  | 'Label'
-  | 'ColumnContainer'
-  | 'GroupContainer';
+  'Control' | 'Label' | 'ColumnContainer' | 'GroupContainer';
 
 interface BaseUiElement {
   id: string;
@@ -47,10 +44,7 @@ export interface GroupContainer extends BaseUiElement {
 }
 
 export type UiElement =
-  | ControlElement
-  | LabelElement
-  | ColumnContainer
-  | GroupContainer;
+  ControlElement | LabelElement | ColumnContainer | GroupContainer;
 
 /**
  * Loses Grenz-Format („parse, don't validate"): beschreibt, was von außen
@@ -106,9 +100,9 @@ export function fromLegacy(el: FlatElement): UiElement {
     };
   }
   if (el.type === 'HorizontalLayout' || el.type === 'ColumnContainer') {
-    const widths = (el.options?.widths ?? el.widths ?? [1, 1]) as number[];
     // Wenn .columns bereits vorhanden → direkter Import
     if (el.columns) {
+      const widths = (el.options?.widths ?? el.widths ?? [1, 1]) as number[];
       return {
         id: el.id ?? newId('col'),
         type: 'ColumnContainer',
@@ -118,9 +112,35 @@ export function fromLegacy(el: FlatElement): UiElement {
         rule: el.rule,
       };
     }
-    // Legacy: elements → erste Spalte befüllen
+    const children = el.elements ?? [];
+    // OFM-Import: jedes Kind eines HorizontalLayout ist eine Spalte;
+    // VerticalLayout-Kinder werden zur Spalte entpackt, ofm:width (1–12)
+    // wird als Spaltenbreite zurückgemappt (Options-Registry, Kapitel 4).
+    const hasOfmWidths = children.some(
+      (child) => typeof child.options?.['ofm:width'] === 'number',
+    );
+    if (hasOfmWidths || children.some((c) => c.type === 'VerticalLayout')) {
+      const cols: UiElement[][] = children.map((child) =>
+        child.type === 'VerticalLayout'
+          ? (child.elements ?? []).map(fromLegacy)
+          : [fromLegacy(child)],
+      );
+      const widths = children.map((child) => {
+        const w = child.options?.['ofm:width'];
+        return typeof w === 'number' && w >= 1 && w <= 12 ? w : 1;
+      });
+      return {
+        id: el.id ?? newId('col'),
+        type: 'ColumnContainer',
+        widths,
+        columns: cols,
+        rule: el.rule,
+      };
+    }
+    // Legacy: elements → Spalten gemäß widths befüllen
+    const widths = (el.options?.widths ?? el.widths ?? [1, 1]) as number[];
     const cols: UiElement[][] = widths.map(() => []);
-    (el.elements ?? []).forEach((child, i) => {
+    children.forEach((child, i) => {
       cols[Math.min(i, cols.length - 1)].push(fromLegacy(child));
     });
     return {

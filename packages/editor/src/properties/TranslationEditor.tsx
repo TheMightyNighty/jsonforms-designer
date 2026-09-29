@@ -11,7 +11,6 @@ import {
   Box,
   Button,
   Chip,
-  Divider,
   FormControl,
   IconButton,
   InputLabel,
@@ -115,14 +114,6 @@ export function TranslationEditor({
 
   return (
     <Box>
-      <Divider sx={{ mb: 2 }} />
-      <Typography
-        variant="subtitle2"
-        sx={{ color: 'text.secondary', fontWeight: 600, mb: 1.5 }}
-      >
-        Übersetzungen
-      </Typography>
-
       {/* Vorhandene Sprachen */}
       {usedLangs.map((lang) => {
         const label =

@@ -7,6 +7,9 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { de } from '../i18n/de';
+import { en } from '../i18n/en';
+import type { EditorTranslations } from '../i18n/types';
 import {
   FIELD_GROUPS,
   FIELD_TYPE_CATALOG,
@@ -57,10 +60,6 @@ describe('FIELD_TYPE_CATALOG — Struktur jedes Eintrags', () => {
         expect(fieldType.id).toBeTruthy();
       });
 
-      it('hat einen displayName', () => {
-        expect(fieldType.displayName).toBeTruthy();
-      });
-
       it('hat ein gültiges schema.type', () => {
         if (fieldType.isStructural) {
           // Strukturelle Einträge (Label, Alert, Spalten, Gruppe) erzeugen
@@ -96,9 +95,7 @@ describe('FIELD_TYPE_CATALOG — Struktur jedes Eintrags', () => {
         expect(fieldType.uiSchema.scope).toBe('');
       });
 
-      it('hat defaults mit label, description und required', () => {
-        expect(typeof fieldType.defaults.label).toBe('string');
-        expect(typeof fieldType.defaults.description).toBe('string');
+      it('hat defaults mit required', () => {
         expect(typeof fieldType.defaults.required).toBe('boolean');
       });
 
@@ -150,7 +147,7 @@ describe('getFieldTypesByGroup()', () => {
   });
 
   it('gibt eine nicht-leere Liste für jede definierte Gruppe zurück', () => {
-    for (const { id } of FIELD_GROUPS) {
+    for (const id of FIELD_GROUPS) {
       expect(getFieldTypesByGroup(id).length).toBeGreaterThan(0);
     }
   });
@@ -158,13 +155,58 @@ describe('getFieldTypesByGroup()', () => {
 
 describe('FIELD_GROUPS — Reihenfolge', () => {
   it('beginnt mit "eingabe"', () => {
-    expect(FIELD_GROUPS[0].id).toBe('eingabe');
+    expect(FIELD_GROUPS[0]).toBe('eingabe');
   });
 
   it('enthält alle drei Gruppen', () => {
-    const ids = FIELD_GROUPS.map((g) => g.id);
-    expect(ids).toContain('eingabe');
-    expect(ids).toContain('auswahl');
-    expect(ids).toContain('layout');
+    expect(FIELD_GROUPS).toContain('eingabe');
+    expect(FIELD_GROUPS).toContain('auswahl');
+    expect(FIELD_GROUPS).toContain('layout');
   });
+});
+
+// ---------------------------------------------------------------------------
+// Katalog und Sprachdateien müssen sich decken (ADR 0007)
+// ---------------------------------------------------------------------------
+
+describe('Feldtyp-Texte', () => {
+  const kataloge: Array<[string, EditorTranslations]> = [
+    ['de', de],
+    ['en', en],
+  ];
+
+  for (const [sprache, texte] of kataloge) {
+    describe(sprache, () => {
+      it('kennt jeden Feldtyp des Katalogs', () => {
+        const fehlend = FIELD_TYPE_CATALOG.map((f) => f.id).filter(
+          (id) => !texte.feldtypen[id],
+        );
+        expect(fehlend).toEqual([]);
+      });
+
+      it('hat für jeden Feldtyp Name und Vorgabe-Label', () => {
+        for (const { id } of FIELD_TYPE_CATALOG) {
+          expect(texte.feldtypen[id]?.name, id).toBeTruthy();
+          expect(texte.feldtypen[id]?.label, id).toBeTruthy();
+        }
+      });
+
+      it('kennt jede Palettengruppe', () => {
+        for (const gruppe of FIELD_GROUPS) {
+          expect(
+            (texte.palette.groups as Record<string, string>)[gruppe],
+            gruppe,
+          ).toBeTruthy();
+        }
+      });
+
+      it('führt keinen Text, den der Katalog nicht kennt', () => {
+        const bekannt = new Set(FIELD_TYPE_CATALOG.map((f) => f.id));
+        const verwaist = Object.keys(texte.feldtypen).filter(
+          (id) => !bekannt.has(id),
+        );
+        expect(verwaist).toEqual([]);
+      });
+    });
+  }
 });

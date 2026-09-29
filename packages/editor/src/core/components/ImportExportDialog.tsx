@@ -1,6 +1,7 @@
 import CancelIcon from '@mui/icons-material/Cancel';
 import DownloadIcon from '@mui/icons-material/CloudDownload';
 import UploadIcon from '@mui/icons-material/Upload';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import {
   Alert,
   Box,
@@ -9,17 +10,24 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Snackbar,
   Tab,
   Tabs,
   Typography,
 } from '@mui/material';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
+import { useRegion } from '../../erweiterung/ErweiterungenProvider';
 import { useI18n } from '../../i18n';
 import { FieldAwareState } from '../model/addFieldReducer';
+import { emptyManifestMeta } from '../model/manifestMeta';
 import { FlatElement, fromLegacy, UiElement } from '../model/uiElements';
+import { hasLegacySchemaMetadata } from '../util/legacyMetadataMigration';
+import { missingManifestFields, serializeOfmExport } from '../util/ofmExport';
 import { sanitizeParsedJson } from '../util/sanitizeJson';
+import { fuelleVorlage } from '../util/textVorlage';
 import { downloadXdf } from '../util/xdfExport';
+import { buildStoredZip } from '../util/zipStored';
 import { FormattedJson } from './Formatted';
 
 interface ImportExportDialogProps {
@@ -79,22 +87,61 @@ export function ImportExportDialog({
   onImport,
 }: ImportExportDialogProps) {
   const { t } = useI18n();
+  const region = useRegion();
+
+  // Die Reiter stehen in einer Liste statt an festen Indizes: OFM und XDF
+  // sind Standards der deutschen Verwaltung und nur da, wenn das
+  // Regionsprofil sie nennt (ADR 0007).
+  const reiter = useMemo(() => {
+    const formate = region?.exportformate ?? [];
+    return [
+      { id: 'schema' as const, label: t.dialog.schemaTab },
+      { id: 'uischema' as const, label: t.dialog.uiSchemaTab },
+      ...(formate.includes('ofm')
+        ? [{ id: 'ofm' as const, label: 'OFM 1.0' }]
+        : []),
+      ...(formate.includes('xdf')
+        ? [{ id: 'xdf' as const, label: 'XDF 2.0' }]
+        : []),
+      { id: 'import' as const, label: t.dialog.importTab },
+    ];
+  }, [region, t]);
   const [tab, setTab] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
+  const [migrationNotice, setMigrationNotice] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Schaltet ein Profil einen Reiter ab, während er gewählt ist, fällt die
+  // Anzeige auf den letzten vorhandenen zurück statt ins Leere.
+  const aktiv = reiter[Math.min(tab, reiter.length - 1)].id;
 
   const exportedUiSchema = buildExportUiSchema(fieldState);
+  const ofmMissing = missingManifestFields(fieldState);
 
-  const downloadJson = (obj: unknown, filename: string) => {
-    const blob = new Blob([JSON.stringify(obj, null, 2)], {
-      type: 'application/json',
-    });
+  const downloadBlob = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const downloadJson = (obj: unknown, filename: string) => {
+    downloadBlob(
+      new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }),
+      filename,
+    );
+  };
+
+  const downloadOfmPackage = async () => {
+    const { files } = await serializeOfmExport(fieldState);
+    const zip = buildStoredZip(files);
+    const baseName =
+      fieldState.manifestMeta.id.split(':').filter(Boolean).pop() ?? 'formular';
+    downloadBlob(
+      new Blob([zip.slice().buffer], { type: 'application/zip' }),
+      `${baseName}.ofm.zip`,
+    );
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,8 +153,14 @@ export function ImportExportDialog({
         const parsed = sanitizeParsedJson(
           JSON.parse(ev.target?.result as string),
         );
-        if (parsed?.schema && parsed?.uiSchema) {
-          const importedElements = buildImportElements(parsed.uiSchema);
+        const uiSchemaRaw = parsed?.uiSchema ?? parsed?.uischema;
+        if (parsed?.schema && uiSchemaRaw) {
+          const importedElements = buildImportElements(uiSchemaRaw);
+          if (hasLegacySchemaMetadata(parsed.schema)) {
+            // OFM-R-304: Alt-Metadaten ziehen beim Laden ins Manifest um
+            // (Migration im Reducer); der Toast macht den Umzug sichtbar.
+            setMigrationNotice(true);
+          }
           onImport({
             schema: parsed.schema,
             uiSchema: { type: 'VerticalLayout', elements: importedElements },
@@ -115,15 +168,17 @@ export function ImportExportDialog({
             activeTabIndex: parsed.activeTabIndex ?? 0,
             tabAssignments: parsed.tabAssignments ?? {},
             lineNumbersEnabled: false,
-            sectionColors: {},
+            typvorschlagIgnoriert: {},
+            sectionColors: parsed.sectionColors ?? {},
+            manifestMeta: parsed.manifestMeta ?? { ...emptyManifestMeta },
           });
           setImportError(null);
           onClose();
         } else {
-          setImportError('Ungültiges Format. Erwartet: { schema, uiSchema }');
+          setImportError(t.dialog.importError);
         }
       } catch {
-        setImportError('Ungültige JSON-Datei.');
+        setImportError(t.dialog.invalidJson);
       }
     };
     reader.readAsText(file);
@@ -131,101 +186,141 @@ export function ImportExportDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{t.dialog.exportTitle}</DialogTitle>
-      <DialogContent sx={{ height: '60vh' }}>
-        <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 1 }}>
-          <Tab label={t.dialog.schemaTab} />
-          <Tab label={t.dialog.uiSchemaTab} />
-          <Tab label="XDF 2.0" />
-          <Tab label={t.dialog.importTab} />
-        </Tabs>
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>{t.dialog.exportTitle}</DialogTitle>
+        <DialogContent sx={{ height: '60vh' }}>
+          <Tabs
+            value={Math.min(tab, reiter.length - 1)}
+            onChange={(_, v) => setTab(v)}
+            sx={{ mb: 1 }}
+          >
+            {reiter.map((r) => (
+              <Tab key={r.id} label={r.label} />
+            ))}
+          </Tabs>
 
-        {tab === 0 && (
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-              <Button
-                size="small"
-                startIcon={<DownloadIcon />}
-                onClick={() => downloadJson(fieldState.schema, 'schema.json')}
-              >
-                Herunterladen
-              </Button>
-            </Box>
-            <FormattedJson object={fieldState.schema} />
-          </Box>
-        )}
-        {tab === 1 && (
-          <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-              <Button
-                size="small"
-                startIcon={<DownloadIcon />}
-                onClick={() => downloadJson(exportedUiSchema, 'ui-schema.json')}
-              >
-                Herunterladen
-              </Button>
-            </Box>
-            <FormattedJson object={exportedUiSchema} />
-          </Box>
-        )}
-        {tab === 2 && (
-          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Alert severity="info">
-              Exportiert das Formular als{' '}
-              <strong>XDatenfelder 2.0 (XDF2)</strong> — dem bundesweit gültigen
-              Standard für FIM-Bausteine. Die XML-Datei kann in
-              FIM-Portal-kompatible Systeme importiert werden.
-            </Alert>
+          {aktiv === 'schema' && (
             <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                <Button
+                  size="small"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => downloadJson(fieldState.schema, 'schema.json')}
+                >
+                  {t.dialog.download}
+                </Button>
+              </Box>
+              <FormattedJson object={fieldState.schema} />
+            </Box>
+          )}
+          {aktiv === 'uischema' && (
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                <Button
+                  size="small"
+                  startIcon={<DownloadIcon />}
+                  onClick={() =>
+                    downloadJson(exportedUiSchema, 'ui-schema.json')
+                  }
+                >
+                  {t.dialog.download}
+                </Button>
+              </Box>
+              <FormattedJson object={exportedUiSchema} />
+            </Box>
+          )}
+          {aktiv === 'ofm' && (
+            <Box
+              sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}
+            >
+              <Alert severity="info" icon={<VerifiedIcon fontSize="inherit" />}>
+                {t.dialog.ofmHinweis}
+              </Alert>
+              {ofmMissing.length > 0 && (
+                <Alert severity="warning">
+                  {fuelleVorlage(t.dialog.ofmFehlend, {
+                    felder: ofmMissing.join(', '),
+                  })}
+                </Alert>
+              )}
+              <Box>
+                <Button
+                  variant="contained"
+                  startIcon={<DownloadIcon />}
+                  disabled={ofmMissing.length > 0}
+                  onClick={() => void downloadOfmPackage()}
+                >
+                  {t.dialog.ofmHerunterladen}
+                </Button>
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                {t.dialog.ofmFussnote}
+              </Typography>
+            </Box>
+          )}
+          {aktiv === 'xdf' && (
+            <Box
+              sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}
+            >
+              <Alert severity="info">{t.dialog.xdfHinweis}</Alert>
+              <Box>
+                <Button
+                  variant="contained"
+                  startIcon={<DownloadIcon />}
+                  onClick={() => downloadXdf(fieldState)}
+                >
+                  {t.dialog.xdfHerunterladen}
+                </Button>
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                {t.dialog.xdfFussnote}
+              </Typography>
+            </Box>
+          )}
+          {aktiv === 'import' && (
+            <Box sx={{ pt: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t.dialog.importHint}
+              </Typography>
+              {importError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {importError}
+                </Alert>
+              )}
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json,application/json"
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
               <Button
-                variant="contained"
-                startIcon={<DownloadIcon />}
-                onClick={() => downloadXdf(fieldState)}
+                variant="outlined"
+                startIcon={<UploadIcon />}
+                onClick={() => fileRef.current?.click()}
               >
-                XDF 2.0 herunterladen
+                {t.dialog.selectFile}
               </Button>
             </Box>
-            <Typography variant="caption" color="text.secondary">
-              Enthält: alle Datenfelder des Formulars, Metadaten (Titel,
-              Behörde, Rechtsgrundlage), Datentypen und Einschränkungen.
-              FIM-Identifier (x-fim-id) werden übernommen.
-            </Typography>
-          </Box>
-        )}
-        {tab === 3 && (
-          <Box sx={{ pt: 1 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              JSON-Datei hochladen mit <code>schema</code> und{' '}
-              <code>uiSchema</code>. Das aktuelle Formular wird überschrieben.
-            </Typography>
-            {importError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {importError}
-              </Alert>
-            )}
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".json,application/json"
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<UploadIcon />}
-              onClick={() => fileRef.current?.click()}
-            >
-              JSON-Datei auswählen
-            </Button>
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button startIcon={<CancelIcon />} onClick={onClose}>
-          {t.dialog.close}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button startIcon={<CancelIcon />} onClick={onClose}>
+            {t.dialog.close}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={migrationNotice}
+        autoHideDuration={8000}
+        onClose={() => setMigrationNotice(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" onClose={() => setMigrationNotice(false)}>
+          {t.dialog.migrationHinweis}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }

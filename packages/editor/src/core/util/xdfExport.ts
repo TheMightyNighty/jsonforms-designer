@@ -13,13 +13,7 @@ import { FieldAwareState } from '../model/addFieldReducer';
 // ---------------------------------------------------------------------------
 
 type XdfDatentyp =
-  | 'text'
-  | 'date'
-  | 'datetime'
-  | 'num_int'
-  | 'num_gk'
-  | 'bool'
-  | 'file';
+  'text' | 'date' | 'datetime' | 'num_int' | 'num_gk' | 'bool' | 'file';
 type XdfFeldart = 'input' | 'select' | 'label';
 
 function mapDatentyp(schema: JsonSchema7): XdfDatentyp {
@@ -83,12 +77,15 @@ export function exportToXdf(
 ): string {
   const { schema } = state;
   const s = schema as Record<string, unknown>;
+  const meta = state.manifestMeta;
   const gruppenId = opts.gruppenId ?? 'G000000001';
-  const version = String(opts.version ?? s['x-version'] ?? '1.0');
+  const version = String(
+    opts.version ?? (meta.version || (s['x-version'] as string)) ?? '1.0',
+  );
   const title = String(s.title ?? 'Unbenanntes Formular');
   const description = String(s.description ?? '');
-  const publisher = String(s['x-publisher'] ?? '');
-  const legalBasis = String(s['x-legal-basis'] ?? '');
+  const publisher = String(meta.publisher || (s['x-publisher'] ?? ''));
+  const legalBasis = String(meta.legalBasis || (s['x-legal-basis'] ?? ''));
 
   // Datenfelder generieren
   let feldIndex = 1;

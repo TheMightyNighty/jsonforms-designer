@@ -4,34 +4,32 @@ import { Dispatch } from 'react';
 import { useEditorContext } from '../core/context';
 import { EditorAction } from '../core/model/actions';
 import { createSetSectionColorAction } from '../core/model/addFieldActions';
-
-const SWATCHES = [
-  { color: '#C8D8F0', label: 'Blau' },
-  { color: '#C8E8C8', label: 'Grün' },
-  { color: '#F5E6A0', label: 'Gelb' },
-  { color: '#F5C8C8', label: 'Rot' },
-  { color: '#DFC8F5', label: 'Lila' },
-  { color: '#C8EAE8', label: 'Türkis' },
-  { color: '#D8D8D8', label: 'Grau' },
-  { color: '#FFFFFF', label: 'Weiß' },
-  { color: '#004A99', label: 'Dunkelblau', textColor: '#fff' },
-  { color: '#009EE0', label: 'Hellblau', textColor: '#fff' },
-];
+import {
+  legacyColorToToken,
+  SECTION_COLOR_DISPLAY,
+  SECTION_COLOR_LABELS,
+  SECTION_COLOR_TOKENS,
+} from '../core/model/sectionColorTokens';
 
 interface SectionColorPickerProps {
   elementId: string;
   dispatch: Dispatch<EditorAction>;
 }
 
+/**
+ * Abschnittsfarben-Wähler: genau die sechs `ofm:sectionColor`-Token der
+ * Options-Registry (OFM-R-421) — kein Freitext, keine weiteren Farben.
+ */
 export function SectionColorPicker({
   elementId,
   dispatch,
 }: SectionColorPickerProps) {
   const { fieldState } = useEditorContext();
-  const current = fieldState.sectionColors[elementId] ?? null;
+  const stored = fieldState.sectionColors[elementId];
+  const current = stored ? legacyColorToToken(stored) : null;
 
-  const set = (color: string | null) => {
-    dispatch(createSetSectionColorAction(elementId, color));
+  const set = (token: string | null) => {
+    dispatch(createSetSectionColorAction(elementId, token));
   };
 
   return (
@@ -46,14 +44,14 @@ export function SectionColorPicker({
           mb: 0.75,
         }}
       >
-        Hintergrundfarbe
+        Abschnittsfarbe (ofm:sectionColor)
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
         <Tooltip title="Keine Farbe">
           <Box
             role="button"
             tabIndex={0}
-            aria-label="Keine Hintergrundfarbe"
+            aria-label="Keine Abschnittsfarbe"
             aria-pressed={!current}
             onClick={() => set(null)}
             onKeyDown={(e) => e.key === 'Enter' && set(null)}
@@ -70,25 +68,28 @@ export function SectionColorPicker({
             }}
           />
         </Tooltip>
-        {SWATCHES.map(({ color, label }) => (
-          <Tooltip key={color} title={label}>
+        {SECTION_COLOR_TOKENS.map((token) => (
+          <Tooltip key={token} title={SECTION_COLOR_LABELS[token]}>
             <Box
               role="button"
               tabIndex={0}
-              aria-label={label}
-              aria-pressed={current === color}
-              onClick={() => set(color)}
-              onKeyDown={(e) => e.key === 'Enter' && set(color)}
+              aria-label={SECTION_COLOR_LABELS[token]}
+              aria-pressed={current === token}
+              onClick={() => set(token)}
+              onKeyDown={(e) => e.key === 'Enter' && set(token)}
               sx={{
                 width: 26,
                 height: 26,
                 borderRadius: 1,
                 cursor: 'pointer',
-                backgroundColor: color,
+                backgroundColor: SECTION_COLOR_DISPLAY[token],
                 border: '2px solid',
                 borderColor:
-                  current === color ? 'primary.main' : 'rgba(0,0,0,0.15)',
-                boxShadow: current === color ? '0 0 0 1px #004A99' : 'none',
+                  current === token ? 'primary.main' : 'rgba(0,0,0,0.15)',
+                boxShadow: (t) =>
+                  current === token
+                    ? `0 0 0 1px ${t.palette.primary.main}`
+                    : 'none',
                 '&:hover': {
                   transform: 'scale(1.15)',
                   borderColor: 'primary.light',
@@ -107,7 +108,7 @@ export function SectionColorPicker({
               width: 14,
               height: 14,
               borderRadius: 0.5,
-              backgroundColor: current,
+              backgroundColor: SECTION_COLOR_DISPLAY[current],
               border: '1px solid rgba(0,0,0,0.2)',
             }}
           />

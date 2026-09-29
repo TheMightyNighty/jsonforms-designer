@@ -1,5 +1,6 @@
 import { JsonSchema7 } from '@jsonforms/core';
 
+import { migrateLegacyFieldState } from '../util/legacyMetadataMigration';
 import {
   ADD_FIELD,
   ADD_FIM_GRUPPE,
@@ -25,6 +26,7 @@ import {
   SetActiveTabAction,
   SetFieldStateAction,
 } from './addFieldActions';
+import { emptyManifestMeta, FormManifestMeta } from './manifestMeta';
 import { FlatElement, fromLegacy, newId, UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
@@ -54,7 +56,18 @@ export interface FieldAwareState {
   activeTabIndex: number;
   tabAssignments: Record<string, number>;
   lineNumbersEnabled: boolean;
+  /** Abschnittsfarben je Element-ID; Werte sind Registry-Token (OFM-R-421). */
   sectionColors: Record<string, string>;
+  /** Formular-Metadaten für das Manifest (OFM-R-205/OFM-R-304). */
+  manifestMeta: FormManifestMeta;
+  /**
+   * Scopes, für die der Typvorschlag bewusst ignoriert wurde
+   * (ADR 0002, Arbeitspaket 5). Optionaler, rückwärtskompatibler Zuwachs am
+   * Persistenzformat: Alt-Stände ohne dieses Feld laden als leeres Objekt
+   * (ADR 0002/V2). Bewusst kein Eintrag im Schema oder UI-Schema — die
+   * Angabe ist Redaktionsgedächtnis und gehört nicht in den Export (V3).
+   */
+  typvorschlagIgnoriert: Record<string, boolean>;
 }
 
 /**
@@ -227,7 +240,7 @@ export function loadTemplateReducer<S extends FieldAwareState>(
         elements: (incoming.uiSchema.elements ?? []).map(fromLegacy),
       }
     : state.uiSchema;
-  return {
+  const next: S = {
     ...state,
     schema: incoming.schema ?? state.schema,
     uiSchema: incomingUiSchema,
@@ -235,8 +248,12 @@ export function loadTemplateReducer<S extends FieldAwareState>(
     activeTabIndex: incoming.activeTabIndex ?? 0,
     tabAssignments: incoming.tabAssignments ?? {},
     lineNumbersEnabled: incoming.lineNumbersEnabled ?? false,
+    typvorschlagIgnoriert: incoming.typvorschlagIgnoriert ?? {},
     sectionColors: incoming.sectionColors ?? {},
+    manifestMeta: incoming.manifestMeta ?? { ...emptyManifestMeta },
   };
+  // Alt-Bestände (x-Metadaten im Schema, Hex-Farben) beim Laden migrieren.
+  return migrateLegacyFieldState(next).state as S;
 }
 
 // ---------------------------------------------------------------------------

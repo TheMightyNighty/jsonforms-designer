@@ -9,17 +9,34 @@ import {
   ReorderInColumnAction,
 } from './addFieldActions';
 import { FieldAwareState, resolveKey } from './addFieldReducer';
-import {
-  ColumnContainer,
-  GroupContainer,
-  LabelElement,
-  newId,
-  UiElement,
-} from './uiElements';
+import { ColumnContainer, LabelElement, newId, UiElement } from './uiElements';
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen: Baum traversieren
 // ---------------------------------------------------------------------------
+
+/** Prüft rekursiv, ob es einen Container mit dieser id gibt. */
+function containerExistiert(
+  elements: UiElement[],
+  containerId: string,
+): boolean {
+  for (const el of elements) {
+    if (
+      el.id === containerId &&
+      (el.type === 'ColumnContainer' || el.type === 'GroupContainer')
+    ) {
+      return true;
+    }
+    if (el.type === 'ColumnContainer') {
+      if (el.columns.some((col) => containerExistiert(col, containerId)))
+        return true;
+    }
+    if (el.type === 'GroupContainer') {
+      if (containerExistiert(el.children, containerId)) return true;
+    }
+  }
+  return false;
+}
 
 /** Findet ein Element by ID (rekursiv), gibt [element, parent, columnIndex?] zurück */
 function findElement(
@@ -79,6 +96,67 @@ function insertInto(
   return [...elements.slice(0, idx + 1), newEl, ...elements.slice(idx + 1)];
 }
 
+/**
+ * Fügt ein Element in einen Container (ColumnContainer-Spalte oder
+ * GroupContainer-Kinderliste) ein — rekursiv, damit Drops auch in
+ * verschachtelten Strukturen (Gruppe in Spalte, Spalte in Gruppe) den
+ * Ziel-Container finden, egal auf welcher Ebene er liegt.
+ */
+function insertIntoContainer(
+  elements: UiElement[],
+  containerId: string,
+  columnIndex: number,
+  newEl: UiElement,
+  insertAfterId?: string,
+): UiElement[] {
+  return elements.map((el) => {
+    if (el.id === containerId) {
+      if (el.type === 'ColumnContainer') {
+        const nextColumns = el.columns.map((colItems, ci) =>
+          ci === columnIndex
+            ? insertInto(colItems, newEl, insertAfterId)
+            : colItems,
+        );
+        return { ...el, columns: nextColumns };
+      }
+      if (el.type === 'GroupContainer') {
+        return {
+          ...el,
+          children: insertInto(el.children, newEl, insertAfterId),
+        };
+      }
+      return el;
+    }
+    if (el.type === 'ColumnContainer') {
+      return {
+        ...el,
+        columns: el.columns.map((col) =>
+          insertIntoContainer(
+            col,
+            containerId,
+            columnIndex,
+            newEl,
+            insertAfterId,
+          ),
+        ),
+      };
+    }
+    if (el.type === 'GroupContainer') {
+      return {
+        ...el,
+        children: insertIntoContainer(
+          el.children,
+          containerId,
+          columnIndex,
+          newEl,
+          insertAfterId,
+        ),
+      };
+    }
+    return el;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // COLUMN_DROP Reducer
 // ---------------------------------------------------------------------------
@@ -94,6 +172,8 @@ export function columnDropReducer<S extends FieldAwareState>(
     columnIndex,
     fieldTypeId,
     propertyKey,
+    label,
+    platzhalter,
     insertAfterId,
     fimSchema,
     fimUiOptions,
@@ -134,7 +214,7 @@ export function columnDropReducer<S extends FieldAwareState>(
         newEl = {
           id: newId('lbl'),
           type: 'Label',
-          label: fieldType.defaults.label,
+          label: label,
           variant: (fieldType.uiSchema.options?.variant ??
             'text') as LabelElement['variant'],
           options: fieldType.uiSchema.options,
@@ -153,7 +233,7 @@ export function columnDropReducer<S extends FieldAwareState>(
         newEl = {
           id: newId('grp'),
           type: 'GroupContainer',
-          label: fieldType.defaults.label,
+          label: label,
           children: [],
         };
       }
@@ -162,7 +242,9 @@ export function columnDropReducer<S extends FieldAwareState>(
         id: newId('ctrl'),
         type: 'Control',
         scope: safeScope,
-        options: fieldType.uiSchema.options,
+        options: platzhalter
+          ? { ...fieldType.uiSchema.options, placeholder: platzhalter }
+          : fieldType.uiSchema.options,
       };
     }
 
@@ -172,23 +254,20 @@ export function columnDropReducer<S extends FieldAwareState>(
           ...state.schema,
           properties: {
             ...(state.schema.properties ?? {}),
-            [safeKey]: { ...fieldType.schema, title: fieldType.defaults.label },
+            [safeKey]: { ...fieldType.schema, title: label },
           },
         };
   }
 
-  // ColumnContainer finden und Spalte aktualisieren
-  const nextElements = state.uiSchema.elements.map((el) => {
-    if (el.id !== containerId) return el;
-    if (el.type !== 'ColumnContainer') return el;
-    const col = el as ColumnContainer;
-    const nextColumns = col.columns.map((colItems, ci) =>
-      ci === columnIndex
-        ? insertInto(colItems, newEl, insertAfterId)
-        : colItems,
-    );
-    return { ...col, columns: nextColumns };
-  });
+  // Ziel-Container (ColumnContainer-Spalte oder GroupContainer) finden und
+  // aktualisieren — rekursiv, auch über verschachtelte Strukturen hinweg.
+  const nextElements = insertIntoContainer(
+    state.uiSchema.elements,
+    containerId,
+    columnIndex,
+    newEl,
+    insertAfterId,
+  );
 
   return {
     ...state,
@@ -219,38 +298,33 @@ export function moveElementReducer<S extends FieldAwareState>(
   if (!found) return state;
   const { el: movingEl } = found;
 
+  // Zielcontainer prüfen, BEVOR das Element aus seiner Position genommen
+  // wird: Sonst wird es entfernt und nirgends wieder eingefügt — es ginge
+  // verloren. Dasselbe gilt für verschachtelte Container, die die frühere,
+  // nur einstufige Suche gar nicht erreichte.
+  if (
+    targetContainerId !== 'root' &&
+    !containerExistiert(state.uiSchema.elements, targetContainerId)
+  ) {
+    return state;
+  }
+
   // Aus aktueller Position entfernen
   const withoutEl = removeById(state.uiSchema.elements, elementId);
 
-  // In Zielposition einfügen
-  let nextElements: UiElement[];
-
-  if (targetContainerId === 'root') {
-    nextElements = insertInto(withoutEl, movingEl, insertAfterId);
-  } else {
-    nextElements = withoutEl.map((el) => {
-      if (el.id !== targetContainerId) return el;
-      if (el.type === 'ColumnContainer') {
-        const col = el as ColumnContainer;
-        return {
-          ...col,
-          columns: col.columns.map((colItems, ci) =>
-            ci === targetColumnIndex
-              ? insertInto(colItems, movingEl, insertAfterId)
-              : colItems,
-          ),
-        };
-      }
-      if (el.type === 'GroupContainer') {
-        const grp = el as GroupContainer;
-        return {
-          ...grp,
-          children: insertInto(grp.children, movingEl, insertAfterId),
-        };
-      }
-      return el;
-    });
-  }
+  // In Zielposition einfügen — rekursiv, auch über verschachtelte
+  // Strukturen hinweg (dieselbe Hilfsfunktion wie beim Ablegen aus der
+  // Palette).
+  const nextElements =
+    targetContainerId === 'root'
+      ? insertInto(withoutEl, movingEl, insertAfterId)
+      : insertIntoContainer(
+          withoutEl,
+          targetContainerId,
+          targetColumnIndex,
+          movingEl,
+          insertAfterId,
+        );
 
   return {
     ...state,

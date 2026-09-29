@@ -1,0 +1,92 @@
+{
+  "type": "VerticalLayout",
+  "elements": [
+    {
+      "type": "Label",
+      "text": "Bitte füllen Sie alle Pflichtfelder aus. Der Ausweis gilt für ein Jahr ab Ausstellungsdatum."
+    },
+    {
+      "type": "Group",
+      "label": "Angaben zur Person",
+      "options": { "ofm:sectionColor": "blue" },
+      "elements": [
+        { "type": "Control", "scope": "#/properties/anrede" },
+        {
+          "type": "HorizontalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/vorname",
+              "options": { "ofm:width": 6 }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/nachname",
+              "options": { "ofm:width": 6 }
+            }
+          ]
+        },
+        { "type": "Control", "scope": "#/properties/geburtsdatum" },
+        { "type": "Control", "scope": "#/properties/email" }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Meldeadresse im Parkgebiet",
+      "options": { "ofm:sectionColor": "green" },
+      "elements": [
+        {
+          "type": "HorizontalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/strasse",
+              "options": { "ofm:width": 9 }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/hausnummer",
+              "options": { "ofm:width": 3 }
+            }
+          ]
+        },
+        {
+          "type": "HorizontalLayout",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/plz",
+              "options": { "ofm:width": 4 }
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/ort",
+              "options": { "ofm:width": 8 }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Group",
+      "label": "Fahrzeug",
+      "options": { "ofm:sectionColor": "yellow" },
+      "elements": [
+        { "type": "Control", "scope": "#/properties/kennzeichen" },
+        { "type": "Control", "scope": "#/properties/fahrzeughalter" },
+        {
+          "type": "Control",
+          "scope": "#/properties/nutzungsberechtigung",
+          "rule": {
+            "effect": "SHOW",
+            "condition": {
+              "scope": "#/properties/fahrzeughalter",
+              "schema": { "const": false }
+            }
+          }
+        },
+        { "type": "Control", "scope": "#/properties/parkzone" }
+      ]
+    }
+  ]
+}

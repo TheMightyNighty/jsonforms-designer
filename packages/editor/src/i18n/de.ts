@@ -9,11 +9,329 @@ export const de: EditorTranslations = {
     copySchema: 'Schema kopieren',
     codeModeOn: 'Code-Modus',
     codeModeOff: 'Visueller Modus',
-    previewOn: 'Vorschau',
-    previewOff: 'Bearbeiten',
+    testModeOn: 'Formular testweise ausfüllen',
+    testModeOff: 'Bearbeitung fortsetzen',
     exportImport: 'Export / Import',
+    metadaten: 'Formular-Metadaten',
+    zeilennummern: 'Zeilennummern',
+    sprache: 'Sprache der Oberfläche',
+    weitere: 'Weitere',
+    menue: {
+      datei: 'Datei',
+      bearbeiten: 'Bearbeiten',
+      ansicht: 'Ansicht',
+      formular: 'Formular',
+      hilfe: 'Hilfe',
+    },
+    hilfe: {
+      anleitung: 'Anleitung …',
+      anleitungTitel: 'So bauen Sie ein Formular',
+      anleitungEinleitung:
+        'In fünf Schritten vom leeren Blatt zum fertigen Formular:',
+      schritte: [
+        'Links einen Baustein wählen — „Antragsteller", „Anschrift", „Bankverbindung" — und in die Mitte ziehen. Ein Baustein bringt mehrere Felder auf einmal mit.',
+        'Einzelne Felder ergänzen Sie im Reiter „Einzelfelder". Die acht häufigsten stehen oben, alles Weitere darunter.',
+        'Ein Feld anklicken: Rechts erscheinen seine Eigenschaften. Im Reiter „Inhalt" geben Sie Bezeichnung, Hilfetext und Pflichtangabe an.',
+        'Unter „Prüfung" hängen Sie Prüfungen an, unter „Bedingungen" legen Sie fest, wann das Feld überhaupt erscheint.',
+        'Oben rechts „Ausprobieren" zeigt das Formular so, wie die Bürgerin es später sieht. Die Ampel daneben nennt offene Punkte.',
+      ],
+      tastatur: 'Bedienung ohne Maus …',
+      tastaturTitel: 'Bedienung ohne Maus',
+      kuerzel: [
+        {
+          taste: 'Tab',
+          was: 'Zum nächsten Bedienelement springen',
+        },
+        {
+          taste: 'Enter oder Leertaste',
+          was: 'Den gewählten Baustein oder Feldtyp ans Ende des Formulars setzen',
+        },
+        {
+          taste: 'Alt + Pfeil hoch/runter',
+          was: 'Das fokussierte Feld im Formular nach oben oder unten schieben',
+        },
+        {
+          taste: 'Enter auf einem Feld',
+          was: 'Das Feld auswählen und seine Eigenschaften rechts öffnen',
+        },
+        {
+          taste: 'Esc',
+          was: 'Menü oder Dialog schließen',
+        },
+      ],
+      tipp: 'Tipp des Tages …',
+      tippTitel: 'Tipp des Tages',
+      tipps: [
+        'Nennen Sie ein Feld „Geburtsdatum", schlägt der Editor von selbst die Feldart „Datum" vor — annehmen oder ignorieren, beides ist in Ordnung.',
+        'Die Ampel oben rechts zählt offene Punkte. Ein Klick auf einen Eintrag springt zum betroffenen Feld.',
+        'Bausteine sparen Zeit: „Anschrift" legt Straße, Hausnummer, Postleitzahl und Ort in einem Zug an.',
+        'Alles lässt sich ohne Maus bedienen — siehe „Hilfe → Bedienung ohne Maus".',
+        'Über „Datei → Öffnen" laden Sie ein Formular aus einem Verzeichnis, über „Speichern unter" legen Sie es dort wieder ab.',
+        'Die Suche über der Palette findet Bausteine auch über die Felder darin: „IBAN" findet „Bankverbindung".',
+        'Pflichtfelder ohne Hilfetext meldet die Ampel als Hinweis — ein Satz zur Erklärung erspart Rückfragen.',
+        'Die Spaltenbreiten lassen sich ziehen. Der Editor merkt sich Ihre Aufteilung.',
+      ],
+      naechsterTipp: 'Nächster Tipp',
+      beimStart: 'Beim Start anzeigen',
+      ueber: 'Über den Designer …',
+      ueberTitel: 'Über den Designer',
+      version: 'Version',
+      lizenz: 'Lizenz',
+      lizenzen: 'Lizenzen und Herkunft …',
+      lizenzenTitel: 'Lizenzen und Herkunft',
+      lizenzenEinleitung:
+        'Der Designer enthält folgende Bestandteile Dritter. Alle liegen im Repository (kein Laufzeit-Zugriff auf fremde Server).',
+      komponente: 'Bestandteil',
+      wofuer: 'Wofür',
+    },
+    ablage: {
+      menue: 'Formular',
+      oeffnenDatei: 'Öffnen …',
+      speichern: 'Speichern',
+      speichernUnter: 'Speichern unter …',
+      zuletzt: 'Zuletzt bearbeitet …',
+      dateiFehler:
+        'Die Datei enthält kein gültiges Formular (erwartet: schema und uiSchema).',
+      gespeichert: 'Formular gespeichert.',
+      neu: 'Neues Formular',
+      oeffnen: 'Im Browser gespeicherte Formulare …',
+      oeffnenTitel: 'Zuletzt bearbeitete Formulare',
+      speichernAls: 'Speichern unter …',
+      umbenennen: 'Umbenennen …',
+      loeschen: 'Löschen',
+      loeschenTitel: 'Formular löschen?',
+      loeschenFrage:
+        '„{name}" wird endgültig gelöscht. Das lässt sich nicht rückgängig machen.',
+      leer: 'Noch kein Formular abgelegt.',
+      name: 'Name des Formulars',
+      uebernehmen: 'Übernehmen',
+      unbenannt: 'Unbenanntes Formular',
+    },
+    qualitaet: {
+      titel: 'Qualität des Formulars',
+      alsButton: 'Qualität prüfen',
+      ohneBefund: 'Keine offenen Punkte.',
+      fehler: 'Fehler',
+      hinweise: 'Hinweise',
+      regeln: {
+        'feld-ohne-label': 'Das Feld „{feld}" hat keine Bezeichnung.',
+        'label-zu-lang':
+          'Die Bezeichnung von „{feld}…" ist länger als {grenze} Zeichen.',
+        'pflichtfeld-ohne-hilfetext':
+          'Das Pflichtfeld „{feld}" hat keinen Hilfetext.',
+        'offener-typvorschlag': 'Für „{feld}" passt vermutlich {vorschlag}.',
+        'doppeltes-label': 'Die Bezeichnung „{feld}" kommt {anzahl}-mal vor.',
+        'bedingung-ohne-feld':
+          'Die Bedingung an „{feld}" verweist auf ein gelöschtes Feld.',
+        'formular-ohne-titel': 'Das Formular hat keinen Titel.',
+        'formular-ohne-rechtsgrundlage':
+          'In den Metadaten fehlt die Rechtsgrundlage.',
+      },
+    },
+    ausprobieren: 'Ausprobieren',
+    bearbeiten: 'Weiter bearbeiten',
+    status: {
+      entwurf: 'Entwurf',
+      speichert: 'wird gespeichert …',
+      geradeEben: 'gerade eben',
+      gespeichertVor: 'gespeichert vor {zeit}',
+      fehler: 'Speichern fehlgeschlagen',
+      sekunden: 's',
+      minuten: 'min',
+      stunden: 'h',
+    },
+  },
+  bereiche: {
+    palette: 'Bausteine und Felder',
+    arbeitsflaeche: 'Formular',
+    eigenschaften: 'Eigenschaften',
+  },
+  /**
+   * Feldtyp-Texte, geschlüsselt nach Katalog-id (ADR 0007). `name` steht in
+   * der Palette, `label` ist die Vorgabe-Beschriftung des eingefügten Feldes,
+   * `beschreibung` die Erläuterung darunter.
+   */
+  feldtypen: {
+    'text-short': {
+      name: 'Textfeld (einzeilig)',
+      label: 'Textfeld',
+      beschreibung: '',
+    },
+    'text-long': {
+      name: 'Textfeld (mehrzeilig)',
+      label: 'Freitext',
+      beschreibung: '',
+    },
+    integer: { name: 'Ganzzahl', label: 'Ganzzahl', beschreibung: '' },
+    number: { name: 'Dezimalzahl', label: 'Zahl', beschreibung: '' },
+    currency: {
+      name: 'Betrag',
+      label: 'Betrag',
+      beschreibung: 'Geldbetrag mit zwei Nachkommastellen',
+    },
+    date: { name: 'Datum', label: 'Datum', beschreibung: '' },
+    time: { name: 'Uhrzeit', label: 'Uhrzeit', beschreibung: '' },
+    datetime: {
+      name: 'Datum + Uhrzeit',
+      label: 'Datum und Uhrzeit',
+      beschreibung: '',
+    },
+    email: {
+      name: 'E-Mail-Adresse',
+      label: 'E-Mail-Adresse',
+      beschreibung: '',
+    },
+    tel: { name: 'Telefonnummer', label: 'Telefonnummer', beschreibung: '' },
+    url: { name: 'Website-URL', label: 'Website', beschreibung: '' },
+    password: {
+      name: 'Passwort',
+      label: 'Passwort',
+      beschreibung: 'Mindestens 8 Zeichen',
+    },
+    iban: {
+      name: 'IBAN',
+      label: 'IBAN',
+      beschreibung: 'Internationale Bankkontonummer',
+    },
+    checkbox: {
+      name: 'Checkbox (Ja/Nein)',
+      label: 'Checkbox',
+      beschreibung: '',
+    },
+    'checkbox-group': {
+      name: 'Mehrfachauswahl',
+      label: 'Mehrfachauswahl',
+      beschreibung: '',
+    },
+    dropdown: { name: 'Dropdown', label: 'Auswahl', beschreibung: '' },
+    radio: { name: 'Radio-Gruppe', label: 'Optionen', beschreibung: '' },
+    slider: { name: 'Schieberegler', label: 'Wert', beschreibung: '0 – 100' },
+    'file-upload': {
+      name: 'Datei-Upload',
+      label: 'Datei',
+      beschreibung: 'Erlaubte Formate: PDF, JPG, PNG',
+    },
+    'repeat-group': {
+      name: 'Wiederholungsgruppe',
+      label: 'Wiederholungsgruppe',
+      beschreibung: 'Mehrere Einträge hinzufügen (z. B. Personen, Kinder)',
+    },
+    'label-heading': {
+      name: 'Überschrift',
+      label: 'Überschrift',
+      beschreibung: '',
+    },
+    'label-text': {
+      name: 'Hinweistext',
+      label: 'Hier steht ein Hinweistext.',
+      beschreibung: '',
+    },
+    'alert-info': { name: 'Infobox', label: 'ℹ Information', beschreibung: '' },
+    'alert-warning': {
+      name: 'Warnhinweis',
+      label: '⚠ Wichtiger Hinweis',
+      beschreibung: '',
+    },
+    'section-header': {
+      name: 'Abschnittskopf',
+      label: 'Abschnittstitel',
+      beschreibung: 'Dunkler Abschnittskopf wie in amtlichen Formularen',
+    },
+    annotation: {
+      name: 'Annotation (Hinweis rechts)',
+      label: 'Hinweistext (rechts)',
+      beschreibung: 'Kleiner Erläuterungstext neben Feldern',
+    },
+    'col-2': {
+      name: '2 Spalten',
+      label: '2 Spalten',
+      beschreibung: 'Zwei gleichbreite Spalten',
+    },
+    'col-3': {
+      name: '3 Spalten',
+      label: '3 Spalten',
+      beschreibung: 'Drei gleichbreite Spalten',
+    },
+    'col-1-2': {
+      name: 'Schmal + Breit',
+      label: 'Schmal + Breit (1:2)',
+      beschreibung: 'Z. B. PLZ + Ort',
+    },
+    'col-2-1': {
+      name: 'Breit + Schmal',
+      label: 'Breit + Schmal (2:1)',
+      beschreibung: 'Z. B. Straße + Hausnummer',
+    },
+    'col-4': {
+      name: '4 Spalten',
+      label: '4 Spalten',
+      beschreibung: 'Vier gleichbreite Spalten',
+    },
+    'col-custom': {
+      name: 'Spalten (frei)',
+      label: 'Spalten (frei konfigurierbar)',
+      beschreibung: 'Breiten z. B. 1:2:1',
+    },
+    group: {
+      name: 'Gruppe (benannt)',
+      label: 'Gruppe',
+      beschreibung: 'Benannter Abschnitt mit Rahmen',
+    },
+  },
+  erweiterungen: {
+    vonUrl: 'Oder von einer Adresse laden',
+    urlPlatzhalter: 'https://intranet.example/bibliothek.json',
+    laden: 'Laden',
+    ladeFehler: {
+      nichtErreichbar:
+        'Die Adresse ist nicht erreichbar. Möglich sind ein Tippfehler, ein abgeschalteter Server oder eine Inhaltsrichtlinie, die den Abruf blockt.',
+      keinJson: 'Die Antwort ist kein lesbares JSON.',
+      unbrauchbar:
+        'Die Antwort enthält kein verwertbares Erweiterungspaket (id, Name und mindestens ein Beitrag sind nötig).',
+    },
+    menue: 'Erweiterungen …',
+    titel: 'Erweiterungen',
+    einleitung:
+      'Erweiterungen bringen zusätzliche Feldtypen, Bausteine, Begriffe oder ein Regionsprofil mit. Sie liegen als Datei vor und werden hier hinzugefügt — der Editor lädt von sich aus nichts nach.',
+    leer: 'Noch keine Erweiterung hinzugefügt.',
+    hinzufuegen: 'Datei hinzufügen …',
+    entfernen: 'Entfernen',
+    aktiv: 'aktiv',
+    keinJson: 'Die Datei ist kein lesbares JSON.',
+    unbrauchbar:
+      'Die Datei enthält kein verwertbares Erweiterungspaket (id, Name und mindestens ein Beitrag sind nötig).',
+  },
+  metadaten: {
+    titel: 'Formular-Metadaten',
+    formularTitel: 'Formular-Titel *',
+    formularTitelHinweis:
+      'Erscheint als Überschrift im Formular (schema.title)',
+    beschreibung: 'Beschreibung / Zweck',
+    beschreibungHinweis: 'Kurze Beschreibung des Vorgangs',
+    urn: 'Formular-ID (URN)',
+    urnPlatzhalter: 'urn:de:bonn:formular:bewohnerparkausweis',
+    urnHinweis: 'Stabile Formular-ID über alle Versionen (Manifest form.id)',
+    urnFehler:
+      'Muster: urn:<namensraum>:<rest>, z. B. urn:de:bonn:formular:bewohnerparkausweis',
+    urnVorschlag: 'URN-Vorschlag aus Herausgeber und Titel erzeugen',
+    abschnittHerausgeber: 'Herausgeber',
+    herausgeber: 'Herausgebende Stelle',
+    herausgeberPlatzhalter: 'z. B. Bundesagentur für Arbeit',
+    herausgeberHinweis: 'Wird im Manifest als form.publisher geführt',
+    rechtsgrundlage: 'Rechtsgrundlage',
+    rechtsgrundlagePlatzhalter: 'z. B. § 16 SGB II, OZG-Leistungs-ID 99001234',
+    rechtsgrundlageHinweis: 'Wird im Manifest als form.legalBasis geführt',
+    abschnittVersion: 'Versionierung',
+    version: 'Version',
+    versionPlatzhalter: 'z. B. 1.0.0',
+    versionHinweis: 'SemVer',
+    gueltigAb: 'Gültig ab',
+    sprache: 'Sprache',
+    sprachen: { de: 'Deutsch', en: 'Englisch' },
   },
   palette: {
+    feldTooltip: '{name} — Enter fügt das Feld am Ende ein',
+    feldHinzufuegen: '{name} hinzufügen',
     groups: {
       eingabe: 'Eingabe',
       auswahl: 'Auswahl',
@@ -23,6 +341,18 @@ export const de: EditorTranslations = {
     },
     validators: 'Validatoren',
     uiBausteine: 'UI-Bausteine',
+    suche: 'Bausteine und Felder suchen …',
+    suchergebnisse: 'Suchergebnisse',
+    weitereFeldtypen: 'Weitere Feldtypen',
+    bausteineLeer: 'Der Baustein-Katalog ist leer.',
+    bausteineFehler: 'Der Baustein-Katalog konnte nicht geladen werden.',
+    fimSucheHinweis:
+      'FIM-Bausteine werden aus dem FIM-Portal geladen — dafür den Reiter „FIM" öffnen.',
+    tabs: {
+      bausteine: 'Bausteine',
+      fim: 'FIM',
+      einzelfelder: 'Einzelfelder',
+    },
     fim: {
       title: 'FIM-Bausteine',
       datenfeldgruppen: 'Datenfeldgruppen',
@@ -44,8 +374,20 @@ export const de: EditorTranslations = {
     mehrstufig: 'Mehrstufiges Formular anlegen',
     seite: 'Seite',
     neuerTab: 'Neuer Tab',
+    leer: {
+      bereich: 'Ablagefläche für das erste Feld',
+      titel: 'Dieses Formular ist noch leer',
+      tastatur:
+        'Ohne Maus: einen Eintrag in der Palette anwählen und Enter drücken.',
+    },
+    geraet: {
+      desktop: 'Desktop',
+      handy: 'Handy',
+      hinweis: 'Ansicht — ändert das Formular nicht',
+    },
   },
   properties: {
+    feldtypUnbekannt: 'Feld',
     emptyHint: 'Feld auswählen,\num Eigenschaften zu bearbeiten',
     label: 'Bezeichnung (Label)',
     description: 'Hilfetext / Beschreibung',
@@ -53,6 +395,49 @@ export const de: EditorTranslations = {
     required: 'Pflichtfeld',
     options: 'Auswahloptionen',
     validatoren: 'OpenCode-Validatoren',
+    tabs: {
+      inhalt: 'Inhalt',
+      pruefung: 'Prüfung',
+      bedingungen: 'Bedingungen',
+      uebersetzung: 'Übersetzung',
+    },
+    feldtypWechseln: 'Art des Feldes ändern',
+    vorschlag: {
+      text: 'Wegen „{ausloeser}" im Namen passt hier vermutlich {vorschlag}.',
+      uebernehmen: 'Übernehmen',
+      ignorieren: 'Ignorieren',
+    },
+    feldtypWechselHinweis: 'Bestimmt, wie das Feld ausgefüllt wird.',
+    feldtypGleicheAntwort: 'Gleiche Art von Antwort',
+    feldtypAndereAntwort: 'Andere Art von Antwort',
+    wechsel: {
+      titel: 'Art des Feldes wirklich ändern?',
+      einleitung: '„{feld}" wird von {alt} zu {neu}. Dabei geht verloren:',
+      andereAntwort:
+        'Das Feld erwartet danach eine andere Art von Antwort. Bereits ausgefüllte Formulare passen nicht mehr zu diesem Feld.',
+      optionen: 'Auswahloptionen: {liste}',
+      pruefungen: 'Prüfungen, die nicht mehr passen: {liste}',
+      bedingungen:
+        'Bedingungen an diesen Feldern vergleichen einen Wert dieses Feldes und treffen danach womöglich nie mehr zu: {liste}',
+      abbrechen: 'Abbrechen',
+      bestaetigen: 'Ändern',
+    },
+    bedingung: {
+      titel: 'Bedingte Anzeige',
+      aktivieren: 'Bedingung aktivieren',
+      keineFelder: 'Erst weitere Felder hinzufügen, um Bedingungen zu setzen.',
+      nurAnzeigen: 'Nur anzeigen',
+      ausblenden: 'Ausblenden',
+      sperren: 'Sperren',
+      wenn: 'wenn',
+      istGleich: 'ist gleich',
+      istNichtGleich: 'ist nicht gleich',
+      wert: 'Wert',
+    },
+    keineValidatoren: 'Keine Prüfungen verfügbar.',
+    keinePassendenValidatoren:
+      'Für diese Art von Feld gibt es keine passende Prüfung.',
+    feldtyp: 'Art des Feldes',
     textElement: 'Text-Element',
     gruppe: 'Gruppe',
     spaltenLayout: 'Spalten-Layout',
@@ -60,6 +445,21 @@ export const de: EditorTranslations = {
     gruppenTitle: 'Gruppenüberschrift',
   },
   dialog: {
+    ofmHinweis:
+      'Exportiert das Formular als OFM-Paket (Offenes Formularmodell 1.0, Konformitätsklasse A): ein ZIP mit form.manifest.json, schema.json und uischema.json. Die Artefakt-Hashes (SHA-256) werden über die exportierten Dateien berechnet.',
+    ofmFehlend:
+      'Für ein gültiges Manifest fehlen folgende Angaben (Dialog „Formular-Metadaten"): {felder}',
+    ofmHerunterladen: 'OFM-Paket (ZIP) herunterladen',
+    ofmFussnote:
+      'Interne Editor-Optionen (Platzhalter, Varianten, Freitextfarben) werden nicht exportiert; Abschnittsfarben werden als ofm:sectionColor-Token, Spaltenbreiten als ofm:width (1–12) geschrieben.',
+    xdfHinweis:
+      'Exportiert das Formular als XDatenfelder 2.0 (XDF2) — dem bundesweit gültigen Standard für FIM-Bausteine. Die XML-Datei kann in FIM-Portal-kompatible Systeme importiert werden.',
+    xdfHerunterladen: 'XDF 2.0 herunterladen',
+    xdfFussnote:
+      'Enthält: alle Datenfelder des Formulars, Metadaten (Titel, Herausgeber, Rechtsgrundlage), Datentypen und Einschränkungen. FIM-Identifier (x-fim-id) werden übernommen.',
+    migrationHinweis:
+      'Formular-Metadaten (x-publisher u. a.) wurden aus dem Schema in das Manifest übernommen (OFM-R-304). Beim nächsten Export sind sie Teil von form.manifest.json.',
+    speichern: 'Speichern',
     templateTitle: 'Vorlage auswählen',
     templateLoad: 'Vorlage laden',
     cancel: 'Abbrechen',
@@ -81,6 +481,7 @@ export const de: EditorTranslations = {
       'Noch keine Felder vorhanden. Im visuellen Modus Felder aus der Palette hinzufügen.',
   },
   actions: {
+    kopieLabel: '{label} (Kopie)',
     duplicate: 'Duplizieren',
     remove: 'Entfernen',
     rename: 'Umbenennen',

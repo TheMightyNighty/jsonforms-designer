@@ -123,7 +123,8 @@ test('screenshot: visueller Modus', async ({ page }) => {
 
 test('screenshot: Code-Modus', async ({ page }) => {
   await gotoDemo(page);
-  await page.getByRole('button', { name: 'Code-Modus' }).click();
+  await page.getByRole('button', { name: 'Ansicht', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Code-Modus' }).click();
   await expect(page.locator('.view-lines').first()).toContainText('Wohngeld', {
     timeout: 15_000,
   });
@@ -133,12 +134,26 @@ test('screenshot: Code-Modus', async ({ page }) => {
 
 test('screenshot: FIM-Bausteine', async ({ page }) => {
   await gotoDemo(page);
-  // FIM-Sektion aufklappen, falls sie nicht schon offen ist
+
+  // FIM liegt seit dem Palette-Umbau in einem eigenen Reiter.
+  await page.getByRole('tab', { name: 'FIM' }).click();
+
+  // Die FIM-Einträge stehen unter der Suche; bei 1600x900 kann der erste
+  // Treffer unter dem Bildausschnitt liegen. Das Bild zeigte deshalb früher
+  // keine FIM-Bausteine, obwohl der Test grün war: Er prüfte nur die
+  // Sichtbarkeit im DOM.
   const fimItem = page.getByText('Anschrift Inland').first();
-  if (!(await fimItem.isVisible().catch(() => false))) {
-    await page.getByText('FIM-Bausteine', { exact: false }).first().click();
-  }
   await expect(fimItem).toBeVisible({ timeout: 10_000 });
+  await fimItem.scrollIntoViewIfNeeded();
+
+  // Sichtbarkeit im Viewport prüfen, nicht nur im DOM — genau diese Lücke
+  // hat den kaputten Screenshot durchgelassen.
+  const viewport = page.viewportSize();
+  const box = await fimItem.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
+
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${DOCS}/screenshot-fim.png` });
 });

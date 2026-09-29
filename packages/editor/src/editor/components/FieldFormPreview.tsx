@@ -1,16 +1,7 @@
 import { JsonSchema7 } from '@jsonforms/core';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DeleteIcon from '@mui/icons-material/Delete';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import LayersIcon from '@mui/icons-material/Layers';
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import React from 'react';
 import { Dispatch } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
@@ -23,35 +14,20 @@ import {
   createReorderElementAction,
 } from '../../core/model/addFieldActions';
 import { FieldAwareState } from '../../core/model/addFieldReducer';
-import { FIELD_TYPE_CATALOG } from '../../field-types/fieldTypes';
+import { fuelleVorlage } from '../../core/util/textVorlage';
+import { useFeldtypKatalog } from '../../erweiterung/ErweiterungenProvider';
 import { useI18n } from '../../i18n';
 import { useFieldDrop } from '../../palette-panel/useFieldDrop';
+import { UISchemaRule } from '../../properties/fieldPropertiesActions';
 import { ColumnContainerRow } from './ColumnContainerRow';
 import { EditorErrorBoundary } from './EditorErrorBoundary';
+import { EDITOR_ITEM, EditorDragItem, FieldRow } from './FieldRow';
+import { GroupContainerRow } from './GroupContainerRow';
 import {
   StructuralElement,
   StructuralElementRow,
 } from './StructuralElementRow';
 import { TabBar } from './TabBar';
-
-// DnD-Typ für interne Reorder-Verschiebung
-const EDITOR_ITEM = 'EDITOR_ITEM' as const;
-interface EditorDragItem {
-  key: string;
-}
-
-// ---------------------------------------------------------------------------
-// Typ-Labels
-// ---------------------------------------------------------------------------
-const TYPE_LABELS: Record<string, string> = {
-  string: 'Text',
-  number: 'Zahl',
-  integer: 'Ganzzahl',
-  boolean: 'Bool',
-  object: 'Objekt',
-  array: 'Liste',
-};
-const typeLabel = (t?: string) => (t ? (TYPE_LABELS[t] ?? t) : '?');
 
 // ---------------------------------------------------------------------------
 // Drop-Zone zwischen Elementen (Palette + Reorder)
@@ -114,149 +90,6 @@ function DropZone({ dispatch, insertAfterScope, tabIndex }: DropZoneProps) {
           hier ablegen
         </Typography>
       )}
-    </Box>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Normales Feld (Control) mit Drag-Handle
-// ---------------------------------------------------------------------------
-interface FieldRowProps {
-  propertyKey: string;
-  scope: string;
-  label: string;
-  schemaType?: string;
-  required: boolean;
-  isSelected: boolean;
-  validators?: string[];
-  onSelect: (scope: string) => void;
-  onDelete: (scope: string) => void;
-  onDuplicate: (scope: string) => void;
-}
-function FieldRow({
-  propertyKey,
-  scope,
-  label,
-  schemaType,
-  required,
-  isSelected,
-  validators = [],
-  onSelect,
-  onDelete,
-  onDuplicate,
-}: FieldRowProps) {
-  const [{ isDragging }, dragRef, dragPreviewRef] = useDrag<
-    EditorDragItem,
-    void,
-    { isDragging: boolean }
-  >(
-    () => ({
-      type: EDITOR_ITEM,
-      item: { key: scope },
-      collect: (m) => ({ isDragging: m.isDragging() }),
-    }),
-    [scope],
-  );
-
-  return (
-    <Box
-      ref={dragPreviewRef as unknown as React.Ref<HTMLDivElement>}
-      data-testid="field-row"
-      role="button"
-      tabIndex={0}
-      onClick={() => onSelect(scope)}
-      onKeyDown={(e) => e.key === 'Enter' && onSelect(scope)}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        px: 1,
-        py: 0.75,
-        borderRadius: 1,
-        cursor: 'pointer',
-        opacity: isDragging ? 0.3 : 1,
-        border: '1px solid',
-        borderColor: isSelected ? 'primary.main' : 'divider',
-        backgroundColor: isSelected ? 'action.selected' : 'background.paper',
-        transition: 'border-color 0.15s, background-color 0.15s',
-        '&:hover': {
-          borderColor: 'primary.light',
-          backgroundColor: 'action.hover',
-        },
-      }}
-    >
-      {/* Drag-Handle */}
-      <Box
-        ref={dragRef as unknown as React.Ref<HTMLDivElement>}
-        sx={{
-          cursor: 'grab',
-          color: 'text.disabled',
-          flexShrink: 0,
-          '&:active': { cursor: 'grabbing' },
-        }}
-      >
-        <DragHandleIcon sx={{ fontSize: 16 }} />
-      </Box>
-
-      {required && (
-        <Typography
-          component="span"
-          sx={{
-            color: 'error.main',
-            fontSize: '1rem',
-            lineHeight: 1,
-            flexShrink: 0,
-          }}
-        >
-          *
-        </Typography>
-      )}
-      <Typography
-        variant="body2"
-        sx={{ flex: 1, fontWeight: isSelected ? 500 : 400 }}
-        noWrap
-      >
-        {label || propertyKey}
-      </Typography>
-      <Chip
-        label={typeLabel(schemaType)}
-        size="small"
-        variant="outlined"
-        sx={{ fontSize: '0.68rem', height: 20, borderRadius: '4px' }}
-      />
-      {validators.length > 0 && (
-        <Tooltip title={`Validatoren: ${validators.join(', ')}`}>
-          <Box
-            component="i"
-            className="ti ti-shield-check"
-            sx={{ fontSize: 14, color: 'primary.main', flexShrink: 0 }}
-          />
-        </Tooltip>
-      )}
-      <Tooltip title="Duplizieren">
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDuplicate(scope);
-          }}
-          sx={{ p: 0.25, opacity: 0.5, '&:hover': { opacity: 1 } }}
-        >
-          <ContentCopyIcon fontSize="inherit" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Entfernen">
-        <IconButton
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(scope);
-          }}
-          sx={{ p: 0.25, opacity: 0.5, '&:hover': { opacity: 1 } }}
-        >
-          <DeleteIcon fontSize="inherit" />
-        </IconButton>
-      </Tooltip>
     </Box>
   );
 }
@@ -329,6 +162,10 @@ interface FieldFormPreviewProps {
   selectedScope: string | null;
   onSelectScope: (scope: string | null) => void;
   dispatch: Dispatch<EditorAction>;
+  /** Testen-Modus: gerenderte Felder werden interaktiv statt rein visuell. */
+  testMode: boolean;
+  testData: Record<string, unknown>;
+  onTestDataChange: (data: Record<string, unknown>) => void;
 }
 
 export function FieldFormPreview({
@@ -336,6 +173,9 @@ export function FieldFormPreview({
   selectedScope,
   onSelectScope,
   dispatch,
+  testMode,
+  testData,
+  onTestDataChange,
 }: FieldFormPreviewProps) {
   const {
     schema,
@@ -346,6 +186,7 @@ export function FieldFormPreview({
     lineNumbersEnabled,
   } = fieldState;
   const { t } = useI18n();
+  const katalog = useFeldtypKatalog();
 
   const handleDelete = (scope: string) => {
     dispatch(createRemoveFieldAction(scope));
@@ -368,18 +209,17 @@ export function FieldFormPreview({
       if (fs.enum) return 'dropdown';
       return 'text-short';
     };
-    const def = FIELD_TYPE_CATALOG.find((f) => f.id === guessId());
+    const def = katalog.find((f) => f.id === guessId());
     if (!def) return;
     const tabIdx =
       tabs.length > 0 ? (tabAssignments[scope] ?? activeTabIndex) : undefined;
     dispatch(
       createAddFieldAction(
-        {
-          ...def,
-          schema: { ...fs },
-          defaults: { ...def.defaults, label: (fs.title ?? key) + ' (Kopie)' },
-        },
-        key + '_kopie',
+        { ...def, schema: { ...fs } },
+        // Kein Suffix: Den eindeutigen Namen vergibt resolveKey, und der
+        // ist sprachfrei.
+        key,
+        fuelleVorlage(t.actions.kopieLabel, { label: fs.title ?? key }),
         scope,
         tabIdx,
       ),
@@ -394,13 +234,7 @@ export function FieldFormPreview({
       return { kind: 'column-container' as const, el, scope: el.id };
     }
     if (el.type === 'GroupContainer') {
-      return {
-        kind: 'structural' as const,
-        scope: el.id,
-        type: 'GroupContainer',
-        label: el.label,
-        options: el.options,
-      };
+      return { kind: 'group-container' as const, el, scope: el.id };
     }
     if (el.type === 'Label') {
       return {
@@ -413,8 +247,7 @@ export function FieldFormPreview({
     }
     const key = el.scope.replace(/^#\/properties\//, '');
     const fs = schema.properties?.[key] as
-      | (JsonSchema7 & { 'x-opencode-validators'?: string[] })
-      | undefined;
+      (JsonSchema7 & { 'x-opencode-validators'?: string[] }) | undefined;
     return {
       kind: 'control' as const,
       scope: el.scope,
@@ -423,6 +256,8 @@ export function FieldFormPreview({
       schemaType: fs?.type as string | undefined,
       required: schema.required?.includes(key) ?? false,
       validators: fs?.['x-opencode-validators'] ?? [],
+      options: el.options,
+      rule: el.rule as UISchemaRule | undefined,
     };
   });
 
@@ -432,6 +267,12 @@ export function FieldFormPreview({
         (el) => (tabAssignments[el.scope] ?? 0) === activeTabIndex,
       )
     : allElements;
+
+  // Formular-Rahmen: Titel aus schema.title, bei mehrstufigen Formularen
+  // zusätzlich der aktive Schrittname — wie bei einem echten Amtsformular
+  // (Kopfbereich, nicht nur eine flache Feldliste).
+  const formTitle = (schema as JsonSchema7).title;
+  const activeStepLabel = hasTabs ? tabs[activeTabIndex]?.label : undefined;
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -461,130 +302,174 @@ export function FieldFormPreview({
         sx={{
           flex: 1,
           overflowY: 'auto',
-          p: 1.5,
-          display: 'flex',
-          flexDirection: 'column',
+          p: 3,
+          backgroundColor: 'background.default',
         }}
       >
-        {/* Erste Drop-Zone (oben) */}
-        <DropZone
-          dispatch={dispatch}
-          tabIndex={hasTabs ? activeTabIndex : undefined}
-        />
+        <Box
+          sx={{
+            maxWidth: 760,
+            mx: 'auto',
+            backgroundColor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {formTitle && <Typography variant="h4">{formTitle}</Typography>}
+          {activeStepLabel && (
+            <Typography
+              variant="subtitle1"
+              sx={{ color: 'text.secondary', mt: 0.5, mb: 3 }}
+            >
+              {activeStepLabel}
+            </Typography>
+          )}
+          {!activeStepLabel && formTitle && <Box sx={{ mb: 3 }} />}
 
-        {visibleElements.map((el, idx) => (
-          <React.Fragment key={el.scope}>
-            {/* Zeilennummer + Element nebeneinander.
+          {/* Erste Drop-Zone (oben) */}
+          <DropZone
+            dispatch={dispatch}
+            tabIndex={hasTabs ? activeTabIndex : undefined}
+          />
+
+          {visibleElements.map((el, idx) => (
+            <React.Fragment key={el.scope}>
+              {/* Zeilennummer + Element nebeneinander.
                 Alt+Pfeil hoch/runter sortiert das fokussierte Element um
                 (Tastatur-Alternative zum Drag & Drop, BITV). */}
-            <Box
-              sx={{ display: 'flex', alignItems: 'flex-start' }}
-              aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
-              onKeyDown={(e) => {
-                if (!e.altKey) return;
-                if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.key === 'ArrowUp' && idx > 0) {
-                  // Vor den Vorgänger = hinter dessen Vorgänger (oder Anfang)
-                  dispatch(
-                    createReorderElementAction(
-                      el.scope,
-                      idx >= 2 ? visibleElements[idx - 2].scope : undefined,
-                    ),
-                  );
-                } else if (
-                  e.key === 'ArrowDown' &&
-                  idx < visibleElements.length - 1
-                ) {
-                  dispatch(
-                    createReorderElementAction(
-                      el.scope,
-                      visibleElements[idx + 1].scope,
-                    ),
-                  );
-                }
-              }}
-            >
-              {lineNumbersEnabled && (
-                <Box
-                  sx={{
-                    minWidth: 22,
-                    textAlign: 'right',
-                    pr: 0.75,
-                    pt: 1.25,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
+              <Box
+                sx={{ display: 'flex', alignItems: 'flex-start' }}
+                aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown"
+                onKeyDown={(e) => {
+                  if (!e.altKey) return;
+                  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.key === 'ArrowUp' && idx > 0) {
+                    // Vor den Vorgänger = hinter dessen Vorgänger (oder Anfang)
+                    dispatch(
+                      createReorderElementAction(
+                        el.scope,
+                        idx >= 2 ? visibleElements[idx - 2].scope : undefined,
+                      ),
+                    );
+                  } else if (
+                    e.key === 'ArrowDown' &&
+                    idx < visibleElements.length - 1
+                  ) {
+                    dispatch(
+                      createReorderElementAction(
+                        el.scope,
+                        visibleElements[idx + 1].scope,
+                      ),
+                    );
+                  }
+                }}
+              >
+                {lineNumbersEnabled && (
+                  <Box
                     sx={{
-                      color: 'text.disabled',
-                      fontSize: '0.65rem',
-                      fontFamily: 'monospace',
+                      minWidth: 22,
+                      textAlign: 'right',
+                      pr: 0.75,
+                      pt: 1.25,
+                      flexShrink: 0,
                     }}
                   >
-                    {idx + 1}
-                  </Typography>
-                </Box>
-              )}
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                {el.kind === 'column-container' ? (
-                  <EditorErrorBoundary fallbackLabel="Layout-Fehler">
-                    <ColumnContainerRow
-                      container={el.el}
-                      schema={schema.properties ?? {}}
-                      selectedId={selectedScope}
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'text.disabled',
+                        fontSize: '0.65rem',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {idx + 1}
+                    </Typography>
+                  </Box>
+                )}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  {el.kind === 'column-container' ? (
+                    <EditorErrorBoundary fallbackLabel="Layout-Fehler">
+                      <ColumnContainerRow
+                        container={el.el}
+                        schema={schema.properties ?? {}}
+                        selectedId={selectedScope}
+                        onSelect={onSelectScope}
+                        dispatch={dispatch}
+                        testMode={testMode}
+                        data={testData}
+                        onDataChange={onTestDataChange}
+                      />
+                    </EditorErrorBoundary>
+                  ) : el.kind === 'group-container' ? (
+                    <EditorErrorBoundary fallbackLabel="Gruppen-Fehler">
+                      <GroupContainerRow
+                        container={el.el}
+                        schema={schema}
+                        selectedId={selectedScope}
+                        onSelect={onSelectScope}
+                        dispatch={dispatch}
+                        testMode={testMode}
+                        data={testData}
+                        onDataChange={onTestDataChange}
+                      />
+                    </EditorErrorBoundary>
+                  ) : el.kind === 'control' ? (
+                    <FieldRow
+                      propertyKey={el.propertyKey}
+                      scope={el.scope}
+                      schema={schema}
+                      uiOptions={el.options}
+                      rule={el.rule}
+                      validators={el.validators}
+                      isSelected={selectedScope === el.scope}
+                      testMode={testMode}
+                      testData={testData}
+                      onTestDataChange={onTestDataChange}
+                      onSelect={onSelectScope}
+                      onDelete={handleDelete}
+                      onDuplicate={handleDuplicate}
+                    />
+                  ) : (
+                    <DraggableStructural
+                      el={{
+                        scope: el.scope,
+                        type: el.type,
+                        label: el.label,
+                        options: el.options,
+                      }}
+                      isSelected={selectedScope === el.scope}
                       onSelect={onSelectScope}
                       dispatch={dispatch}
+                      elementKey={el.scope}
                     />
-                  </EditorErrorBoundary>
-                ) : el.kind === 'control' ? (
-                  <FieldRow
-                    propertyKey={el.propertyKey}
-                    scope={el.scope}
-                    label={el.label}
-                    schemaType={el.schemaType}
-                    required={el.required}
-                    validators={el.validators}
-                    isSelected={selectedScope === el.scope}
-                    onSelect={onSelectScope}
-                    onDelete={handleDelete}
-                    onDuplicate={handleDuplicate}
-                  />
-                ) : (
-                  <DraggableStructural
-                    el={{
-                      scope: el.scope,
-                      type: el.type,
-                      label: el.label,
-                      options: el.options,
-                    }}
-                    isSelected={selectedScope === el.scope}
-                    onSelect={onSelectScope}
-                    dispatch={dispatch}
-                    elementKey={el.scope}
-                  />
-                )}
+                  )}
+                </Box>
               </Box>
-            </Box>
-            <DropZone
-              dispatch={dispatch}
-              insertAfterScope={el.scope}
-              tabIndex={hasTabs ? activeTabIndex : undefined}
-            />
-          </React.Fragment>
-        ))}
+              <DropZone
+                dispatch={dispatch}
+                insertAfterScope={el.scope}
+                tabIndex={hasTabs ? activeTabIndex : undefined}
+              />
+            </React.Fragment>
+          ))}
 
-        {visibleElements.length === 0 && hasTabs && (
-          <Typography
-            variant="body2"
-            color="text.disabled"
-            sx={{ pt: 2, textAlign: 'center' }}
-          >
-            {t.editor.feldHierher}
-          </Typography>
-        )}
+          {visibleElements.length === 0 && hasTabs && (
+            <Typography
+              variant="body2"
+              color="text.disabled"
+              sx={{ pt: 2, textAlign: 'center' }}
+            >
+              {t.editor.feldHierher}
+            </Typography>
+          )}
+        </Box>
       </Box>
     </Box>
   );
