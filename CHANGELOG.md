@@ -7,6 +7,32 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+---
+
+## [0.4.0] — 2026-09-29
+
+**Der Editor ist nicht mehr auf eine Behörde zugeschnitten.** Der Kern kennt
+weder Sprache noch Region; Deutschland ist ein Profil wie jedes andere, und
+Dritte erweitern ihn über Dateien statt über einen Fork (ADR 0007).
+
+### Umstellung für einbettende Hosts
+
+- **FIM und Open CoDE sind aus** (`modules.fim.enabled`, `modules.openCode.enabled`
+  jetzt `false`). Wer sie nutzt, schaltet sie ausdrücklich ein.
+- **`createAddFieldAction` hat einen dritten Parameter `label`.** Reducer sind
+  reine Funktionen ohne Zugriff auf i18n; die auslösende Komponente reicht den
+  Text mit.
+- **`feldtypLabel` und `FELDTYP_FALLBACK_LABEL` entfallen.** Feldtyp-Texte
+  stehen unter `i18n.feldtypen[<id>]`; `FieldTypeDefinition` trägt weder
+  `displayName` noch `defaults.label`/`.description`.
+- **`sucheFeldtypen`** bekommt die Namensfunktion hereingereicht,
+  **`vorschlagFeldtyp`/`vorschlagWeichtAb`** die Stichwortregeln.
+- **`FIELD_GROUPS`** ist jetzt eine Liste von ids, kein Objekt-Array.
+
+Formulare, die mit 0.3.x gebaut wurden, bleiben unberührt — das
+Persistenzformat `jfd_fieldState_v1` ändert sich nicht.
+
+
 ### Geändert (Zustand im Render statt im Effekt)
 - **`react-hooks/set-state-in-effect` aufgelöst** und von `warn` auf **`error`** gehoben. Fünf der neun Stellen waren abgeleiteter Zustand und werden jetzt im Render angeglichen: Reiterwahl beim Feldwechsel, Bedingung des gewählten Feldes, Werte des Metadaten-Dialogs beim Öffnen, Fehlermeldung beim Reiterwechsel im Code-Modus, und die Selektion, die auf ein gelöschtes Element zeigt. Ein Effekt läuft nach dem Malen — die Redakteurin sah für einen Durchlauf den alten Wert zum neuen Gegenstand.
 - **Die Selektion wird abgeleitet statt zurückgesetzt:** Der Zustand bleibt stehen, wenn das Element verschwindet, und Rückgängig bringt die Auswahl wieder mit. Nach außen gilt sie nur, solange es das Element gibt.
@@ -223,7 +249,8 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 - OpenCode-Integration (Validatoren, UI-Bausteine)
 - DE/EN-Lokalisierung
 
-[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/TheMIghtyNighty/jsonforms-designer/compare/v0.1.0...v0.2.0
