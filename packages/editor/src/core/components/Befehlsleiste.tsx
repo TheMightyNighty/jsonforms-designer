@@ -12,12 +12,15 @@
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Divider from '@mui/material/Divider';
 import ListItemText from '@mui/material/ListItemText';
-import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
+import Paper from '@mui/material/Paper';
+import Popper from '@mui/material/Popper';
 import Snackbar from '@mui/material/Snackbar';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { EditorMode } from '../../editor/editorMode';
 import { ErweiterungenDialog } from '../../erweiterung/ErweiterungenDialog';
@@ -64,22 +67,59 @@ interface BefehlsleisteProps {
   onModeChange: (mode: EditorMode) => void;
 }
 
-/** Ein Menü der Leiste — Knopf plus zugehörige Klappe. */
+/** Wie lange die Klappe nach Verlassen mit der Maus noch stehen bleibt. */
+const SCHLIESS_VERZOEGERUNG_MS = 150;
+
+/**
+ * Ein Menü der Leiste — Knopf plus zugehörige Klappe.
+ *
+ * Die Klappe öffnet beim Überfahren mit der Maus und schließt, sobald die
+ * Maus Knopf und Klappe verlassen hat; die kurze Verzögerung überbrückt
+ * den Weg vom Knopf in die Klappe. Klick und Tastatur öffnen sie ebenso
+ * (Touch, Bedienung ohne Maus). Die Klappe ist nicht modal, damit der
+ * Mauszeiger die übrigen Knöpfe der Leiste weiter erreicht. Ein Klick
+ * auf einen Eintrag schließt die Klappe.
+ */
 function LeistenMenue({
   name,
   children,
 }: {
   name: string;
-  children: (schliessen: () => void) => React.ReactNode;
+  children: React.ReactNode;
 }) {
   const [anker, setAnker] = useState<null | HTMLElement>(null);
-  const schliessen = () => setAnker(null);
+  // Per Klick/Tastatur geöffnet → erster Eintrag bekommt den Fokus;
+  // beim Überfahren bleibt der Fokus, wo er ist.
+  const [fokusInKlappe, setFokusInKlappe] = useState(false);
+  const schliessTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const abbrechenSchliessen = () => clearTimeout(schliessTimer.current);
+  const schliessen = () => {
+    abbrechenSchliessen();
+    setAnker(null);
+  };
+  const spaeterSchliessen = () => {
+    abbrechenSchliessen();
+    schliessTimer.current = setTimeout(
+      () => setAnker(null),
+      SCHLIESS_VERZOEGERUNG_MS,
+    );
+  };
+  useEffect(() => abbrechenSchliessen, []);
+
+  const oeffnen = (knopf: HTMLElement, mitFokus: boolean) => {
+    abbrechenSchliessen();
+    setAnker(knopf);
+    setFokusInKlappe(mitFokus);
+  };
 
   return (
     <>
       <Button
         size="small"
-        onClick={(e) => setAnker(e.currentTarget)}
+        onMouseEnter={(e) => oeffnen(e.currentTarget, false)}
+        onMouseLeave={spaeterSchliessen}
+        onClick={(e) => oeffnen(e.currentTarget, true)}
         aria-haspopup="menu"
         aria-expanded={anker ? true : undefined}
         sx={{
@@ -88,13 +128,48 @@ function LeistenMenue({
           textTransform: 'none',
           minWidth: 0,
           px: 1.25,
+          ...(anker && { bgcolor: 'action.hover' }),
         }}
       >
         {name}
       </Button>
-      <Menu anchorEl={anker} open={Boolean(anker)} onClose={schliessen}>
-        {children(schliessen)}
-      </Menu>
+      <Popper
+        open={Boolean(anker)}
+        anchorEl={anker}
+        placement="bottom-start"
+        sx={{ zIndex: (theme) => theme.zIndex.modal }}
+      >
+        <Paper
+          elevation={8}
+          onMouseEnter={abbrechenSchliessen}
+          onMouseLeave={spaeterSchliessen}
+        >
+          <ClickAwayListener
+            onClickAway={(e) => {
+              if (!anker?.contains(e.target as Node)) schliessen();
+            }}
+          >
+            <MenuList
+              autoFocusItem={fokusInKlappe}
+              onClick={(e) => {
+                if ((e.target as HTMLElement).closest('[role="menuitem"]'))
+                  schliessen();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' || e.key === 'Tab') {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    anker?.focus();
+                  }
+                  schliessen();
+                }
+              }}
+            >
+              {children}
+            </MenuList>
+          </ClickAwayListener>
+        </Paper>
+      </Popper>
     </>
   );
 }
@@ -192,14 +267,13 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
       >
         {/* ── Datei ─────────────────────────────────────────────────── */}
         <LeistenMenue name={t.header.menue.datei}>
-          {(schliessen) => [
+          {[
             formularAblage && (
               <MenuItem
                 key="neu"
                 onClick={() => {
                   formularAblage.neu();
                   setDateiHandle(undefined);
-                  schliessen();
                 }}
               >
                 <ListItemText>{t.header.ablage.neu}</ListItemText>
@@ -211,7 +285,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="oeffnen"
               onClick={() => {
                 void ausDateiOeffnen();
-                schliessen();
               }}
             >
               <ListItemText>{t.header.ablage.oeffnenDatei}</ListItemText>
@@ -221,7 +294,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
                 key="zuletzt"
                 onClick={() => {
                   setAblageOffen(true);
-                  schliessen();
                 }}
               >
                 <ListItemText>{t.header.ablage.zuletzt}</ListItemText>
@@ -232,7 +304,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="speichern"
               onClick={() => {
                 void alsDateiSpeichern(false);
-                schliessen();
               }}
             >
               <ListItemText>{t.header.ablage.speichern}</ListItemText>
@@ -241,7 +312,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="speichernUnter"
               onClick={() => {
                 void alsDateiSpeichern(true);
-                schliessen();
               }}
             >
               <ListItemText>{t.header.ablage.speichernUnter}</ListItemText>
@@ -251,7 +321,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="vorlage"
               onClick={() => {
                 setTemplateOpen(true);
-                schliessen();
               }}
             >
               <ListItemText>{t.header.template}</ListItemText>
@@ -260,7 +329,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="importExport"
               onClick={() => {
                 setExportOpen(true);
-                schliessen();
               }}
             >
               <ListItemText>{t.header.exportImport}</ListItemText>
@@ -270,13 +338,12 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
 
         {/* ── Bearbeiten ────────────────────────────────────────────── */}
         <LeistenMenue name={t.header.menue.bearbeiten}>
-          {(schliessen) => [
+          {[
             <MenuItem
               key="undo"
               disabled={!canUndo}
               onClick={() => {
                 undo();
-                schliessen();
               }}
             >
               <ListItemText>{t.header.undo}</ListItemText>
@@ -286,7 +353,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               disabled={!canRedo}
               onClick={() => {
                 redo();
-                schliessen();
               }}
             >
               <ListItemText>{t.header.redo}</ListItemText>
@@ -297,7 +363,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
                 key="umbenennen"
                 onClick={() => {
                   setNameDialog('umbenennen');
-                  schliessen();
                 }}
               >
                 <ListItemText>{t.header.ablage.umbenennen}</ListItemText>
@@ -308,12 +373,11 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
 
         {/* ── Ansicht ───────────────────────────────────────────────── */}
         <LeistenMenue name={t.header.menue.ansicht}>
-          {(schliessen) => [
+          {[
             <MenuItem
               key="code"
               onClick={() => {
                 onModeChange(isCode ? 'visual' : 'code');
-                schliessen();
               }}
             >
               <ListItemText>
@@ -324,7 +388,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="zeilen"
               onClick={() => {
                 dispatch(createToggleLineNumbersAction());
-                schliessen();
               }}
             >
               <ListItemText>
@@ -337,7 +400,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="erweiterungen"
               onClick={() => {
                 setErweiterungenOffen(true);
-                schliessen();
               }}
             >
               <ListItemText>{t.erweiterungen.menue}</ListItemText>
@@ -346,7 +408,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="sprache"
               onClick={() => {
                 setLocale(locale === 'de' ? 'en' : 'de');
-                schliessen();
               }}
             >
               <ListItemText>
@@ -358,12 +419,11 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
 
         {/* ── Formular ──────────────────────────────────────────────── */}
         <LeistenMenue name={t.header.menue.formular}>
-          {(schliessen) => [
+          {[
             <MenuItem
               key="meta"
               onClick={() => {
                 setMetaOpen(true);
-                schliessen();
               }}
             >
               <ListItemText>{t.header.metadaten}</ListItemText>
@@ -372,7 +432,6 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
               key="copy"
               onClick={() => {
                 handleCopySchema();
-                schliessen();
               }}
             >
               <ListItemText>{t.header.copySchema}</ListItemText>
@@ -382,32 +441,29 @@ export function Befehlsleiste({ mode, onModeChange }: BefehlsleisteProps) {
 
         {/* ── Hilfe ─────────────────────────────────────────────────── */}
         <LeistenMenue name={t.header.menue.hilfe}>
-          {(schliessen) =>
-            (
-              [
-                ['anleitung', t.header.hilfe.anleitung],
-                ['tastatur', t.header.hilfe.tastatur],
-                ['tipp', t.header.hilfe.tipp],
-                ['trenner', ''],
-                ['ueber', t.header.hilfe.ueber],
-                ['lizenzen', t.header.hilfe.lizenzen],
-              ] as const
-            ).map(([schluessel, beschriftung]) =>
-              schluessel === 'trenner' ? (
-                <Divider key="trenner" />
-              ) : (
-                <MenuItem
-                  key={schluessel}
-                  onClick={() => {
-                    setHilfeDialog(schluessel);
-                    schliessen();
-                  }}
-                >
-                  <ListItemText>{beschriftung}</ListItemText>
-                </MenuItem>
-              ),
-            )
-          }
+          {(
+            [
+              ['anleitung', t.header.hilfe.anleitung],
+              ['tastatur', t.header.hilfe.tastatur],
+              ['tipp', t.header.hilfe.tipp],
+              ['trenner', ''],
+              ['ueber', t.header.hilfe.ueber],
+              ['lizenzen', t.header.hilfe.lizenzen],
+            ] as const
+          ).map(([schluessel, beschriftung]) =>
+            schluessel === 'trenner' ? (
+              <Divider key="trenner" />
+            ) : (
+              <MenuItem
+                key={schluessel}
+                onClick={() => {
+                  setHilfeDialog(schluessel);
+                }}
+              >
+                <ListItemText>{beschriftung}</ListItemText>
+              </MenuItem>
+            ),
+          )}
         </LeistenMenue>
       </Box>
 

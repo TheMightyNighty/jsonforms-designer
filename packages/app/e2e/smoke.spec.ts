@@ -355,6 +355,29 @@ test('Kopfzeile zeigt Formularname, Speicherstatus und das Menü „Weitere"', a
   }
 });
 
+test('Befehlsleiste öffnet ihre Menüs beim Überfahren mit der Maus', async ({
+  page,
+}) => {
+  await gotoSeeded(page);
+
+  await page.getByRole('button', { name: 'Datei', exact: true }).hover();
+  const menue = page.getByRole('menu');
+  await expect(
+    menue.getByRole('menuitem', { name: 'Neues Formular', exact: true }),
+  ).toBeVisible();
+
+  // Über den Nachbarknopf wechselt die Klappe ohne Klick
+  await page.getByRole('button', { name: 'Ansicht', exact: true }).hover();
+  await expect(
+    menue.getByRole('menuitem', { name: 'Code-Modus' }),
+  ).toBeVisible();
+  await expect(page.getByRole('menu')).toHaveCount(1);
+
+  // Maus weg von Leiste und Klappe → Klappe schließt von selbst
+  await page.mouse.move(600, 500);
+  await expect(page.getByRole('menu')).toHaveCount(0);
+});
+
 // ---------------------------------------------------------------------------
 // Formular-Verwaltung (ADR 0006)
 // ---------------------------------------------------------------------------
