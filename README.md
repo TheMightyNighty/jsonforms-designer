@@ -5,10 +5,10 @@
 **Visueller Formular-Editor für JSON Schema & JSONForms UI Schema**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)](./packages/editor/package.json)
+[![Version](https://img.shields.io/badge/version-0.4.0-brightgreen.svg)](./packages/editor/package.json)
 [![Changelog](https://img.shields.io/badge/changelog-📋-lightgrey)](./CHANGELOG.md)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript)](https://www.typescriptlang.org)
 [![MUI](https://img.shields.io/badge/MUI-7-007FFF?logo=mui)](https://mui.com)
 
 *JSONForms-kompatible Formulare werden ohne Schema-Vorkenntnisse per Drag & Drop erstellt und bearbeitet.*
@@ -40,6 +40,7 @@ JSONForms Designer ist ein React-basierter Formular-Editor, der nach dem **Form-
 | **Formular-Metadaten** | Titel, Behörde, Rechtsgrundlage, Versionsnummer, Gültigkeitsdatum |
 | **Mehrsprachigkeit (Inhalt)** | Feldbezeichnungen, Hilfetexte und Platzhalter werden pro Sprache (EN/FR/PL/TR/AR/UK) hinterlegt |
 | **Modi** | Visuell · Code (Monaco) · Vorschau — alle bidirektional synchronisiert |
+| **Befehlsleiste** | Menüs Datei · Bearbeiten · Ansicht · Formular · Hilfe öffnen beim Überfahren mit der Maus; Klick und Tastatur öffnen ebenso, Escape/Tab schließen |
 | **Persistenz** | Auto-Save in `localStorage`, Export/Import als JSON, XDatenfelder-Export (XDF 2.0), Undo/Redo (50 Schritte) |
 | **Druckansicht** | Print-CSS-Integration, Drucken-Button in der Vorschau-Toolbar |
 | **Vorlagen** | Vorgefertigte Formular-Vorlagen |

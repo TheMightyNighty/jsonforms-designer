@@ -7,6 +7,12 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Geändert
+- **Befehlsleiste: Menüs öffnen beim Überfahren mit der Maus.** Die Klappen öffnen sich beim Überfahren und schließen, sobald die Maus Knopf und Klappe verlassen hat. Klick und Tastatur öffnen weiterhin (Touch, Bedienung ohne Maus), Escape und Tab schließen. Statt des modalen `Menu`, dessen Backdrop das Überfahren der übrigen Knöpfe blockierte, kommen `Popper` und `MenuList` zum Einsatz.
+
+### Dokumentation
+- README-Screenshots neu erzeugt (Stand 0.4.0); Versions- und TypeScript-Badge aktualisiert.
+
 ---
 
 ## [0.4.0] — 2026-09-29
