@@ -19,6 +19,18 @@ RUN npm ci --no-fund --ignore-scripts
 
 COPY tsconfig.base.json ./
 COPY packages ./packages
+
+# Optional: Formularkatalog als Ablage (z. B. VSP). Ohne diese Werte
+# speichert der Designer wie bisher im Browser. DESIGNER_BASE ist der
+# Unterpfad, unter dem ein Reverse-Proxy den Designer ausliefert.
+ARG VITE_KATALOG_API=""
+ARG VITE_OIDC_AUTHORITY=""
+ARG VITE_OIDC_CLIENT_ID="vsp-designer"
+ARG DESIGNER_BASE="/"
+ENV VITE_KATALOG_API=$VITE_KATALOG_API \
+    VITE_OIDC_AUTHORITY=$VITE_OIDC_AUTHORITY \
+    VITE_OIDC_CLIENT_ID=$VITE_OIDC_CLIENT_ID \
+    DESIGNER_BASE=$DESIGNER_BASE
 RUN npm run build
 
 # ---- Runtime-Stage ---------------------------------------------------------

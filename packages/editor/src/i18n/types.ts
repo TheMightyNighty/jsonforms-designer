@@ -290,4 +290,33 @@ export interface EditorTranslations {
     release: string;
     deleteContainer: string;
   };
+  katalog: {
+    titel: string;
+    nichtImKatalog: string;
+    anlegen: string;
+    anlegenTitel: string;
+    anlegenText: string;
+    anlegenBestaetigen: string;
+    titelFeld: string;
+    angelegt: string;
+    entwurf: string;
+    entwurfVonIhnen: string;
+    version: string;
+    ohneVersion: string;
+    speichert: string;
+    gespeichert: string;
+    speicherFehler: string;
+    nurLesen: string;
+    freigeben: string;
+    freigebenTitel: string;
+    freigebenBestaetigen: string;
+    freigebenText: string;
+    gueltigAb: string;
+    freigegeben: string;
+    vierAugen: string;
+    keinRecht: string;
+    keinEntwurf: string;
+    abbrechen: string;
+    loeschenNichtMoeglich: string;
+  };
 }

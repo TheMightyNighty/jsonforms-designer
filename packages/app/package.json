@@ -21,6 +21,7 @@
     "@monaco-editor/react": "^4.6.0",
     "@mui/material": "^7.0.0",
     "monaco-editor": "~0.57.0",
+    "oidc-client-ts": "^3.5.0",
     "react": "^19.0.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",

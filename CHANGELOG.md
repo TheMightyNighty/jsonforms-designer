@@ -7,6 +7,27 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Versionier
 
 ## [Unreleased]
 
+### Hinzugefügt
+
+- **Formularkatalog als Ablage** (ADR 0008): `KatalogFieldStateService`
+  legt Formulare über die Redaktions-API eines Formularkatalogs ab
+  (Entwurf per Auto-Save, Kennung aus dem Titel). Die Fußleiste
+  `erzeugeKatalogLeiste` legt Formulare im Katalog an, zeigt den Stand und
+  gibt Entwürfe frei; die
+  Freigabe ist gesperrt ohne Recht, ohne Entwurf und für die Person, die
+  zuletzt bearbeitet hat.
+- Die Demo-App meldet sich im Katalog-Modus per OIDC (PKCE) an. Neue
+  Build-Argumente: `VITE_KATALOG_API`, `VITE_OIDC_AUTHORITY`,
+  `VITE_OIDC_CLIENT_ID`, `DESIGNER_BASE`. Neue Abhängigkeit der App:
+  `oidc-client-ts`.
+- `buildJsonFormsUiSchema` und `elementeJeReiter` exportieren die
+  Umwandlung des Arbeitsstands in ein JSONForms-UI-Schema (mit Reitern als
+  Categorization).
+
+### Geändert
+
+- Die Vorschau nutzt die gemeinsame Umwandlung statt einer eigenen Kopie.
+
 ---
 
 ## [0.4.0] — 2026-09-29
