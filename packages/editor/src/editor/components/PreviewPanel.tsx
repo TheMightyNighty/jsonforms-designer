@@ -17,9 +17,13 @@ import {
 import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
 import { useEffect, useMemo, useState } from 'react';
 
-import { FieldAwareState, FormTab } from '../../core/model/addFieldReducer';
+import { FieldAwareState } from '../../core/model/addFieldReducer';
 import { sectionColorDisplay } from '../../core/model/sectionColorTokens';
 import { toJsonForms, UiElement } from '../../core/model/uiElements';
+import {
+  buildJsonFormsUiSchema,
+  elementeJeReiter,
+} from '../../core/util/jsonFormsExport';
 import { jsonFormsI18n } from '../../core/util/jsonFormsI18n';
 import { buildOfmSchema, buildOfmUiSchema } from '../../core/util/ofmExport';
 import { useI18n } from '../../i18n';
@@ -75,28 +79,7 @@ function convertEl(el: UiElement): object | null {
 // buildPreviewUiSchema
 // ---------------------------------------------------------------------------
 function buildPreviewUiSchema(fieldState: FieldAwareState): object {
-  const { uiSchema, tabs, tabAssignments } = fieldState;
-  if (tabs.length === 0) {
-    return {
-      type: 'VerticalLayout',
-      elements: uiSchema.elements.map(convertEl).filter(Boolean),
-    };
-  }
-  const tabBuckets: object[][] = tabs.map(() => []);
-  uiSchema.elements.forEach((el) => {
-    const id = 'scope' in el ? (el.scope ?? el.id) : el.id;
-    const idx = Math.min(tabAssignments[id] ?? 0, tabBuckets.length - 1);
-    const jfEl = convertEl(el);
-    if (jfEl) tabBuckets[idx].push(jfEl);
-  });
-  return {
-    type: 'Categorization',
-    elements: tabs.map((tab: FormTab, i: number) => ({
-      type: 'Category',
-      label: tab.label,
-      elements: [{ type: 'VerticalLayout', elements: tabBuckets[i] ?? [] }],
-    })),
-  };
+  return buildJsonFormsUiSchema(fieldState, convertEl);
 }
 
 // ---------------------------------------------------------------------------
@@ -105,18 +88,10 @@ function buildPreviewUiSchema(fieldState: FieldAwareState): object {
 // materialRenderers-Categorization-Widget zu überlassen.
 // ---------------------------------------------------------------------------
 function buildTabUiSchemas(fieldState: FieldAwareState): object[] {
-  const { uiSchema, tabs, tabAssignments } = fieldState;
-  if (tabs.length === 0) return [];
-  const buckets: object[][] = tabs.map(() => []);
-  uiSchema.elements.forEach((el) => {
-    const id = 'scope' in el ? (el.scope ?? el.id) : el.id;
-    const idx = Math.min(tabAssignments[id] ?? 0, buckets.length - 1);
-    const jfEl = convertEl(el);
-    if (jfEl) buckets[idx].push(jfEl);
-  });
-  return tabs.map((_, i) => ({
+  if (fieldState.tabs.length === 0) return [];
+  return elementeJeReiter(fieldState, convertEl).map((elements) => ({
     type: 'VerticalLayout',
-    elements: buckets[i] ?? [],
+    elements,
   }));
 }
 

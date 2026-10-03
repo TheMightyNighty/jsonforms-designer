@@ -13,6 +13,15 @@ import { defineConfig, Plugin } from 'vite';
 //   worker-src 'self' blob:    — Monaco-Worker werden als eigene Dateien
 //     gebündelt (?worker-Rezept); blob: als Fallback für Vite-Worker-Helper.
 //   connect-src fimportal.de   — FIM-Portal API.
+// Katalog-Modus: Keycloak und Redaktions-API liegen im Betrieb hinter
+// demselben Origin. Liegen sie anderswo (lokale Entwicklung gegen den
+// VSP-Stack), müssen ihre Origins in connect-src stehen.
+function fremdeOrigins(): string[] {
+  return [process.env.VITE_OIDC_AUTHORITY, process.env.VITE_KATALOG_API]
+    .filter((a): a is string => !!a && /^https?:\/\//.test(a))
+    .map((a) => new URL(a).origin);
+}
+
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -24,7 +33,7 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "script-src 'self' 'unsafe-eval'",
   "worker-src 'self' blob:",
-  "connect-src 'self' https://fimportal.de",
+  ["connect-src 'self' https://fimportal.de", ...fremdeOrigins()].join(' '),
 ].join('; ');
 
 const cspPlugin = (): Plugin => ({
@@ -52,6 +61,8 @@ export default defineConfig(({ command }) => {
       : {};
 
   return {
+    // Unterpfad, wenn der Designer z. B. unter /designer/ ausgeliefert wird.
+    base: process.env.DESIGNER_BASE ?? '/',
     plugins: [react(), cspPlugin()],
     resolve: { alias },
     server: {

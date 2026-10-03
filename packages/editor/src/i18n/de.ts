@@ -488,4 +488,37 @@ export const de: EditorTranslations = {
     release: 'Aus Spalte herauslösen',
     deleteContainer: 'Container entfernen',
   },
+  katalog: {
+    titel: 'Formularkatalog',
+    nichtImKatalog: 'Dieses Formular ist noch nicht im Katalog.',
+    anlegen: 'Im Katalog anlegen …',
+    anlegenTitel: 'Formular im Katalog anlegen',
+    anlegenText:
+      'Der Titel steht später im Portal. Aus ihm entsteht die feste Kennung des Formulars; sie lässt sich danach nicht mehr ändern.',
+    anlegenBestaetigen: 'Anlegen',
+    titelFeld: 'Titel',
+    angelegt: '„{titel}“ ist im Katalog angelegt.',
+    entwurf: 'Entwurf v{version}, zuletzt bearbeitet von {person}',
+    entwurfVonIhnen: 'Entwurf v{version}, zuletzt von Ihnen bearbeitet',
+    version: 'Gültige Version: {version}',
+    ohneVersion: 'Noch keine gültige Version',
+    speichert: 'Speichert …',
+    gespeichert: 'Entwurf gespeichert',
+    speicherFehler: 'Entwurf konnte nicht gespeichert werden: {fehler}',
+    nurLesen: 'Nur lesen – Sie haben kein Redaktionsrecht für dieses Formular.',
+    freigeben: 'Freigeben …',
+    freigebenTitel: 'Entwurf freigeben',
+    freigebenBestaetigen: 'Freigeben',
+    freigebenText:
+      'Der Entwurf wird zur neuen gültigen Version. Die bisherige Version tritt zum selben Zeitpunkt außer Kraft. Freigegebene Versionen lassen sich nicht mehr ändern.',
+    gueltigAb: 'Gültig ab',
+    freigegeben: 'Version {version} ist freigegeben.',
+    vierAugen:
+      'Sie haben den Entwurf zuletzt bearbeitet. Die Freigabe muss eine zweite Person übernehmen.',
+    keinRecht: 'Sie haben kein Freigaberecht für dieses Formular.',
+    keinEntwurf: 'Es gibt keinen Entwurf zum Freigeben.',
+    abbrechen: 'Abbrechen',
+    loeschenNichtMoeglich:
+      'Formulare im Katalog lassen sich nicht löschen. Eine Version wird stattdessen außer Kraft gesetzt.',
+  },
 };

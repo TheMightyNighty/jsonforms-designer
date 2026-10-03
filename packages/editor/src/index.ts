@@ -17,6 +17,7 @@ export * from './fim';
 export * from './i18n';
 export * from './JsonFormsEditor';
 export * from './JsonFormsEditorUi';
+export * from './katalog';
 export * from './opencode';
 export * from './palette-panel';
 export * from './preview-variants';

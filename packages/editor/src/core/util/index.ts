@@ -3,6 +3,7 @@ export * from './evaluateRule';
 export * from './fieldStateFromSchemas';
 export * from './formularDatei';
 export * from './formularPruefung';
+export * from './jsonFormsExport';
 export * from './jsonFormsI18n';
 export * from './legacyMetadataMigration';
 export * from './ofmExport';

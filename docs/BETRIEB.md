@@ -50,6 +50,30 @@ Port 8080 (kein root nötig).
   ein eigenes Backend (`GET`/`PUT` einer JSON-Ressource); Backend-Origin in
   `connect-src` der CSP ergänzen. Details: README → „Persistenz".
 
+### Formularkatalog (VSP)
+
+Mit diesen Build-Argumenten legt der Designer Formulare im Formularkatalog
+der VSP ab statt im Browser (ADR 0008):
+
+| Build-Argument | Bedeutung | Beispiel |
+|---|---|---|
+| `VITE_KATALOG_API` | Basisadresse der Redaktions-API | `/katalog-api` |
+| `VITE_OIDC_AUTHORITY` | Keycloak-Realm der Verwaltung | `/auth/realms/vsp-verwaltung` |
+| `VITE_OIDC_CLIENT_ID` | OIDC-Client (öffentlich, PKCE) | `vsp-designer` |
+| `DESIGNER_BASE` | Unterpfad hinter einem Reverse-Proxy | `/designer/` |
+
+```bash
+docker build -t jsonforms-designer \
+  --build-arg VITE_KATALOG_API=/katalog-api \
+  --build-arg VITE_OIDC_AUTHORITY=/auth/realms/vsp-verwaltung \
+  --build-arg DESIGNER_BASE=/designer/ .
+```
+
+Relative Adressen setzen voraus, dass Designer, Keycloak und Redaktions-API
+hinter demselben Origin liegen (so im VSP-Stack). Absolute Adressen auf
+einem anderen Origin werden beim Build in `connect-src` der CSP
+eingetragen. Zugriffstokens liegen nur im Arbeitsspeicher der Seite.
+
 ## Diagnose & Support
 
 - **Version:** wird im Header der Anwendung angezeigt (z. B. `v0.2.1`) —

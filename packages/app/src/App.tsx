@@ -1,11 +1,21 @@
 import type { EditorConfig } from '@jsonforms-designer/editor';
 import {
+  erzeugeKatalogLeiste,
   fimPortalService,
   JsonFormsEditor,
+  KatalogFieldStateService,
   REGION_DE,
 } from '@jsonforms-designer/editor';
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  CssBaseline,
+  ThemeProvider,
+} from '@mui/material';
+import { ComponentType, useEffect, useState } from 'react';
 
+import { anmelden, KatalogKonfig, katalogKonfig } from './katalogAnmeldung';
 import { theme } from './theme';
 
 // ---------------------------------------------------------------------------
@@ -48,11 +58,72 @@ const editorConfig: EditorConfig = {
 // App
 // ---------------------------------------------------------------------------
 
+type KatalogAnbindung = {
+  dienst: KatalogFieldStateService;
+  leiste: ComponentType;
+};
+
+/**
+ * Designer mit Formularkatalog als Ablage: Anmeldung, dann Editor mit
+ * Katalog-Adapter und Fußleiste für Stand und Freigabe.
+ */
+function KatalogEditor({ konfig }: { konfig: KatalogKonfig }) {
+  const [anbindung, setAnbindung] = useState<KatalogAnbindung>();
+  const [fehler, setFehler] = useState<string>();
+
+  useEffect(() => {
+    let abgebrochen = false;
+    anmelden(konfig)
+      .then((token) => {
+        if (abgebrochen) return;
+        const dienst = new KatalogFieldStateService({
+          basisUrl: konfig.api,
+          token,
+        });
+        setAnbindung({ dienst, leiste: erzeugeKatalogLeiste(dienst) });
+      })
+      .catch((err: unknown) => {
+        if (!abgebrochen) setFehler(String(err));
+      });
+    return () => {
+      abgebrochen = true;
+    };
+  }, [konfig]);
+
+  if (fehler) {
+    return (
+      <Alert severity="error" sx={{ m: 4 }}>
+        Anmeldung am Formularkatalog fehlgeschlagen: {fehler}
+      </Alert>
+    );
+  }
+  if (!anbindung) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
+        <CircularProgress aria-label="Anmeldung läuft" />
+      </Box>
+    );
+  }
+  return (
+    <JsonFormsEditor
+      config={editorConfig}
+      fieldStateStorage={anbindung.dienst}
+      footer={anbindung.leiste}
+    />
+  );
+}
+
+const katalog = katalogKonfig();
+
 export function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <JsonFormsEditor config={editorConfig} />
+      {katalog ? (
+        <KatalogEditor konfig={katalog} />
+      ) : (
+        <JsonFormsEditor config={editorConfig} />
+      )}
     </ThemeProvider>
   );
 }

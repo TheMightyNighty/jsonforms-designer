@@ -128,6 +128,30 @@ wird weiter mitgeschrieben.
 Formulare auf einem Server abgelegt und berechtigt werden, hängt am
 Fachverfahren.
 
+### Formularkatalog als Ablage
+
+`KatalogFieldStateService` legt Formulare in einem versionierten
+Formularkatalog ab (ADR 0008), aktuell gegen die Redaktions-API der
+Verwaltungs-Service-Plattform. Die Fußleiste legt ein neues Formular im
+Katalog an, der Auto-Save schreibt danach den Entwurf, und eine zweite
+Person mit Freigaberecht gibt ihn über die Fußleiste frei.
+
+```tsx
+const dienst = new KatalogFieldStateService({
+  basisUrl: '/katalog-api',
+  token: () => holeZugriffstoken(), // vom Host, z. B. per oidc-client-ts
+});
+
+<JsonFormsEditor
+  fieldStateStorage={dienst}
+  footer={erzeugeKatalogLeiste(dienst)}
+/>;
+```
+
+Die Demo-App schaltet den Katalog-Modus ein, wenn sie mit
+`VITE_KATALOG_API` und `VITE_OIDC_AUTHORITY` gebaut wird (siehe
+`docs/BETRIEB.md`).
+
 ---
 
 ## Baustein-Bibliothek
